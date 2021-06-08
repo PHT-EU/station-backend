@@ -3,7 +3,7 @@ from typing import Union
 from sqlalchemy.orm import Session
 from .advertise_keys import advertise_keys
 from .share_keys import share_keys
-from app.crud import trains
+from station.app.crud import trains
 
 ROUND_FUNCTIONS = {
     0: advertise_keys,
