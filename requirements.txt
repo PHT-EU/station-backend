@@ -10,7 +10,7 @@ docker
 numpy
 pandas
 python-dotenv
-apache-airflow[postgres]
+apache-airflow[postgres, celery]
 minio
 pytorch-lightning
 git+https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/train-container-library.git

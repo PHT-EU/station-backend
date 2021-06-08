@@ -6,20 +6,6 @@ volumes:
     external: True
 
 services:
-
-  station:
-    image: registry.gitlab.com/personalhealthtrain/implementations/germanmii/difuture/incubating/pht/station
-    environment:
-      - STATION_DB=postgresql+psycopg2://admin:admin@postgres/pht_station
-      - STATION_ID=1
-      - MINIO_URL=127.0.0.1:9000
-      - MINIO_USER=minio_admin
-      - MINIO_PW=minio_admin
-      - CONDUCTOR_URL=http://127.0.0.1:8000
-      - HARBOR_API_URL=https://harbor.pht.medic.uni-tuebingen.de/api/v2.0
-      - HARBOR_USER=
-      - HARBOR_PW=
-
   postgres:
     image: postgres:13
     volumes:
