@@ -1,5 +1,9 @@
 image: docker:19.03.12
 
+stages:
+  - build
+  - test
+
 variables:
   # When you use the dind service, you must instruct Docker to talk with
   # the daemon started inside of the service. The daemon is available
@@ -17,6 +21,7 @@ variables:
   # container, thanks to volume mount from config.toml
   DOCKER_TLS_CERTDIR: "/certs"
 
+
 services:
   - docker:19.03.12-dind
 
@@ -29,3 +34,11 @@ build:
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com/personalhealthtrain/implementations/germanmii/difuture/incubating/pht/station
     - docker build -t registry.gitlab.com/personalhealthtrain/implementations/germanmii/difuture/incubating/pht/station .
     - docker push registry.gitlab.com/personalhealthtrain/implementations/germanmii/difuture/incubating/pht/station
+
+test:
+  stage: test
+  image: python:3.8
+  script:
+    - pip install pytest pytest-cov -r requirements.txt
+    - pip install .
+    - pytest station
