@@ -1,6 +1,7 @@
 venv
 data
 *.env
+test_data
 
 
 

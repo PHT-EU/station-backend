@@ -1,0 +1,5 @@
+CREATE DATABASE airflow;
+CREATE DATABASE pht_conductor;
+CREATE DATABASE pht_station;
+GRANT ALL PRIVILEGES ON DATABASE airflow TO admin;
+GRANT ALL PRIVILEGES ON DATABASE pht_station TO admin;

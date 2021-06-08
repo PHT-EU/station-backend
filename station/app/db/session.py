@@ -6,7 +6,7 @@ import os
 # SQLALCHEMY_DATABASE_URL = "sqlite:///./app.db"
 # TODO store db credentials in environment variables
 if os.getenv("STATION_DB"):
-    SQLALCHEMY_DATABASE_URL = f"postgresql+psycopg2://admin:admin@postgres/{os.getenv('STATION_DB')}"
+    SQLALCHEMY_DATABASE_URL = os.getenv('STATION_DB')
 else:
     SQLALCHEMY_DATABASE_URL = "postgresql+psycopg2://admin:admin@localhost/pht_station_1"
 
