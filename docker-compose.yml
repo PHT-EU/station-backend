@@ -22,10 +22,10 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       # Station Private Key needs to be set and registered
-      - ./station/station_leipzig_private_key.pem:/opt/private_key.pem
+      # - ./station/station_leipzig_private_key.pem:/opt/private_key.pem
       # Mount the dags directory as a volume
       - ./airflow/dags:/root/airflow/dags
-      - ./station /opt/station
+      # - ./station /opt/station
     depends_on:
       - postgres
     environment:

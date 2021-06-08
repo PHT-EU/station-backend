@@ -1,3 +1,5 @@
+import os
+
 import uvicorn
 from dotenv import load_dotenv, find_dotenv
 from app.db.setup_db import setup_db, reset_db
