@@ -1,0 +1,33 @@
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, UniqueConstraint
+from sqlalchemy.orm import relationship, backref
+from datetime import datetime
+
+from station.app.db.base_class import Base
+
+
+class BroadCastKeys(Base):
+    __tablename__ = "key_broadcasts"
+    id = Column(Integer, primary_key=True, index=True)
+    received_at = Column(DateTime, default=datetime.now())
+    iteration = Column(Integer)
+    train_id = Column(Integer, ForeignKey('trains.id'))
+    station_id = Column(Integer)
+    signing_key = Column(String)
+    sharing_key = Column(String)
+    key_signature = Column(String, nullable=True)
+
+
+class Cypher(Base):
+    __tablename__ = "cyphers"
+    # __table_args__ = (
+    #     # this can be db.PrimaryKeyConstraint if you want it to be a primary key
+    #     UniqueConstraint('train_id', 'iteration'),
+    # )
+    id = Column(Integer, primary_key=True, index=True)
+    received_at = Column(DateTime, default=datetime.now())
+    train_id = Column(Integer, ForeignKey('trains.id'))
+    iteration = Column(Integer)
+    station_id = Column(Integer)
+    cypher = Column(String)
+
+
