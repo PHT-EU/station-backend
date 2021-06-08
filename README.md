@@ -3,6 +3,7 @@ This project contains the implementation of the station API, workers for trainin
 
 ## Station API
 A FastAPI REST API for train and station management can be found in the `station` directory
+
 ## Airflow
 The `airflow` directory contains the configuration file for the station airflow instance as well as the predefined airflow
 DAGs responsible for executing trains and other longer running or repeating functionality.
@@ -16,4 +17,9 @@ DAGs responsible for executing trains and other longer running or repeating func
 1. If it does not yet exist create the volume for the database `docker volume create pg_pht_station`
 1. Run the development docker-compose file `docker-compose -f docker-compose_dev.yml up -d`, which will spin up the third
 party services such as the postgres db, airflow and minio, allowing for development of the station API inside of an IDE.
+   The services require the following ports to be available on the machine:
+   - Postgres: 5432
+   - Airflow: 8080
+   - Minio: 9000 
+
    
