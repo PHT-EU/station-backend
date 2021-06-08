@@ -26,5 +26,6 @@ before_script:
 build:
   stage: build
   script:
+    - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com/personalhealthtrain/implementations/germanmii/difuture/incubating/pht/station
     - docker build -t registry.gitlab.com/personalhealthtrain/implementations/germanmii/difuture/incubating/pht/station .
     - docker push registry.gitlab.com/personalhealthtrain/implementations/germanmii/difuture/incubating/pht/station
