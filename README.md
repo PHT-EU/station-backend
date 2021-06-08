@@ -8,6 +8,10 @@ A FastAPI REST API for train and station management can be found in the `station
 The `airflow` directory contains the configuration file for the station airflow instance as well as the predefined airflow
 DAGs responsible for executing trains and other longer running or repeating functionality.
 
+## PHT Worker
+The PHT worker package contains implementations high cost operations such as loading or preparing data sets and training models
+or running trains. It should expose a simple API to be used in Airflow DAGs and can also interact with the station DB.
+
 ## Installation
 1. Create a named docker volume for the postgres database `docker volume create pg_pht_station`
 1. Run the docker-compose file `docker-compose up -d`, which will start the station and associated services
@@ -20,6 +24,6 @@ party services such as the postgres db, airflow and minio, allowing for developm
    The services require the following ports to be available on the machine:
    - Postgres: 5432
    - Airflow: 8080
-   - Minio: 9000 
+   - Minio: 9000
 
    
