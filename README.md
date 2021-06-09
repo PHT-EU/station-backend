@@ -20,10 +20,10 @@ or running trains. It should expose a simple API to be used in Airflow DAGs and 
 ### Running the services for development
 1. If it does not yet exist create the volume for the database `docker volume create pg_pht_station`
 1. Run the development docker-compose file `docker-compose -f docker-compose_dev.yml up -d`, which will spin up the third
-party services such as the postgres db, airflow and minio, allowing for development of the station API inside of an IDE.
+   party services such as the postgres db, airflow and minio, allowing for development of the station API inside of an IDE.
    The services require the following ports to be available on the machine:
-   - Postgres: 5432
-   - Airflow: 8080
-   - Minio: 9000
+    - Postgres: 5432
+    - Airflow: 8080
+    - Minio: 9000
 
    

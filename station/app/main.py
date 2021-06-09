@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from station.app.api.api_v1.api import api_router
 from dotenv import load_dotenv, find_dotenv
 from fastapi.middleware.cors import CORSMiddleware
+import logging
 
 load_dotenv(find_dotenv())
 app = FastAPI(

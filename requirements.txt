@@ -13,4 +13,5 @@ python-dotenv
 apache-airflow[postgres, celery]
 minio
 pytorch-lightning
+pytest
 git+https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/train-container-library.git
