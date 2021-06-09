@@ -15,7 +15,7 @@ from station.clients.conductor import ConductorRESTClient
 router = APIRouter()
 
 
-@router.post("/trains/{train_id}", response_model=Train)
+@router.post("/trains/federated/{train_id}", response_model=Train)
 def add_new_train(train_id: str, db: Session = Depends(dependencies.get_db)) -> Any:
     station_id = int(os.getenv("STATION_ID"))
     # TODO fix proposal id
@@ -23,18 +23,18 @@ def add_new_train(train_id: str, db: Session = Depends(dependencies.get_db)) -> 
     return train
 
 
-@router.get("/trains/{train_id}", response_model=Train)
+@router.get("/trains/federated/{train_id}", response_model=Train)
 def get_train(train_id: Any, db: Session = Depends(dependencies.get_db)) -> Any:
     db_train = trains.get_by_train_id(db, train_id)
     return db_train
 
 
-@router.get("/trains", response_model=List[Train])
+@router.get("/trains/federated/", response_model=List[Train])
 def get_trains(db: Session = Depends(dependencies.get_db)):
     return trains.get_multi(db)
 
 
-@router.post("/trains/sync/")
+@router.post("/trains/federated/sync/")
 def synchronize_trains_with_conductor(db: Session = Depends(dependencies.get_db)):
     # Get the station assigned trains from conductor
     client = ConductorRESTClient()
@@ -56,7 +56,7 @@ def synchronize_trains_with_conductor(db: Session = Depends(dependencies.get_db)
     return updated_trains
 
 
-@router.post("/trains/{train_id}/model", response_model=DLModel)
+@router.post("/trains/federated/{train_id}/model", response_model=DLModel)
 def add_model_to_train(train_id: int, model_in: DLModelCreate, db: Session = Depends(dependencies.get_db)):
     db_train = trains.get(db, id=train_id)
     if not db_train:
@@ -65,14 +65,14 @@ def add_model_to_train(train_id: int, model_in: DLModelCreate, db: Session = Dep
     return db_model
 
 
-@router.get("/trains/{train_id}/model", response_model=DLModel)
+@router.get("/trains/federated/{train_id}/model", response_model=DLModel)
 def get_train_model(train_id: Any, db: Session = Depends(dependencies.get_db)):
     db_train_model = dl_models.get_train_model(db, train_id)
     # TODO check byte string consistency
     return db_train_model
 
 
-@router.post("/trains/{train_id}/dataset/{dataset_id}", response_model=Train)
+@router.post("/trains/federated/{train_id}/dataset/{dataset_id}", response_model=Train)
 def assign_train_dataset(train_id: Any, dataset_id: Any, db: Session = Depends(dependencies.get_db)):
     db_train = trains.get(db, id=train_id)
     if not db_train:
@@ -88,7 +88,7 @@ def assign_train_dataset(train_id: Any, dataset_id: Any, db: Session = Depends(d
     return db_train
 
 
-@router.post("/trains/{train_id}/start")
+@router.post("/trains/federated/{train_id}/start")
 def start_train(train_id: int, db: Session = Depends(dependencies.get_db)):
     # TODO check if train already exists locally if not request model from conductor and pass it to the worker
     pass
