@@ -5,11 +5,11 @@ from datetime import datetime
 
 from .client import airflow_client
 from station.app.crud.docker_trains import read_train_by_train_id
-from station.app.schemas.docker_trains import DockerTrainRun, DockerTrain
+from station.app.schemas.docker_trains import DockerTrainConfig, DockerTrain
 
 
-
-def run_train(db: Session, train_id: Any, run_config: DockerTrainRun):
+# TODO rework this !!!
+def run_train(db: Session, train_id: Any, run_config: DockerTrainConfig):
     """
     Execute a PHT 1.0 docker train using a configured airflow instance
 
@@ -43,8 +43,3 @@ def run_train(db: Session, train_id: Any, run_config: DockerTrainRun):
     db.commit()
 
     return run_id
-
-
-
-
-

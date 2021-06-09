@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 
 from station.app.api import dependencies
 from station.clients.airflow import docker_trains
-from station.app.schemas.docker_trains import DockerTrain, DockerTrainCreate, DockerTrainRun
+from station.app.schemas.docker_trains import DockerTrain, DockerTrainCreate, DockerTrainConfig
 from station.app.crud.docker_trains import create_train, read_train_by_train_id, read_trains
 
 router = APIRouter()
@@ -29,7 +29,7 @@ def get_train_by_train_id(train_id: str, db: Session = Depends(dependencies.get_
 
 
 @router.post("/trains/docker/{train_id}/run")
-def run_docker_train(train_id: str, run_config: DockerTrainRun, db: Session = Depends(dependencies.get_db)):
+def run_docker_train(train_id: str, run_config: DockerTrainConfig, db: Session = Depends(dependencies.get_db)):
     # TODO get config and execute station_airflow dag
     run_id = docker_trains.run_train(db, train_id, run_config)
     return run_id
@@ -49,6 +49,7 @@ def get_config_for_train(train_id: str, db: Session = Depends(dependencies.get_d
 @router.post("/trains/docker/{train_id}/config")
 def assign_config_to_docker_train(train_id: str, db: Session = Depends(dependencies.get_db)):
     pass
+
 
 @router.get("/trains/docker/{train_id}/state")
 def get_state_for_train(train_id: str, db: Session = Depends(dependencies.get_db)):
