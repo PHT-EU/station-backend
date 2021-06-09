@@ -25,15 +25,12 @@ def create_data_sets(db: Session):
 
     db_ds_1 = datasets.create(db, obj_in=ds_schema_minio)
     db_ds_2 = datasets.create(db, obj_in=ds_schema_file)
-    print(db_ds_1)
-    print(db_ds_2)
 
 
 def create_models(db: Session):
     cifar_model = Cifar10Model()
 
     model_dict = serde.serialize_lightning_model(cifar_model)
-    print(model_dict)
 
     model_create_schema = DLModelCreate(
         **model_dict,
@@ -42,9 +39,6 @@ def create_models(db: Session):
 
     db_model_1 = dl_models.create(db, obj_in=model_create_schema)
     db_model_2 = dl_models.create(db, obj_in=model_create_schema)
-
-    print(db_model_1)
-    print(db_model_2)
 
 
 def seed_station_db():
