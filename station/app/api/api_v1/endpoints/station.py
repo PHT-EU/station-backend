@@ -34,9 +34,8 @@ def get_available_trains(active: Optional[bool] = None,
                          db: Session = Depends(dependencies.get_db)):
     if refresh:
         # TODO query the conductor for trains
-        harbor_trains = sync_db_with_registry(db, station_id=1)
+        sync_db_with_registry(db, station_id=os.getenv("ST"))
         conductor_client = ConductorRESTClient()
-        print(conductor_client.get_available_trains())
 
     if active:
         db_docker_trains = docker_train.get_trains_by_active_status(db, active)

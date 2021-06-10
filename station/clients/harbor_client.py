@@ -34,4 +34,5 @@ class HarborClient:
 if __name__ == '__main__':
     load_dotenv(find_dotenv())
     hc = HarborClient()
-    res = hc.get_artifacts_for_station(1)
+    res = hc.get_artifacts_for_station(3)
+    print(res)
