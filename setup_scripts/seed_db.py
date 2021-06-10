@@ -9,6 +9,7 @@ from conductor import serde
 
 
 def create_data_sets(db: Session):
+    print("Creating test data sets")
     ds_schema_minio = DataSetCreate(
         name="CIFAR test set 1",
         data_type="image",
@@ -28,6 +29,7 @@ def create_data_sets(db: Session):
 
 
 def create_models(db: Session):
+    print("Creating test models")
     cifar_model = Cifar10Model()
 
     model_dict = serde.serialize_lightning_model(cifar_model)
