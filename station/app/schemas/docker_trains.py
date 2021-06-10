@@ -9,8 +9,8 @@ class DBSchema(BaseModel):
 
 
 class DockerTrainState(DBSchema):
-    num_executions: int
-    status: str
+    num_executions: Optional[int] = 0
+    status: Optional[str] = None
     last_execution: Optional[datetime] = None
 
 
