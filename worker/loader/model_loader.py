@@ -7,9 +7,9 @@ import importlib.machinery
 import os
 import tempfile
 
-from clients.minio import MinioClient
-from conductor.src.torch import LightningTrainModel
-from app.crud import trains
+from station.clients.minio import MinioClient
+from conductor_lib.src.torch import LightningTrainModel
+from station.app.crud import trains
 
 
 class ModelLoader:

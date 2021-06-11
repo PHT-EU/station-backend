@@ -7,9 +7,9 @@ from minio import datatypes
 from PIL import Image
 from torchvision.transforms import Compose, ToTensor, CenterCrop
 import numpy as np
-from conductor.src.torch import LightningTrainModel
+from conductor_lib.src.torch import LightningTrainModel
 
-from clients.minio import MinioClient
+from station.clients.minio import MinioClient
 
 
 class BaseDataSet(Dataset, ABC):

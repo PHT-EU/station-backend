@@ -1,8 +1,8 @@
-from clients.minio import MinioClient
+from station.clients.minio import MinioClient
 import importlib.util
 import importlib.machinery
 import tempfile
-from conductor.src.torch import LightningTrainModel
+from conductor_lib.src.torch import LightningTrainModel
 from typing import Union
 import os
 from torch.utils.data import DataLoader

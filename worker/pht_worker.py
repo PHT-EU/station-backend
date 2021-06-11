@@ -4,10 +4,10 @@ from dotenv import load_dotenv, find_dotenv
 import os
 import torch
 
-from app.crud import trains
+from station.app.crud import trains
 from worker.testing.db import SessionLocal
-from clients.conductor import ConductorRESTClient
-from clients.minio import MinioClient
+from station.clients.conductor import ConductorRESTClient
+from station.clients.minio import MinioClient
 from worker.discovery import perform_discovery
 from worker.loader import MinioFolderDS, BaseLoader, ModelLoader
 from worker.trainer import FederatedTrainer

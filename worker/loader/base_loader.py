@@ -7,7 +7,7 @@ import pytorch_lightning as pl
 
 from torch.utils.data import DataLoader, Dataset
 
-from clients.minio import MinioClient
+from station.clients.minio import MinioClient
 from worker.loader.dataset import MinioFolderDataSet, MinioFolderDS
 from torchvision.transforms import Compose, ToTensor, CenterCrop
 
