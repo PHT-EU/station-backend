@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  station_1:
+    build: .
+    environment:
+      - STATION_DB=postgresql+psycopg2://admin:admin@postgres/pht_station_1
+      - STATION_ID=1
+      - MINIO_URL=127.0.0.1:9000
+      - MINIO_USER=minio_admin
+      - MINIO_PW=minio_admin
+      - CONDUCTOR_URL=http://127.0.0.1:8000
+      - HARBOR_API_URL=https://harbor.pht.medic.uni-tuebingen.de/api/v2.0
+      - HARBOR_USER=
+      - HARBOR_PW=
+  station_2:
+    build: .
+    environment:
+      - STATION_DB=postgresql+psycopg2://admin:admin@postgres/pht_station_2
+      - STATION_ID=2
+      - MINIO_URL=127.0.0.1:9000
+      - MINIO_USER=minio_admin
+      - MINIO_PW=minio_admin
+      - CONDUCTOR_URL=http://127.0.0.1:8000
+      - HARBOR_API_URL=https://harbor.pht.medic.uni-tuebingen.de/api/v2.0
+      - HARBOR_USER=
+      - HARBOR_PW=
+  station_3:
+    build: .
+    environment:
+      - STATION_DB=postgresql+psycopg2://admin:admin@postgres/pht_station_3
+      - STATION_ID=3
+      - MINIO_URL=127.0.0.1:9000
+      - MINIO_USER=minio_admin
+      - MINIO_PW=minio_admin
+      - CONDUCTOR_URL=http://127.0.0.1:8000
+      - HARBOR_API_URL=https://harbor.pht.medic.uni-tuebingen.de/api/v2.0
+      - HARBOR_USER=
+      - HARBOR_PW=
