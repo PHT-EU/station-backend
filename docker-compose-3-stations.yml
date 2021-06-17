@@ -1,6 +1,22 @@
 version: '3.8'
 
+volumes:
+  pg_pht_station:
+    external: True
+
 services:
+
+  postgres:
+    image: postgres:13
+    volumes:
+      - ./setup_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - pg_pht_station:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+    ports:
+      - 5432:5432
+
   station_1:
     build: .
     environment:
@@ -9,10 +25,12 @@ services:
       - MINIO_URL=127.0.0.1:9000
       - MINIO_USER=minio_admin
       - MINIO_PW=minio_admin
-      - CONDUCTOR_URL=http://127.0.0.1:8000
+      - CONDUCTOR_URL=http://conductor:8000
       - HARBOR_API_URL=https://harbor.pht.medic.uni-tuebingen.de/api/v2.0
       - HARBOR_USER=
       - HARBOR_PW=
+    ports:
+      - 8001:8001
   station_2:
     build: .
     environment:
@@ -21,10 +39,12 @@ services:
       - MINIO_URL=127.0.0.1:9000
       - MINIO_USER=minio_admin
       - MINIO_PW=minio_admin
-      - CONDUCTOR_URL=http://127.0.0.1:8000
+      - CONDUCTOR_URL=http://conductor:8000
       - HARBOR_API_URL=https://harbor.pht.medic.uni-tuebingen.de/api/v2.0
       - HARBOR_USER=
       - HARBOR_PW=
+    ports:
+      - 8002:8001
   station_3:
     build: .
     environment:
@@ -33,7 +53,14 @@ services:
       - MINIO_URL=127.0.0.1:9000
       - MINIO_USER=minio_admin
       - MINIO_PW=minio_admin
-      - CONDUCTOR_URL=http://127.0.0.1:8000
+      - CONDUCTOR_URL=http://conductor:8000
       - HARBOR_API_URL=https://harbor.pht.medic.uni-tuebingen.de/api/v2.0
       - HARBOR_USER=
       - HARBOR_PW=
+    ports:
+      - 8003:8001
+
+networks:
+    default:
+        external:
+            name: pht-network

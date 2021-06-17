@@ -10,6 +10,22 @@ from station.app.models.train import TrainState
 
 
 class AggregationProtocol:
+
+    def execute_protocol(self, db: Session, train_id: Any):
+        db_train = trains.get_by_train_id(db, train_id)
+        if not db_train:
+            raise ValueError(f"Train {train_id} does not exist in the database")
+
+        round = db_train.state.round
+
+        if round == 0:
+            state = self.advertise_keys(db, train_id)
+        elif round == 1:
+            state = self.share_keys(db, train_id)
+
+
+
+
     @staticmethod
     def setup_protocol(db: Session, train_id: Any):
         db_train = trains.get_by_train_id(db, train_id=train_id)
