@@ -25,7 +25,7 @@ def add_new_train(train_id: str, db: Session = Depends(dependencies.get_db)) -> 
 
 @router.get("/trains/federated/{train_id}", response_model=Train)
 def get_train(train_id: Any, db: Session = Depends(dependencies.get_db)) -> Any:
-    db_train = trains.get_by_train_id(db, train_id)
+    db_train = trains.get(db, id=train_id)
     return db_train
 
 

@@ -12,6 +12,5 @@ def get_signing_key_from_key_broadcast(db: Session, train_id: int, station_id: i
         BroadCastKeys.station_id == station_id,
         BroadCastKeys.train_id == train_id
     ).first()
-    print(broad_cast.signing_key)
     return broad_cast.signing_key
 

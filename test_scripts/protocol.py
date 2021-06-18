@@ -2,7 +2,6 @@ from typing import Any
 
 import requests
 
-
 STATION_1_URL = "http://localhost:8001/api/trains/"
 STATION_2_URL = "http://localhost:8002/api/trains/"
 STATION_3_URL = "http://localhost:8003/api/trains/"
@@ -25,4 +24,5 @@ def execute_protocol(train_id: Any):
 
 
 if __name__ == '__main__':
-    add_train(1)
+    # add_train(1)
+    execute_protocol(1)

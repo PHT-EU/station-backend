@@ -34,7 +34,8 @@ def advertise_keys(db: Session, train_id: int,
     assert conductor_url
 
     # Send message to the conductor
-    response = requests.post(conductor_url + f"/api/trains/{train_id}/advertiseKeys", data=msg.serialize())
+    response = requests.post(conductor_url + f"/api/trains/{train_id}/advertiseKeys", json=msg.serialize())
+    print(response.json())
     response.raise_for_status()
 
     # update train state
