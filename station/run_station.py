@@ -15,4 +15,4 @@ if __name__ == '__main__':
     log_config["formatters"]["access"]["fmt"] = "%(asctime)s - %(levelname)s - %(message)s"
     log_config["formatters"]["default"]["fmt"] = "%(asctime)s - %(levelname)s - %(message)s"
 
-    uvicorn.run("app.main:app", port=8001, host="0.0.0.0", reload=True, log_config=log_config)
+    uvicorn.run("app.main:app", port=8001, host="0.0.0.0", reload=os.getenv("ENVIRONMENT") != "prod", log_config=log_config)

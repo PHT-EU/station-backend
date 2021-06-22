@@ -6,7 +6,7 @@ volumes:
 
 services:
 
-  postgres:
+  pg_station:
     image: postgres:13
     volumes:
       - ./setup_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -20,7 +20,7 @@ services:
   station_1:
     build: .
     environment:
-      - STATION_DB=postgresql+psycopg2://admin:admin@postgres/pht_station_1
+      - STATION_DB=postgresql+psycopg2://admin:admin@pg_station/pht_station_1
       - STATION_ID=1
       - MINIO_URL=127.0.0.1:9000
       - MINIO_USER=minio_admin
@@ -29,12 +29,16 @@ services:
       - HARBOR_API_URL=https://harbor.pht.medic.uni-tuebingen.de/api/v2.0
       - HARBOR_USER=
       - HARBOR_PW=
+      - ENVIRONMENT=prod
     ports:
       - 8001:8001
+    command: ["./wait-for-it.sh", "postgres:5432", "--", "python", "/home/station/run_station.py"]
+
+
   station_2:
     build: .
     environment:
-      - STATION_DB=postgresql+psycopg2://admin:admin@postgres/pht_station_2
+      - STATION_DB=postgresql+psycopg2://admin:admin@pg_station/pht_station_2
       - STATION_ID=2
       - MINIO_URL=127.0.0.1:9000
       - MINIO_USER=minio_admin
@@ -43,12 +47,15 @@ services:
       - HARBOR_API_URL=https://harbor.pht.medic.uni-tuebingen.de/api/v2.0
       - HARBOR_USER=
       - HARBOR_PW=
+      - ENVIRONMENT=prod
     ports:
       - 8002:8001
+    command: ["./wait-for-it.sh", "postgres:5432", "--", "python", "/home/station/run_station.py"]
+
   station_3:
     build: .
     environment:
-      - STATION_DB=postgresql+psycopg2://admin:admin@postgres/pht_station_3
+      - STATION_DB=postgresql+psycopg2://admin:admin@pg_station/pht_station_3
       - STATION_ID=3
       - MINIO_URL=127.0.0.1:9000
       - MINIO_USER=minio_admin
@@ -57,8 +64,11 @@ services:
       - HARBOR_API_URL=https://harbor.pht.medic.uni-tuebingen.de/api/v2.0
       - HARBOR_USER=
       - HARBOR_PW=
+      - ENVIRONMENT=prod
     ports:
       - 8003:8001
+
+    command: ["./wait-for-it.sh", "postgres:5432", "--", "python", "/home/station/run_station.py"]
 
 networks:
     default:
