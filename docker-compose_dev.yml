@@ -5,6 +5,9 @@ volumes:
   pg_pht_station:
     external: True
 
+  blaze-data:
+    external: True
+
 services:
   postgres:
     image: postgres:13
@@ -52,3 +55,10 @@ services:
       - MINIO_SECRET_KEY=minio_admin
 
     command: server /data
+
+  fhir-blaze:
+    image: samply/blaze
+    volumes:
+      - blaze-data:/app/data
+    ports:
+      - 8081:8080
