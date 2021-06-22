@@ -8,7 +8,7 @@ STATION_3_URL = "http://localhost:8003/api/trains/"
 
 STATION_URLS = [STATION_1_URL, STATION_2_URL, STATION_3_URL]
 
-TRAIN_ID = 4
+TRAIN_ID = 1
 
 def add_train(train_id: Any):
     for i, url in enumerate(STATION_URLS):
@@ -25,5 +25,5 @@ def execute_protocol(train_id: Any):
 
 
 if __name__ == '__main__':
-    # add_train(TRAIN_ID)
+    #add_train(TRAIN_ID)
     execute_protocol(TRAIN_ID)

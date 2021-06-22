@@ -65,7 +65,7 @@ def get_broad_casted_keys(train_id: int, conductor_url: str = None) -> BroadCast
     """
     if not conductor_url:
         conductor_url = os.getenv("CONDUCTOR_URL")
-    r = requests.get(conductor_url + f"/trains/{train_id}/broadcastKeys")
+    r = requests.get(conductor_url + f"/api/trains/{train_id}/broadcastKeys")
     print(r.json())
     r.raise_for_status()
     broadcast = BroadCastKeysSchema(**r.json())
