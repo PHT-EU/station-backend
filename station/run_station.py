@@ -6,9 +6,9 @@ from station.app.db.setup_db import setup_db, reset_db
 
 if __name__ == '__main__':
     load_dotenv(find_dotenv())
-
-    # reset_db()
-    setup_db()
+    # TODO remove reset in production
+    reset_db()
+    # setup_db()
 
     # Configure logging behaviour
     log_config = uvicorn.config.LOGGING_CONFIG

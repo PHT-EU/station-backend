@@ -19,6 +19,8 @@ router = APIRouter()
 def add_new_train(train_id: str, db: Session = Depends(dependencies.get_db)) -> Any:
     station_id = int(os.getenv("STATION_ID"))
     # TODO fix proposal id
+    if trains.get(db=db, id=train_id):
+        raise HTTPException(status_code=403, detail="Train already exists")
     train = initialize_train(db, station_id=station_id, train_id=train_id, proposal_id=1)
     return train
 
