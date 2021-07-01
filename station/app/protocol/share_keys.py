@@ -42,6 +42,7 @@ def share_keys(db: Session, train_id: int, conductor_url: str = None):
     msg = ShareKeysMessage(db, signing_key, broadcast.keys, seed_shares, key_shares, state.iteration)
 
     res = send_shared_keys_to_server(train_id, msg, conductor_url)
+
     return res
 
 

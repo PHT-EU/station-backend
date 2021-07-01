@@ -8,7 +8,7 @@ from station.app.protocol import execute_protocol
 from station.app.schemas.trains import Train, TrainState
 from station.app.schemas.protocol import BroadCastKeysSchema
 from station.app.crud.train import read_train, update_train_state_with_key_broadcast
-from station.app.protocol import share_keys, masked_input_collection
+from station.app.protocol import share_keys, masked_input_collection, AggregationProtocol
 
 router = APIRouter()
 
@@ -21,8 +21,17 @@ def perform_protocol(train_id: int, db: Session = Depends(dependencies.get_db)) 
     """
     print(f"Executing Protocol for Train: {train_id}")
     train = read_train(db, train_id)
-    response = execute_protocol(db, str(train_id))
-    print(response)
+
+    if not train:
+        raise HTTPException(status_code=403, detail="Train does not exist")
+
+    protocol = AggregationProtocol()
+
+    protocol.execute_protocol(db=db, train_id=str(train_id))
+
+
+    # response = execute_protocol(db, str(train_id))
+    # print(response)
 
 
 @router.get("/trains/{train_id}/protocol")
