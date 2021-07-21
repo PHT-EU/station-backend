@@ -31,6 +31,12 @@ def get_train(train_id: Any, db: Session = Depends(dependencies.get_db)) -> Any:
     return db_train
 
 
+@router.delete("/trains/federated/{train_id}", response_model=Train)
+def delete_train_with_id(train_id: Any, db: Session = Depends(dependencies.get_db)) -> Any:
+    removed_train = trains.remove(db, id=train_id)
+    return removed_train
+
+
 @router.get("/trains/federated/", response_model=List[Train])
 def get_trains(db: Session = Depends(dependencies.get_db)):
     return trains.get_multi(db)
