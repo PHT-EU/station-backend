@@ -8,7 +8,7 @@ volumes:
 services:
 
   station:
-    image: registry.gitlab.com/personalhealthtrain/implementations/germanmii/difuture/incubating/pht/station
+    build: .
     environment:
       - STATION_DB=postgresql+psycopg2://admin:admin@pg_station/pht_station
       - STATION_ID=1

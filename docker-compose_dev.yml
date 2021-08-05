@@ -5,7 +5,7 @@ volumes:
   pg_pht_station:
     external: True
 
-  blaze-data:
+  blaze_data:
     external: True
 
 services:
@@ -59,6 +59,6 @@ services:
   fhir-blaze:
     image: samply/blaze
     volumes:
-      - blaze-data:/app/data
+      - blaze_data:/app/data
     ports:
       - 8081:8080
