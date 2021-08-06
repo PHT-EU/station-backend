@@ -46,7 +46,7 @@ def get_config_for_train(train_id: str, db: Session = Depends(dependencies.get_d
     pass
 
 
-@router.post("/trains/docker/{train_id}/config")
+@router.post("/trains/docker/{train_id}/config/{config}")
 def assign_config_to_docker_train(train_id: str, db: Session = Depends(dependencies.get_db)):
     pass
 
@@ -56,7 +56,7 @@ def get_state_for_train(train_id: str, db: Session = Depends(dependencies.get_db
     pass
 
 
-@router.get("/trains/docker/configs")
+@router.get("/trains/docker/configs", response_model=List[DockerTrainConfig])
 def get_all_docker_train_configs(db: Session = Depends(dependencies.get_db)):
     pass
 

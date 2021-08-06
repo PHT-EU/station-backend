@@ -21,13 +21,15 @@ or running trains. It should expose a simple API to be used in Airflow DAGs and 
 ## Development environment
 
 ### Running the third party services
-1. If it does not yet exist create the volume for the database `docker volume create pg_pht_station`
+1. If it does not yet exist create volumes for the database `docker volume create pg_pht_station` and the 
+   [Blaze](https://github.com/samply/blaze) FHIR server `docker volume create blaze_data`
 1. Run the development docker-compose file `docker-compose -f docker-compose_dev.yml up -d`, which will spin up the third
    party services such as the postgres db, airflow and minio, allowing for development of the station API inside of an IDE.
    The services require the following ports to be available on the machine:
     - Postgres: 5432
     - Airflow: 8080
     - Minio: 9000
+    - Blaze FHIR Server: 8001
 
 ### Running the station API
 1. Setup a virtual environment and install the required packages `pip install -r requirements.txt`
