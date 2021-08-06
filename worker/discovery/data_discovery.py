@@ -1,6 +1,6 @@
 from typing import Dict, Union, List
 
-from station.app.models.data import DataSet
+from station.app.models.datasets import DataSet
 from station.clients.minio import MinioClient
 
 

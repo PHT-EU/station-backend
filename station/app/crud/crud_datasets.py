@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 
 from .base import CRUDBase, CreateSchemaType, ModelType
 from fastapi.encoders import jsonable_encoder
-from station.app.models.data import DataSet
+from station.app.models.datasets import DataSet
 from station.app.schemas.datasets import DataSetCreate, DataSetUpdate
 from station.clients.minio import MinioClient
 
