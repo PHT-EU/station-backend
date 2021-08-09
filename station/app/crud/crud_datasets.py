@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
 
+import pandas as pd
+
 from .base import CRUDBase, CreateSchemaType, ModelType
 from fastapi.encoders import jsonable_encoder
 from station.app.models.datasets import DataSet
@@ -13,13 +15,26 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
         obj_in_data = jsonable_encoder(obj_in)
         db_obj = self.model(**obj_in_data)
         if obj_in_data["storage_type"] == "minio":
-            client = MinioClient()
-            n_items = len(list(client.get_data_set_items(obj_in_data["access_path"])))
-            db_obj.n_items = n_items
-
+            self._extract_mino_information(db_obj, obj_in_data)
+        elif obj_in_data["storage_type"] == "csv":
+            self._extract_csv_information(db_obj, obj_in_data)
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
+
+        return db_obj
+
+    def _extract_mino_information(self, db_obj, obj_in_data):
+        client = MinioClient()
+        n_items = len(list(client.get_data_set_items(obj_in_data["access_path"])))
+        db_obj.n_items = n_items
+        return db_obj
+
+    def _extract_csv_information(self, db_obj, obj_in_data):
+        csv_df = pd.read_csv(db_obj.access_path)
+        n_items = len(csv_df.index)
+        db_obj.n_items = n_items
+        print(n_items)
         return db_obj
 
 

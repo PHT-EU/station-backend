@@ -22,6 +22,7 @@ def create_new_data_set(create_msg: DataSetCreate, db: Session = Depends(depende
     db_dataset = datasets.create(db, obj_in=create_msg)
     return db_dataset
 
+
 @router.put("/datasets/{dataset_id}")
 def update_data_set(dataset_id: Any, update_msg: DataSetUpdate, db: Session = Depends(dependencies.get_db)) -> DataSet:
     db_data_set = datasets.get(db, id=dataset_id)
@@ -31,6 +32,7 @@ def update_data_set(dataset_id: Any, update_msg: DataSetUpdate, db: Session = De
 @router.get("/datasets")
 def read_all_data_sets(db: Session = Depends(dependencies.get_db)) -> List[DataSet]:
     all_datasets = datasets.get_multi(db=db, limit=None)
+    print("tests")
     return all_datasets
 
 
