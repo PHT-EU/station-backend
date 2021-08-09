@@ -13,7 +13,7 @@ class DataSetBase(BaseModel):
     # TODO improve clarity of access definition
     access_path: Optional[str]
     n_items: Optional[int]
-    target_class: Optional[str]
+    target_field: Optional[str]
 
 class DataSetCreate(DataSetBase):
     pass
