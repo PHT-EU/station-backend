@@ -17,5 +17,6 @@ class DataSet(Base):
     access_path = Column(String, nullable=True)
     n_items = Column(Integer, default=0)
     target_field = Column(String, default=None)
+    class_distribution = Column(String, default=None)
     trains = relationship("Train", back_populates="dataset")
 
