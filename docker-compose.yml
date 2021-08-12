@@ -42,7 +42,7 @@ services:
       - ./airflow/dags:/root/airflow/dags
       # - ./station /opt/station
     depends_on:
-      - postgres
+      - pg_station
     environment:
       - FHIR_ADDRESS=https://fhir.personalhealhtrain.de
       - FHIR_USER=fhiruser
