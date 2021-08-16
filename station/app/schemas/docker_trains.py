@@ -60,11 +60,9 @@ class DockerTrain(DBSchema):
     state: Optional[DockerTrainState] = None
 
 class DockerTrainConfigCreate(DockerTrainConfigBase):
-    config_id: int
     created_at: datetime = datetime.now()
     train_id: Optional[List[int]] = None
 
 class DockerTrainConfigUpdate(DockerTrainConfigBase):
-    config_id: int
-    created_at: datetime
     updated_at: datetime = datetime.now()
+    train_id: Optional[List[int]] = None
