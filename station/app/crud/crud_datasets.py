@@ -46,17 +46,18 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
         return db_obj
     
     def _extract_fhir_information(self, db_obj, obj_in_data):
-        fhir_client = PHTFhirClient(obj_in_data["access_path"],
+        # TODO finish when fhir client has the functinalty
+        """fhir_client = PHTFhirClient(obj_in_data["access_path"],
                                     obj_in_data["fhir_user"],
                                     obj_in_data["fhir_password"],
-                                    server_type="ibm")
+                                    server_type=obj_in_data["fhir_server_type"])
         query={
             "query": {
                 "resource": "Resource",
                 "parameters": [
                     {
                         "variable": "_count",
-                        "condition": 0
+                        "condition": 6
                     }
                 ]
             },
@@ -69,7 +70,8 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
         }
         results = asyncio.run(fhir_client.execute_query(query=query))
 
-        print(results)
+        print(results)"""
+        pass
 
 
 datasets = CRUDDatasets(DataSet)

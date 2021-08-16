@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from fastapi import APIRouter, Body, Depends, HTTPException
 from station.app.api import dependencies
 
-from station.app.schemas.datasets import DataSet, DataSetCreate, DataSetUpdate, DataSetCreateFhir
+from station.app.schemas.datasets import DataSet, DataSetCreate, DataSetUpdate
 from station.app.crud import datasets
 from station.clients.minio import MinioClient
 
@@ -30,12 +30,6 @@ def download(data_set_id: Any, db: Session = Depends(dependencies.get_db)):
 
 @router.post("/datasets")
 def create_new_data_set(create_msg: DataSetCreate, db: Session = Depends(dependencies.get_db)) -> DataSet:
-    db_dataset = datasets.create(db, obj_in=create_msg)
-    return db_dataset
-
-@router.post("/datasets/fhir")
-def create_new_fhir_set(create_msg: DataSetCreate, db: Session = Depends(dependencies.get_db)) -> DataSet:
-    print("test")
     db_dataset = datasets.create(db, obj_in=create_msg)
     return db_dataset
 
