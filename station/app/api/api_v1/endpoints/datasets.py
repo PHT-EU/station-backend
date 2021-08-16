@@ -47,6 +47,12 @@ def read_all_data_sets(db: Session = Depends(dependencies.get_db)) -> List[DataS
     return all_datasets
 
 
+@router.delete("/datasets/{dataset_id}")
+def delete_data_set(dataset_id: Any, db: Session = Depends(dependencies.get_db)) -> DataSet:
+    db_data_set = datasets.remove(db, id=dataset_id)
+    return db_data_set
+
+
 @router.get("/datasets/minio/")
 def get_data_sets_from_bucket():
     client = MinioClient()
