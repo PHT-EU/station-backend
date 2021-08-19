@@ -4,10 +4,10 @@ from fastapi import APIRouter, Depends
 
 from station.app.api import dependencies
 from station.clients.airflow import docker_trains
-from station.app.schemas.docker_trains import DockerTrain, DockerTrainCreate, DockerTrainConfig, DockerTrainConfigCreate, DockerTrainConfigUpdate
+from station.app.schemas.docker_trains import DockerTrain, DockerTrainCreate, DockerTrainConfig, DockerTrainConfigCreate, DockerTrainConfigUpdate, DockerTrainExecution
 from station.app.crud.docker_trains import create_train, read_train_by_train_id, read_trains, read_train_config
 from station.app.crud.crud_docker_trains import docker_train
-from station.app.crud.crud_train_configs import docker_trainConfig
+from station.app.crud.crud_train_configs import docker_train_config
 
 router = APIRouter()
 
@@ -31,8 +31,7 @@ def get_train_by_train_id(train_id: str, db: Session = Depends(dependencies.get_
 
 
 @router.post("/trains/docker/{train_id}/run")
-def run_docker_train(train_id: str, run_config: DockerTrainConfig, db: Session = Depends(dependencies.get_db)):
-    # TODO get config and execute station_airflow dag
+def run_docker_train(train_id: str, run_config: DockerTrainExecution, db: Session = Depends(dependencies.get_db)):
     run_id = docker_trains.run_train(db, train_id, run_config)
     return run_id
 
@@ -45,13 +44,13 @@ def get_latest_train_execution_result(train_id: str, db: Session = Depends(depen
 
 @router.get("/trains/docker/{train_id}/config", response_model=DockerTrainConfig)
 def get_config_for_train(train_id: str, db: Session = Depends(dependencies.get_db)):
-    train_config = docker_trainConfig.get_by_train_id(db, train_id)
+    train_config = docker_train_config.get_by_train_id(db, train_id)
     return train_config
 
 
 @router.post("/trains/docker/{train_id}/config/{config}")
 def assign_config_to_docker_train(train_id: str, config: int, db: Session = Depends(dependencies.get_db)):
-    train = docker_trainConfig.assign_to_train(db, train_id, config)
+    train = docker_train_config.assign_to_train(db, train_id, config)
     return train
 
 
@@ -61,25 +60,25 @@ def get_state_for_train(train_id: str, db: Session = Depends(dependencies.get_db
 
 
 @router.get("/trains/docker/configs", response_model=List[DockerTrainConfig])
-def get_all_docker_train_configs(db: Session = Depends(dependencies.get_db)):
-    configs = db.query(DockerTrainConfig).all()
+def get_all_docker_train_configs(db: Session = Depends(dependencies.get_db), skip: int = 0, limit: int = 100):
+    configs = docker_train_config.get_multi(db, skip, limit)
     return configs
 
 
-@router.post("/trains/docker/config")
+@router.post("/trains/docker/config", response_model=DockerTrainConfig)
 def add_docker_train_configuration(config_in: DockerTrainConfigCreate, db: Session = Depends(dependencies.get_db)):
-    config = docker_trainConfig.create(db, config_in)
+    config = docker_train_config.create(db, config_in)
     return config
 
 
-@router.put("/trains/docker/config/{config_id}")
+@router.put("/trains/docker/config/{config_id}", response_model=DockerTrainConfig)
 def update_docker_train_configuration(update_config: DockerTrainConfigUpdate, config_id: int, db: Session = Depends(dependencies.get_db)):
-    old_config = docker_trainConfig.get(db, config_id)
-    config = docker_trainConfig.update(db, old_config, update_config)
+    old_config = docker_train_config.get(db, config_id)
+    config = docker_train_config.update(db, old_config, update_config)
     return config
 
 
 @router.get("trains/docker/config/{config_id}", response_model=DockerTrainConfig)
 def get_docker_train_configuration(config_id: int, db: Session = Depends(dependencies.get_db)):
-    config = docker_trainConfig.get(db, config_id)
+    config = docker_train_config.get(db, config_id)
     return config

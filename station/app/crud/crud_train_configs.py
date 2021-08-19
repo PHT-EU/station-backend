@@ -1,7 +1,8 @@
 from sqlalchemy.orm import Session
 from typing import List
+from datetime import datetime
 
-from .base import CRUDBase, CreateSchemaType, ModelType
+from .base import CRUDBase, CreateSchemaType, ModelType, UpdateSchemaType
 
 from station.app.models.docker_trains import DockerTrain, DockerTrainConfig
 from station.app.schemas.docker_trains import DockerTrainConfigCreate, DockerTrainConfigUpdate, DockerTrainConfigBase
@@ -20,4 +21,13 @@ class CRUDDockerTrainConfig(CRUDBase[DockerTrainConfigBase, DockerTrainConfigCre
         train.config_id = config_id
         return train
 
-docker_trainConfig = CRUDDockerTrainConfig(DockerTrainConfigBase)
+    def update(self, db: Session, *, db_obj: ModelType, obj_in: Union[UpdateSchemaType, Dict[str, Any]]) -> ModelType:
+        obj = super().update(db, db_obj=db_obj, obj_in=obj_in)
+        setattr(obj, updated_at, datetime.now())
+        db.add(obj)
+        db.commit()
+        db.refresh(obj)
+        return obj
+
+
+docker_train_config = CRUDDockerTrainConfig(DockerTrainConfigBase)
