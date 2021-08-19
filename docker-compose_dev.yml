@@ -9,7 +9,7 @@ volumes:
     external: True
 
 services:
-  postgres:
+  pg_station:
     image: postgres:13
     volumes:
       - ./setup_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -18,7 +18,7 @@ services:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
     ports:
-      - 5432:5432
+      - "5432:5432"
 
   airflow:
     build: './airflow'
@@ -30,7 +30,7 @@ services:
       - ./airflow/dags:/root/airflow/dags
       # - ./station /opt/station
     depends_on:
-      - postgres
+      - pg_station
     environment:
       - FHIR_ADDRESS=https://fhir.personalhealhtrain.de
       - FHIR_USER=fhiruser
@@ -41,12 +41,12 @@ services:
       - STATION_PRIVATE_KEY_PATH=/opt/private_key.pem
       - HARBOR_API_URL=https://harbor.personalhealthtrain.de/api/v2.0
     ports:
-      - 8080:8080
+      - "8080:8080"
 
   minio:
     image: minio/minio:latest
     ports:
-      - 9000:9000
+      - "9000:9000"
     volumes:
       - ./test_data:/data
 
@@ -61,4 +61,4 @@ services:
     volumes:
       - blaze_data:/app/data
     ports:
-      - 8081:8080
+      - "8081:8080"
