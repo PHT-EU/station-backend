@@ -9,7 +9,7 @@ volumes:
     external: True
 
 services:
-  postgres:
+  pg_station:
     image: postgres:13
     volumes:
       - ./setup_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -30,7 +30,7 @@ services:
       - ./airflow/dags:/root/airflow/dags
       # - ./station /opt/station
     depends_on:
-      - postgres
+      - pg_station
     environment:
       - FHIR_ADDRESS=https://fhir.personalhealhtrain.de
       - FHIR_USER=fhiruser

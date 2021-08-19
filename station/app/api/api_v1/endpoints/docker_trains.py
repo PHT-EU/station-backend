@@ -20,7 +20,7 @@ def get_available_trains(active: bool = None, limit: int = 0, db: Session = Depe
 
 @router.post("/trains/docker/", response_model=DockerTrain)
 def register_train(create_msg: DockerTrainCreate, db: Session = Depends(dependencies.get_db)):
-    db_train = docker_train.create(db, create_msg)
+    db_train = docker_train.create(db, obj_in=create_msg)
     return db_train
 
 
@@ -67,7 +67,7 @@ def get_all_docker_train_configs(db: Session = Depends(dependencies.get_db), ski
 
 @router.post("/trains/docker/config", response_model=DockerTrainConfig)
 def add_docker_train_configuration(config_in: DockerTrainConfigCreate, db: Session = Depends(dependencies.get_db)):
-    config = docker_train_config.create(db, config_in)
+    config = docker_train_config.create(db, obj_in=config_in)
     return config
 
 

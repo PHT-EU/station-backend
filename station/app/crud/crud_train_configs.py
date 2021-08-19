@@ -8,7 +8,8 @@ from station.app.models.docker_trains import DockerTrain, DockerTrainConfig
 from station.app.schemas.docker_trains import DockerTrainConfigCreate, DockerTrainConfigUpdate, DockerTrainConfigBase
 from dateutil import parser
 
-class CRUDDockerTrainConfig(CRUDBase[DockerTrainConfigBase, DockerTrainConfigCreate, DockerTrainConfigUpdate]):
+
+class CRUDDockerTrainConfig(CRUDBase[DockerTrainConfig, DockerTrainConfigCreate, DockerTrainConfigUpdate]):
 
     def get_by_train_id(self, db: Session, train_id: str) -> DockerTrainConfig:
         train = db.query(DockerTrain).filter(DockerTrain.train_id == train_id).first()
@@ -30,4 +31,4 @@ class CRUDDockerTrainConfig(CRUDBase[DockerTrainConfigBase, DockerTrainConfigCre
         return obj
 
 
-docker_train_config = CRUDDockerTrainConfig(DockerTrainConfigBase)
+docker_train_config = CRUDDockerTrainConfig(DockerTrainConfig)
