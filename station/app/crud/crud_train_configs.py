@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Union, Dict, Any
 from datetime import datetime
 
 from .base import CRUDBase, CreateSchemaType, ModelType, UpdateSchemaType
@@ -23,7 +23,7 @@ class CRUDDockerTrainConfig(CRUDBase[DockerTrainConfigBase, DockerTrainConfigCre
 
     def update(self, db: Session, *, db_obj: ModelType, obj_in: Union[UpdateSchemaType, Dict[str, Any]]) -> ModelType:
         obj = super().update(db, db_obj=db_obj, obj_in=obj_in)
-        setattr(obj, updated_at, datetime.now())
+        obj.updated_at = datetime.now()
         db.add(obj)
         db.commit()
         db.refresh(obj)
