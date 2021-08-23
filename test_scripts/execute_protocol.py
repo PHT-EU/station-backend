@@ -25,5 +25,5 @@ def execute_protocol(train_id: Any):
 
 
 if __name__ == '__main__':
-    # add_train(TRAIN_ID)
+    add_train(TRAIN_ID)
     execute_protocol(TRAIN_ID)

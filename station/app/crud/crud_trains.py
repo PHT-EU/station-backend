@@ -64,6 +64,7 @@ class CRUDTrain(CRUDBase[Train, TrainCreate, TrainUpdate]):
                 )
                 db.add(db_broadcast)
         db_train_state.key_broadcast = key_broadcast.json()
+        db_train_state.round = 2
         db.commit()
         db.refresh(db_train_state)
 
