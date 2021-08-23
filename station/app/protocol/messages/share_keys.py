@@ -28,12 +28,16 @@ class ShareKeysMessage(Message):
         self.iteration = iteration
 
     def serialize(self, format: str = "json"):
+
         msg = {}
         cypher_texts = self._create_cyphers()
         msg["cyphers"] = cypher_texts
         msg["created_at"] = datetime.now().isoformat()
         msg["station_id"] = self.station_id
         msg["iteration"] = self.iteration
+
+        if format == "dict":
+            return msg
 
         return json.dumps(msg)
 

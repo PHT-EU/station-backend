@@ -36,20 +36,21 @@ class AdvertiseKeysMessage(Message):
 
         self.iteration = iteration
 
-    def serialize(self, format: str = "json"):
+    def serialize(self, format: str = None):
 
         # Create dictionary and serialize values
+        json_dict = {
+            "train_id": self.train_id,
+            "station_id": self.station_id,
+            "signing_key": self._pk_to_hex(self.signing_key),
+            "sharing_key": self._pk_to_hex(self.sharing_key),
+            "key_signature": self._to_hex(self.key_signature) if self.key_signature else None,
+            "iteration": self.iteration
+        }
         if format == "json":
-            json_dict = {
-                "train_id": self.train_id,
-                "station_id": self.station_id,
-                "signing_key": self._pk_to_hex(self.signing_key),
-                "sharing_key": self._pk_to_hex(self.sharing_key),
-                "key_signature": self._to_hex(self.key_signature) if self.key_signature else None,
-                "iteration": self.iteration
-            }
-
             return json.dumps(json_dict, indent=2)
+
+        return json_dict
 
     def _make_message(self, sign_keys=False):
         sk1, cert1 = get_certified_ec_key_pair("pht_federated")

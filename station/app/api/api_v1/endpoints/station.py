@@ -34,7 +34,7 @@ def get_available_trains(active: Optional[bool] = None,
                          db: Session = Depends(dependencies.get_db)):
     if refresh:
         # TODO query the conductor for trains
-        sync_db_with_registry(db, station_id=os.getenv("ST"))
+        sync_db_with_registry(db, station_id=os.getenv("STATION_ID"))
         conductor_client = ConductorRESTClient()
 
     if active:

@@ -68,7 +68,7 @@ def get_cyphers(db: Session, train_id: int, iteration: int, conductor_url: str =
         "station_id": os.getenv("STATION_ID"),
         "iteration": iteration
     }
-    r = requests.post(conductor_url + f"/trains/{train_id}/cyphers", json=data)
+    r = requests.post(conductor_url + f"/api/trains/{train_id}/cyphers", json=data)
     # TODO validate the length of the users based on train config
     print(len(r.json()))
     participants = _process_cyphers(db, train_id, iteration, r.json())

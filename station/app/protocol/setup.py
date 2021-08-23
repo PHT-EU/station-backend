@@ -30,7 +30,7 @@ def register_for_train(station_id: int, train_id: str, conductor_url: str = None
     if not conductor_url:
         conductor_url = os.getenv("CONDUCTOR_URL")
 
-    r = requests.post(conductor_url + f"/stations/{station_id}/{train_id}")
+    r = requests.post(conductor_url + f"/api/trains/{train_id}/register", params={"station_id": os.getenv("STATION_ID")})
     r.raise_for_status()
     token = r.json()["token"]
     return token

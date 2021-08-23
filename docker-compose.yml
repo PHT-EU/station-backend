@@ -8,9 +8,9 @@ volumes:
 services:
 
   station:
-    image: registry.gitlab.com/personalhealthtrain/implementations/germanmii/difuture/incubating/pht/station
+    build: .
     environment:
-      - STATION_DB=postgresql+psycopg2://admin:admin@postgres/pht_station
+      - STATION_DB=postgresql+psycopg2://admin:admin@pg_station/pht_station
       - STATION_ID=1
       - MINIO_URL=127.0.0.1:9000
       - MINIO_USER=minio_admin
@@ -19,8 +19,12 @@ services:
       - HARBOR_API_URL=https://harbor.pht.medic.uni-tuebingen.de/api/v2.0
       - HARBOR_USER=
       - HARBOR_PW=
+      - ENVIRONMENT=prod
+    ports:
+      - "8001:8001"
+    command: ["./wait-for-it.sh","--timeout=10", "postgres:5432", "--", "python", "/home/station/run_station.py"]
 
-  postgres:
+  pg_station:
     image: postgres:13
     volumes:
       - ./setup_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -41,7 +45,7 @@ services:
       - ./airflow/dags:/root/airflow/dags
       # - ./station /opt/station
     depends_on:
-      - postgres
+      - pg_station
     environment:
       - FHIR_ADDRESS=https://fhir.personalhealhtrain.de
       - FHIR_USER=fhiruser

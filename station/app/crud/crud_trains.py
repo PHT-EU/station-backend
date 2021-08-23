@@ -1,10 +1,13 @@
 from sqlalchemy.orm import Session
+import os
 
 from .base import CRUDBase
 from typing import List, Any, Tuple
 
 from station.app.models.train import Train, TrainState
 from station.app.schemas.trains import TrainCreate, TrainUpdate
+from station.app.schemas.protocol import BroadCastKeysSchema
+from station.app.models.protocol import BroadCastKeys
 
 
 class CRUDTrain(CRUDBase[Train, TrainCreate, TrainUpdate]):
@@ -46,6 +49,25 @@ class CRUDTrain(CRUDBase[Train, TrainCreate, TrainUpdate]):
         db.refresh(db_train_state)
 
         return db_train
+
+    def update_train_with_key_broadcast(self, db: Session, train_id: int,
+                                        key_broadcast: BroadCastKeysSchema) -> TrainState:
+        db_train = self.get(db, id=train_id)
+        assert db_train
+        db_train_state: TrainState = db.query(TrainState).filter(TrainState.train_id == train_id).first()
+        for key_pair in key_broadcast.keys:
+            if key_pair.station_id != int(os.getenv("STATION_ID")):
+                db_broadcast = BroadCastKeys(
+                    train_id=db_train.id,
+                    iteration=db_train_state.iteration,
+                    **key_pair.dict()
+                )
+                db.add(db_broadcast)
+        db_train_state.key_broadcast = key_broadcast.json()
+        db.commit()
+        db.refresh(db_train_state)
+
+        return db_train_state
 
 
 trains = CRUDTrain(Train)

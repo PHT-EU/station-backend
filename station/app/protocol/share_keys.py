@@ -13,10 +13,10 @@ from station.app.crud.train import (
     get_train_signing_key
 )
 from station.app.protocol.messages.share_keys import ShareKeysMessage
+from station.app.crud import trains
 
 
 def share_keys(db: Session, train_id: int, conductor_url: str = None):
-
     if not conductor_url:
         conductor_url = os.getenv("CONDUCTOR_URL")
 
@@ -26,15 +26,13 @@ def share_keys(db: Session, train_id: int, conductor_url: str = None):
     # TODO get threshold from train config and pass to secret sharing
     validate_keys(broadcast.keys)
     # store the received keys
-    state = update_train_state_with_key_broadcast(db, train_id=train_id, broadcast=broadcast)
-
-
+    state = trains.update_train_with_key_broadcast(db, train_id=train_id, key_broadcast=broadcast)
 
     n_participants = len(broadcast.keys)
 
     # Create seed/shares and update db state
     seed, seed_shares = create_random_seed_and_shares(n_participants)
-    state = update_rng_seed(db, train_id, seed)
+    state = update_rng_seed(db, str(train_id), seed)
 
     sharing_key = get_train_sharing_key(db, train_id)
     signing_key = get_train_signing_key(db, train_id)
@@ -44,11 +42,12 @@ def share_keys(db: Session, train_id: int, conductor_url: str = None):
     msg = ShareKeysMessage(db, signing_key, broadcast.keys, seed_shares, key_shares, state.iteration)
 
     res = send_shared_keys_to_server(train_id, msg, conductor_url)
+
     return res
 
 
 def send_shared_keys_to_server(train_id: int, msg: ShareKeysMessage, conductor_url: str = None):
-    r = requests.post(conductor_url + f"/trains/{train_id}/shareKeys", data=msg.serialize())
+    r = requests.post(conductor_url + f"/api/trains/{train_id}/shareKeys", json=msg.serialize(format="dict"))
     print(r.json())
     r.raise_for_status()
 
@@ -65,7 +64,7 @@ def get_broad_casted_keys(train_id: int, conductor_url: str = None) -> BroadCast
     """
     if not conductor_url:
         conductor_url = os.getenv("CONDUCTOR_URL")
-    r = requests.get(conductor_url + f"/trains/{train_id}/broadcastKeys")
+    r = requests.get(conductor_url + f"/api/trains/{train_id}/broadcastKeys")
     print(r.json())
     r.raise_for_status()
     broadcast = BroadCastKeysSchema(**r.json())
@@ -97,11 +96,9 @@ def create_random_seed_and_shares(n: int, threshold: int = 3) -> Tuple[int, List
 
 
 def create_key_shares(sharing_key: str, n: int, t: int = 3):
-
     key_shares = share_secret_key(bytes.fromhex(sharing_key), t, n)
     # print(key_shares)
     return key_shares
-
 
 
 if __name__ == '__main__':

@@ -12,7 +12,8 @@ ROUND_FUNCTIONS = {
 
 
 def execute_protocol(db: Session, train_id: Union[int, str]):
-    train = trains.get_by_train_id(db, str(train_id))
+    train = trains.get(db, train_id)
+
     state = train.state
 
     protocol_round = state.round

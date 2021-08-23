@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 from station.app.crud import dl_models, datasets, trains
 from station.app.schemas.dl_models import DLModelCreate
 from station.app.schemas.datasets import DataSetCreate
-from conductor.examples.cifar_model import Cifar10Model
-from conductor import serde
+from conductor_lib.examples.cifar_model import Cifar10Model
+from conductor_lib import serde
 
 
 def create_data_sets(db: Session):
