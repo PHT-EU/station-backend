@@ -11,7 +11,7 @@ class HarborClient:
     def __init__(self, harbor_api_url: str = None, username: str = None, password: str = None):
         # Setup and verify connection parameters either based on arguments or .env vars
 
-        self.url = harbor_api_url if harbor_api_url else os.getenv("HARBOR_API_URL")
+        self.url = harbor_api_url if harbor_api_url else os.getenv("HARBOR_URL")
         assert self.url
 
         self.username = username if username else os.getenv("HARBOR_USER")
@@ -21,7 +21,6 @@ class HarborClient:
         assert self.password
 
     def get_artifacts_for_station(self, station_id: Union[str, int] = None) -> List[dict]:
-
         if not station_id:
             station_id = int(os.getenv("STATION_ID"))
         assert station_id
@@ -30,6 +29,14 @@ class HarborClient:
         r = requests.get(self.url + endpoint, auth=(self.username, self.password))
         return r.json()
 
+    def health_check(self):
+        print(self.url)
+        url = self.url + "health"
+        r = requests.get(url=url, auth=(self.username, self.password))
+        return r.json()
+
+
+harbor_client = HarborClient()
 
 if __name__ == '__main__':
     load_dotenv(find_dotenv())

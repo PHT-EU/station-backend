@@ -49,9 +49,13 @@ class AirflowClient:
         print(r.json())
         r.raise_for_status()
 
+    def health_check(self):
+        url = self.airflow_url + "health"
+        r = requests.get(url=url)
+        return r.json()
+
 
 airflow_client = AirflowClient()
-
 
 if __name__ == '__main__':
     load_dotenv(find_dotenv())
@@ -63,4 +67,3 @@ if __name__ == '__main__':
 
     dag_runs = client.get_all_dag_runs("run_train")
     dag_run_id = client.trigger_dag("run_train")
-

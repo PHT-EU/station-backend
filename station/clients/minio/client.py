@@ -8,6 +8,7 @@ from dotenv import load_dotenv, find_dotenv
 from uuid import uuid4
 import pickle
 import dill
+import requests
 
 
 class MinioClient:
@@ -28,7 +29,6 @@ class MinioClient:
         assert self.minio_server
         assert self.access_key
         assert self.secret_key
-
 
         # Initialize minio client
         self.client = Minio(
@@ -125,6 +125,14 @@ class MinioClient:
 
         return class_distribution
 
+    def health_check(self):
+        url = self.minio_server + "/minio/health/live"
+        print(url)
+        r = requests.get(url=url, auth=(self.username, self.password))
+        return r.json()
+
+
+minio_client = MinioClient()
 
 if __name__ == '__main__':
     load_dotenv(find_dotenv())
