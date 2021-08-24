@@ -126,10 +126,14 @@ class MinioClient:
         return class_distribution
 
     def health_check(self):
-        url = self.minio_server + "/minio/health/live"
-        print(url)
-        r = requests.get(url=url, auth=(self.username, self.password))
-        return r.json()
+        """
+        Get health of minio
+        """
+        try:
+            buckets = self.client.list_buckets()
+            return {"status": "healthy"}
+        except:
+            return {"status": "none"}
 
 
 minio_client = MinioClient()

@@ -21,6 +21,7 @@ def harbor_status():
 @router.get("/status/Minio")
 def status_minio():
     status = minio_client.health_check()
+    #TODO add externall addet MinIO to the health check
     return status
 
 
