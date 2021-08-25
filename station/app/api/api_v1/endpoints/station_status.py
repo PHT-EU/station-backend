@@ -2,7 +2,7 @@ from fastapi import APIRouter, Body, Depends
 from station.clients.airflow.client import airflow_client
 from station.clients.harbor_client import harbor_client
 from station.clients.minio.client import minio_client
-
+from station.clients.fhir.client import FhirClient
 router = APIRouter()
 
 
@@ -27,5 +27,6 @@ def status_minio():
 
 @router.get("/status/fhir")
 def status_Fhir():
-    pass
+    fhir_client = FhirClient()
+    fhir_client.health_check()
 
