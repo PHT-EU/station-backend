@@ -24,8 +24,12 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
     def get_by_train_id(self, db: Session, train_id: str) -> DockerTrain:
         return db.query(DockerTrain).filter(DockerTrain.train_id == train_id).first()
 
-    def get_trains_by_active_status(self, db: Session, active=True) -> List[DockerTrain]:
-        return db.query(DockerTrain).filter(DockerTrain.is_active == active).all()
+    def get_trains_by_active_status(self, db: Session, active=True, limit: int = 0) -> List[DockerTrain]:
+        if limit != 0:
+            trains = db.query(DockerTrain).filter(DockerTrain.is_active == active).limit(limit).all()
+        else:
+            trains = db.query(DockerTrain).filter(DockerTrain.is_active == active).all()
+        return trains
 
     def add_if_not_exists(self, db: Session, train_id: str, created_at: str = None):
         db_train = self.get_by_train_id(db, train_id)
