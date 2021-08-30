@@ -10,6 +10,7 @@ class FhirClient:
                  server_type: str = None, disable_auth: bool = False):
         """
         Fhir client for station internal / health check / how many data points are in a fhir server
+        The code in hear is mostly copied from the train libary fhir client .
 
         :param server_url: base url of the FHIR server to execute the query against
         :param username: username for use in basic auth authentication against the fhir server
@@ -37,6 +38,21 @@ class FhirClient:
         #TODO remove verify false only for thesting becouse of verificaion problems with the ibm fhir server
         r = requests.get(api_url, auth=auth , verify=False)
         r.raise_for_status()
+        r_json = r.json()
+        response = {"status": None,
+                    "date": None}
+        # This is hear to make the response the same for all health check
+        if r_json["status"] == "active":
+            response["status"]= "healthy"
+            response["date"] = r_json["date"]
+        return response
+
+    def get_number_of_resource(self):
+        api_url = self._generate_api_url() + "/Resource?_count=0"
+        auth = self._generate_auth()
+        r = requests.get(api_url, auth=auth, verify=False).json()
+        return r["total"]
+
 
     def _generate_url(self, query: dict = None, query_string: str = None, return_format="json", limit=1000):
         """

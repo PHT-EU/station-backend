@@ -47,30 +47,7 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
     
     def _extract_fhir_information(self, db_obj, obj_in_data):
         # TODO finish when fhir client has the functinalty
-        """fhir_client = PHTFhirClient(obj_in_data["access_path"],
-                                    obj_in_data["fhir_user"],
-                                    obj_in_data["fhir_password"],
-                                    server_type=obj_in_data["fhir_server_type"])
-        query={
-            "query": {
-                "resource": "Resource",
-                "parameters": [
-                    {
-                        "variable": "_count",
-                        "condition": 6
-                    }
-                ]
-            },
-            "data": {
-                "output_format": "json",
-                "variables": [
-                    "total"
-                ]
-            }
-        }
-        results = asyncio.run(fhir_client.execute_query(query=query))
 
-        print(results)"""
         pass
 
 
