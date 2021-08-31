@@ -40,7 +40,8 @@ class FhirClient:
         r.raise_for_status()
         r_json = r.json()
         response = {"status": None,
-                    "date": None}
+                    "date": None,
+                    "name": None}
         # This is hear to make the response the same for all health check
         if r_json["status"] == "active":
             response["status"]= "healthy"
