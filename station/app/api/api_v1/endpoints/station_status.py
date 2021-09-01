@@ -67,8 +67,14 @@ def status_total_cpu_util():
 @router.get("/status/total_gpu_util")
 def status_total_gpu_util():
     pass
-    #TODO get the GPU recorces
+    # TODO get the GPU recorces
+
 
 @router.get("/status/total_disk_util")
 def status_total_disk_util():
-    pass
+    disk_util = psutil.disk_usage('./')
+    disk_util_dict = {"total": disk_util.total,
+                      "used": disk_util.used,
+                      "free": disk_util.free,
+                      "percent": disk_util.percent}
+    return disk_util_dict
