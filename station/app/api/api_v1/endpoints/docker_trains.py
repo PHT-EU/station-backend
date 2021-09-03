@@ -48,9 +48,9 @@ def get_config_for_train(train_id: str, db: Session = Depends(dependencies.get_d
     return train_config
 
 
-@router.post("/trains/docker/{train_id}/config/{config}")
-def assign_config_to_docker_train(train_id: str, config: int, db: Session = Depends(dependencies.get_db)):
-    train = docker_train_config.assign_to_train(db, train_id, config)
+@router.post("/trains/docker/{train_id}/config/{config_id}", response_model=DockerTrain)
+def assign_config_to_docker_train(train_id: str, config_id: int, db: Session = Depends(dependencies.get_db)):
+    train = docker_train_config.assign_to_train(db, train_id, config_id)
     return train
 
 
@@ -59,10 +59,10 @@ def get_state_for_train(train_id: str, db: Session = Depends(dependencies.get_db
     pass
 
 
-@router.get("/trains/docker/configs", response_model=List[DockerTrainConfig])
-def get_all_docker_train_configs(db: Session = Depends(dependencies.get_db), skip: int = 0, limit: int = 100):
-    configs = docker_train_config.get_multi(db, skip, limit)
-    return configs
+@router.get("/trains/configs", response_model=List[DockerTrainConfig])
+def get_all_docker_train_configs(db: Session = Depends(dependencies.get_db), limit: int = 100, skip: int = 0):
+    config_all = docker_train_config.get_multi(db, limit=limit, skip=skip)
+    return config_all
 
 
 @router.post("/trains/docker/config", response_model=DockerTrainConfig)
@@ -74,11 +74,11 @@ def add_docker_train_configuration(config_in: DockerTrainConfigCreate, db: Sessi
 @router.put("/trains/docker/config/{config_id}", response_model=DockerTrainConfig)
 def update_docker_train_configuration(update_config: DockerTrainConfigUpdate, config_id: int, db: Session = Depends(dependencies.get_db)):
     old_config = docker_train_config.get(db, config_id)
-    config = docker_train_config.update(db, old_config, update_config)
+    config = docker_train_config.update(db, db_obj=old_config, obj_in=update_config)
     return config
 
 
-@router.get("trains/docker/config/{config_id}", response_model=DockerTrainConfig)
+@router.get("/trains/docker/config/{config_id}", response_model=DockerTrainConfig)
 def get_docker_train_configuration(config_id: int, db: Session = Depends(dependencies.get_db)):
     config = docker_train_config.get(db, config_id)
     return config

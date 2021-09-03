@@ -20,6 +20,9 @@ class CRUDDockerTrainConfig(CRUDBase[DockerTrainConfig, DockerTrainConfigCreate,
     def assign_to_train(self, db: Session, train_id: str, config_id: int) -> DockerTrain:
         train = db.query(DockerTrain).filter(DockerTrain.train_id == train_id).first()
         train.config_id = config_id
+        db.add(train)
+        db.commit()
+        db.refresh(train)
         return train
 
     def update(self, db: Session, *, db_obj: ModelType, obj_in: Union[UpdateSchemaType, Dict[str, Any]]) -> ModelType:

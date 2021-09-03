@@ -44,8 +44,8 @@ class DockerTrainExecution(BaseModel):
 class DockerTrainCreate(BaseModel):
     train_id: str
     proposal_id: Optional[int] = None
+    config: Optional[DockerTrainConfig] = None
     config_id: Optional[int] = None
-    config_name: Optional[str] = None
 
 
 class DockerTrainUpdate(DockerTrainCreate):
@@ -58,6 +58,7 @@ class DockerTrain(DBSchema):
     proposal_id: int
     is_active: bool
     train_id: Optional[str] = None
+    config_id: Optional[int] = None
     config: Optional[DockerTrainConfig] = None
     state: Optional[DockerTrainState] = None
 
