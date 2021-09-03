@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from typing import List
+from datetime import datetime
 
 from .base import CRUDBase, CreateSchemaType, ModelType
 
@@ -7,6 +8,7 @@ from station.app.models.docker_trains import DockerTrain, DockerTrainConfig, Doc
 from station.app.schemas.docker_trains import DockerTrainCreate, DockerTrainUpdate, DockerTrainConfigCreate, \
     DockerTrainConfigUpdate
 from dateutil import parser
+from station.app.crud.crud_train_configs import docker_train_config
 
 
 # TODO improve handling of proposals
@@ -14,7 +16,26 @@ from dateutil import parser
 class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate]):
 
     def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
-        db_train = super().create(db, obj_in=obj_in)
+        if obj_in.config_id:
+            try:
+               config = docker_train_config.get(db, obj_in.config_id)
+               config_id = obj_in.config_id
+               if obj_in.config:
+                   if config != obj_in.config:
+                       print("Config will be updated")
+                       docker_train_config.update(db, db_obj=config, obj_in=obj_in.config)
+            except:
+               print("Config does not exist")
+        elif obj_in.config:
+            try:
+                new_config = docker_train_config.create(db, obj_in=obj_in.config.dict())
+                config_id = new_config.id
+                db.add(new_config)
+                db.commit()
+            except:
+                print("Config could not be created")
+        db_train = super().create(db, obj_in=obj_in.dict(exclude={'config'}))
+        db_train.config_id = config_id
         train_state = DockerTrainState(train_id=db_train.id)
         db.add(train_state)
         db.commit()

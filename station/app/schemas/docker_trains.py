@@ -41,17 +41,6 @@ class DockerTrainExecution(BaseModel):
     config_json: Optional[Dict[str, Any]] = None
 
 
-class DockerTrainCreate(BaseModel):
-    train_id: str
-    proposal_id: Optional[int] = None
-    config: Optional[DockerTrainConfig] = None
-    config_id: Optional[int] = None
-
-
-class DockerTrainUpdate(DockerTrainCreate):
-    pass
-
-
 class DockerTrain(DBSchema):
     created_at: datetime
     updated_at: Optional[datetime] = None
@@ -59,7 +48,7 @@ class DockerTrain(DBSchema):
     is_active: bool
     train_id: Optional[str] = None
     config_id: Optional[int] = None
-    config: Optional[DockerTrainConfig] = None
+    config: Optional[DockerTrainConfigBase] = None
     state: Optional[DockerTrainState] = None
 
 
@@ -68,4 +57,13 @@ class DockerTrainConfigCreate(DockerTrainConfigBase):
 
 
 class DockerTrainConfigUpdate(DockerTrainConfigBase):
+    pass
+
+class DockerTrainCreate(BaseModel):
+    train_id: str
+    proposal_id: Optional[int] = None
+    config: Optional[DockerTrainConfigCreate] = None
+    config_id: Optional[int] = None
+
+class DockerTrainUpdate(DockerTrainCreate):
     pass
