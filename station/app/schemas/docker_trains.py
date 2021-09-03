@@ -12,6 +12,7 @@ class DockerTrainState(DBSchema):
     num_executions: Optional[int] = 0
     status: Optional[str] = None
     last_execution: Optional[datetime] = None
+    run_id: Optional[str] = None
 
 
 class DockerTrainConfigBase(DBSchema):
