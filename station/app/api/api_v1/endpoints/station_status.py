@@ -3,10 +3,12 @@ from station.clients.airflow.client import airflow_client
 from station.clients.harbor_client import harbor_client
 from station.clients.minio.client import minio_client
 from station.clients.fhir.client import FhirClient
+from station.clients.docker.client import dockerClient
 from station.app.api import dependencies
 from sqlalchemy.orm import Session
 from station.app.crud import datasets
 import psutil
+import docker
 
 router = APIRouter()
 """
@@ -16,25 +18,37 @@ The station status  endpoint returns the status of local and global components  
 
 @router.get("/status/Airflow")
 def status_airflow():
+    """
+    Get the health status of the connected Airflow instance
+    """
     status = airflow_client.health_check()
     return status
 
 
 @router.get("/status/Harbor")
 def harbor_status():
+    """
+    Get the health status of the central harbor instance
+    """
     status = harbor_client.health_check()
     return status
 
 
 @router.get("/status/Minio")
 def status_minio():
+    """
+    Get the health status of the minio instance
+    """
     status = minio_client.health_check()
-    # TODO add externall added MinIO to the health check
+    # TODO add external added MinIO to the health check
     return status
 
 
 @router.get("/status/fhir")
 def status_Fhir(db: Session = Depends(dependencies.get_db)):
+    """
+    Get the health status of all concectetd fhir servers
+    """
     all_datasets = datasets.get_multi(db=db, limit=None)
     statuses = []
     # Iterate over all addet data sorces
@@ -56,25 +70,46 @@ def status_Fhir(db: Session = Depends(dependencies.get_db)):
 
 @router.get("/status/total_memory_util")
 def status_total_memory_util():
+    """
+    get the current memory util of the system
+    """
     return psutil.virtual_memory().percent
 
 
 @router.get("/status/total_cpu_util")
 def status_total_cpu_util():
+    """
+    get the current cpu utilisation of the cpu
+    """
     return psutil.cpu_percent(interval=1, percpu=True)
 
 
 @router.get("/status/total_gpu_util")
 def status_total_gpu_util():
+    """
+    get the current gpu utilisation of connected GPUs
+    """
     pass
     # TODO get the GPU recorces
 
 
 @router.get("/status/total_disk_util")
 def status_total_disk_util():
+    """
+        get the current gpu utilisation of connected GPUs
+    """
     disk_util = psutil.disk_usage('./')
     disk_util_dict = {"total": disk_util.total,
                       "used": disk_util.used,
                       "free": disk_util.free,
                       "percent": disk_util.percent}
     return disk_util_dict
+
+
+@router.get("/status/container_resource_util")
+def status_docker_container_resource_use():
+    """
+    get information for all docker containers
+    """
+    return dockerClient.get_stats_all()
+
