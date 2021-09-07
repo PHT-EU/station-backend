@@ -16,23 +16,24 @@ class DockerTrainState(DBSchema):
 
 class DockerTrainConfigBase(DBSchema):
     name: str
-    airflow_config: Optional[Dict[str, Any]] = None
+    airflow_config_json: Optional[Dict[str, Any]] = None
     cpu_requirements: Optional[Dict[str, Any]] = None
     gpu_requirements: Optional[Dict[str, Any]] = None
     auto_execute: Optional[bool] = None
 
 
-class DockerTrainConfigCreate(DockerTrainConfigBase):
-    pass
-
-
-class DockerTrainConfigUpdate(DockerTrainConfigBase):
-    pass
+class DockerTrainMinimal(DBSchema):
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    proposal_id: int
+    is_active: bool
+    train_id: Optional[str] = None
 
 
 class DockerTrainConfig(DockerTrainConfigBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
+    trains: Optional[List[DockerTrainMinimal]] = None
 
 
 class DockerTrainExecution(BaseModel):
@@ -59,3 +60,11 @@ class DockerTrain(DBSchema):
     train_id: Optional[str] = None
     config: Optional[DockerTrainConfig] = None
     state: Optional[DockerTrainState] = None
+
+
+class DockerTrainConfigCreate(DockerTrainConfigBase):
+    pass
+
+
+class DockerTrainConfigUpdate(DockerTrainConfigBase):
+    pass

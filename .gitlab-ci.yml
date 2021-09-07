@@ -33,13 +33,3 @@ build:
     - docker push registry.gitlab.com/personalhealthtrain/implementations/germanmii/difuture/incubating/pht/station
   only:
     - master
-
-test:
-  stage: test
-  image: python:3.8
-  script:
-    - pip install pytest pytest-cov -r requirements.txt
-    - pip install .
-    - pytest station
-  only:
-    - master

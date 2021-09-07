@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, LargeBinary, Float, BigInteger
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, LargeBinary, Float, BigInteger, JSON
 from sqlalchemy.orm import relationship, backref
 from datetime import datetime
 
@@ -29,10 +29,10 @@ class DockerTrainConfig(Base):
     name = Column(String)
     created_at = Column(DateTime, default=datetime.now())
     updated_at = Column(DateTime, nullable=True)
-    airflow_config_json = Column(String, nullable=True)
+    airflow_config_json = Column(JSON, nullable=True)
     trains = relationship("DockerTrain")
-    cpu_requirements = Column(String, nullable=True)
-    gpu_requirements = Column(String, nullable=True)
+    cpu_requirements = Column(JSON, nullable=True)
+    gpu_requirements = Column(JSON, nullable=True)
     auto_execute = Column(Boolean, default=False)
 
 
