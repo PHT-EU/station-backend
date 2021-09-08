@@ -30,10 +30,17 @@ class HarborClient:
         return r.json()
 
     def health_check(self):
-        print(self.url)
         url = self.url + "health"
-        r = requests.get(url=url, auth=(self.username, self.password))
-        return r.json()
+        try:
+            r = requests.get(url=url, auth=(self.username, self.password))
+            if r and r.status_code == 200:
+                return r.json()
+            else:
+                return {"status": None}
+        except requests.exceptions.ConnectionError as e:
+            print(e)
+        return {"status": None}
+
 
 
 harbor_client = HarborClient()

@@ -35,17 +35,23 @@ class FhirClient:
     def health_check(self):
         api_url = self._generate_api_url() + "/metadata"
         auth = self._generate_auth()
-        #TODO remove verify false only for thesting becouse of verificaion problems with the ibm fhir server
-        r = requests.get(api_url, auth=auth , verify=False)
-        r.raise_for_status()
-        r_json = r.json()
+
         response = {"status": None,
                     "date": None,
                     "name": None}
-        # This is hear to make the response the same for all health check
-        if r_json["status"] == "active":
-            response["status"]= "healthy"
-            response["date"] = r_json["date"]
+        try:
+            # TODO remove verify false only for thesting becouse of verificaion problems with the ibm fhir server
+            r = requests.get(api_url, auth=auth , verify=False)
+            r.raise_for_status()
+            r_json = r.json()
+
+            # This is hear to make the response the same for all health check
+            if r_json["status"] == "active":
+                response["status"]= "healthy"
+                response["date"] = r_json["date"]
+        except requests.exceptions.ConnectionError as e:
+            print(e)
+            pass
         return response
 
     def get_number_of_resource(self):

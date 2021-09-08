@@ -14,10 +14,25 @@ class DockerClient:
         self.sleep_time_for_cpu_usage_check = 3
 
     def get_stats_all(self):
+        """
+        Returns a list of dicts, of  all the memory usage and the cpu utilizaiton for all localy running docker continers
+        """
         container_statuses_start = self._get_all_stats_all_container()
         time.sleep(self.sleep_time_for_cpu_usage_check)
         container_statuses_end = self._get_all_stats_all_container()
         return self._calculate_usage_statistics(container_statuses_start, container_statuses_end)
+
+    def get_stats_container(self,container_id):
+        """
+         Returns a list of dicts, with one elment of the container with the id container_id the memory usage and the cpu utilizaiton for all localy running docker continers
+        """
+        container_status_start = self._get_all_stats_container(container_id)
+        time.sleep(self.sleep_time_for_cpu_usage_check)
+        container_status_end = self._get_all_stats_container(container_id)
+        return self._calculate_usage_statistics([container_status_start], [container_status_end])
+
+    def get_information_all(self):
+        return self.containers
 
     def _get_all_stats_all_container(self):
         """
