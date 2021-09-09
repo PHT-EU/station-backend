@@ -10,7 +10,7 @@ from station.app.api import dependencies
 from sqlalchemy.orm import Session
 from station.app.crud import datasets
 import psutil
-import docker
+
 
 router = APIRouter()
 """

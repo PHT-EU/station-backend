@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from station.app.api.api_v1.endpoints import trains, datasets, protocol, docker_trains, station, station_status
+from station.app.api.api_v1.endpoints import trains, datasets, protocol, docker_trains, station, station_status, local_trains
 
 api_router = APIRouter()
 
@@ -11,5 +11,6 @@ api_router.include_router(trains.router, tags=["Federated Trains"])
 api_router.include_router(datasets.router, tags=["Datasets"])
 api_router.include_router(protocol.router, tags=["Protocol"])
 api_router.include_router(station_status.router, tags=["Station Status"])
+api_router.include_router(local_trains.router, tags=["Run Local Trains"])
 
 
