@@ -34,6 +34,12 @@ class DockerClient:
     def get_information_all(self):
         return self.containers
 
+    def get_master_images(self, masterImage):
+        # pull master image
+        registry = os.getenv("HARBOR_URL").split("//")[-1]
+        master_image_source = f"{registry}/{masterImage}"
+        self.docker_client.images.pull(master_image_source, tag="latest")
+
     def _get_all_stats_all_container(self):
         """
         returns all the stats for all containers using the APIClient
