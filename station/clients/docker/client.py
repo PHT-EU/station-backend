@@ -8,6 +8,7 @@ class DockerClient:
     """
 
     def __init__(self):
+        #TOTO os env
         self.client = docker.APIClient(base_url='unix://var/run/docker.sock')
         self.container_statuses = []
         self.containers = self.client.containers()
