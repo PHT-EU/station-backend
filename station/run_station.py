@@ -6,7 +6,7 @@ from station.app.db.setup_db import setup_db, reset_db
 
 if __name__ == '__main__':
     load_dotenv(find_dotenv())
-    # TODO remove reset in production
+    # todo remove reset in production
     reset_db()
     # setup_db()
 

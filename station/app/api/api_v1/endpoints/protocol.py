@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Body, Depends, HTTPException
@@ -19,7 +20,7 @@ def perform_protocol(train_id: int, db: Session = Depends(dependencies.get_db)) 
     Convenience endpoint for executing the next protocol round based on the db state
 
     """
-    print(f"Executing Protocol for Train: {train_id}")
+    logging.info(f"Executing Protocol for Train: {train_id}")
     train = read_train(db, train_id)
 
     if not train:

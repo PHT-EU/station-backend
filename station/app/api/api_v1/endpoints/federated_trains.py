@@ -53,13 +53,11 @@ def synchronize_trains_with_conductor(db: Session = Depends(dependencies.get_db)
     # Get the models for the new trains and store them
     for train in new_trains:
         train_model = client.get_model_for_train(train.train_id, db)
-        print(train_model)
         db_model = dl_models.create_model_from_conductor(
             db,
             train_id=train.id,
             model_in=train_model
         )
-        print(db_model.id)
 
     return updated_trains
 

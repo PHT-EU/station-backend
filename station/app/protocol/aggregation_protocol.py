@@ -15,9 +15,7 @@ class AggregationProtocol:
         db_train = trains.get(db, train_id)
         if not db_train:
             raise ValueError(f"Train {train_id} does not exist in the database")
-
         round = db_train.state.round
-
         if round == 0:
             state = self.advertise_keys(db, train_id)
         elif round == 1:

@@ -54,9 +54,3 @@ services:
       - 8003:8001
 
     command: ["./wait-for-it.sh", "pg_station:5432", "--", "python", "/home/station/run_station.py"]
-
-
-networks:
-    default:
-        external:
-            name: pht-network
