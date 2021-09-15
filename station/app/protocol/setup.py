@@ -16,7 +16,7 @@ from station.app.crud import trains
 
 # TODO Check consistency in train ids
 def initialize_train(db: Session, station_id: int, train_id: str, proposal_id: int):
-    db_train = trains.get_by_train_id(db, train_id)
+    db_train = trains.get(db, train_id)
     if db_train:
         raise HTTPException(400, detail="Train already exists")
     token = register_for_train(station_id=station_id, train_id=train_id)

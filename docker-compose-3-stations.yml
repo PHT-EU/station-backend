@@ -15,7 +15,7 @@ services:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
     ports:
-      - 5432:5432
+      - "5432:5432"
 
   station_1:
     build: .
@@ -26,7 +26,7 @@ services:
     env_file:
       - .env
     ports:
-      - 8001:8001
+      - "8001:8001"
     command: ["./wait-for-it.sh", "pg_station:5432", "--", "python", "/home/station/run_station.py"]
 
 
@@ -39,7 +39,7 @@ services:
     env_file:
       - .env
     ports:
-      - 8002:8001
+      - "8002:8001"
     command: ["./wait-for-it.sh", "pg_station:5432", "--", "python", "/home/station/run_station.py"]
 
   station_3:
@@ -51,6 +51,6 @@ services:
     env_file:
       - .env
     ports:
-      - 8003:8001
+      - "8003:8001"
 
     command: ["./wait-for-it.sh", "pg_station:5432", "--", "python", "/home/station/run_station.py"]

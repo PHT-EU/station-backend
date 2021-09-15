@@ -35,6 +35,7 @@ def advertise_keys(db: Session, train_id: int,
 
     # Send message to the conductor
     response = requests.post(conductor_url + f"/api/trains/{train_id}/advertiseKeys", json=msg.serialize())
+    print(response.text)
     print(response.json())
     response.raise_for_status()
 
