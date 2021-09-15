@@ -1,9 +1,14 @@
-from typing import Union
+import math
+from typing import Union, List, Tuple
 
+from Crypto.Protocol.SecretSharing import Shamir
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKeyWithSerialization as ECPubKey
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePrivateKeyWithSerialization as ECPrivateKey
-from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+
+from station.app.protocol.primitives.secret_sharing import share_secret_pycroptodome, combine_secret_pycroptodome
 
 
 class ProtocolKeys:
@@ -35,6 +40,56 @@ class ProtocolKeys:
 
             else:
                 self.sharing_key = sharing_key
+
+    def create_key_shares(self, n: int, t: int = 3) -> List[List[Tuple[int, bytes]]]:
+        sharing_key_bytes = bytes.fromhex(self.hex_sharing_key)
+        blocks = math.floor(len(sharing_key_bytes) / 16.0)
+        block_shares = []
+        for i in range(blocks):
+            key_block = sharing_key_bytes[i * 16: (i + 1) * 16]
+            block = share_secret_pycroptodome(key_block, t, n)
+            block_shares.append(block)
+        # Add the incomplete block
+        remainder = sharing_key_bytes[blocks * 16:]
+        pad_size = 16 - len(remainder)
+        remainder += b"\0" * pad_size
+        block_shares.append(share_secret_pycroptodome(remainder, t, n))
+
+        return block_shares
+
+    @staticmethod
+    def _share_secret_pycryptodome(secret: bytes, t: int, n: int):
+        if len(secret) < 16:
+            padded_secret = secret + b"\0" * (16 - len(secret))
+            shares = Shamir.split(t, n, padded_secret, ssss=False)
+            return shares
+        shares = Shamir.split(t, n, secret, ssss=False)
+        return shares
+
+    @staticmethod
+    def recover_secret_key(shares: List[List[Tuple[int, bytes]]]) -> str:
+        recovered = ""
+        for block in shares:
+            recovered += combine_secret_pycroptodome(block).hex()
+
+        # remove padding (last 14 bytes/28 hex chars in current implementation)
+        # TODO improve this hack
+        recovered = recovered[:-28]
+
+        return recovered
+
+    def derive_shared_key(self, private_key: ECPrivateKey, public_key: ECPubKey,
+                          data: bytes = None) -> bytes:
+        shared_key = private_key.exchange(ec.ECDH(), public_key)
+        if data:
+            derived_key = HKDF(
+                algorithm=hashes.SHA256(),
+                length=32,
+                salt=None,
+                info=data
+            ).derive(shared_key)
+            return derived_key
+        return shared_key
 
     @property
     def hex_signing_key(self) -> str:

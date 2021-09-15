@@ -1,28 +1,34 @@
 import datetime
-from typing import Any
+from typing import Any, List
 
 import requests
 from sqlalchemy.orm import Session
 import os
 
 from .advertise_keys import advertise_keys
+from .messages.share_keys import ShareKeysMessage
 from .primitives.keys import ProtocolKeys
+from .primitives.secret_sharing import create_random_seed_and_shares
 from .share_keys import share_keys
 from station.app.crud import federated_trains
 from station.app.models.train import TrainState, Train
+from ..schemas.protocol import BroadCastKeysSchema, StationKeys
 
 
 class AggregationProtocolClient:
 
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, conductor_url: str = None):
         self.db = db
+        self.conductor_url = conductor_url if conductor_url else os.getenv("CONDUCTOR_URL")
+
+        if not self.conductor_url:
+            raise EnvironmentError("Conductor url not specified.")
 
     def execute_protocol_for_train(self, train_id: int) -> TrainState:
         db_train = federated_trains.get(self.db, train_id)
         if not db_train:
             raise ProtocolError(f"Train {train_id} does not exist in the database")
         round = db_train.state.round
-        iteration = db_train.state.iteration
 
         if round == 0:
             self.setup_protocol(train_id)
@@ -68,14 +74,8 @@ class AggregationProtocolClient:
 
         return db_train
 
-    @staticmethod
-    def _register_for_train(station_id: Any, train_id: str, conductor_url: str = None):
-        if not conductor_url:
-            conductor_url = os.getenv("CONDUCTOR_URL")
-
-        if not conductor_url:
-            raise EnvironmentError("Conductor Url not defined.")
-        r = requests.post(conductor_url + f"/api/trains/{train_id}/register",
+    def _register_for_train(self, station_id: Any, train_id: str):
+        r = requests.post(self.conductor_url + f"/api/trains/{train_id}/register",
                           params={"station_id": os.getenv("STATION_ID", station_id)})
         r.raise_for_status()
         token = r.json()["token"]
@@ -95,11 +95,14 @@ class AggregationProtocolClient:
         train_state = advertise_keys(self.db, train_id, station_id, conductor_url)
         return train_state
 
-    @staticmethod
-    def share_keys(db: Session, train_id: Any) -> TrainState:
-        response = share_keys(db, train_id)
-        state = federated_trains.get(db=db, id=train_id).state
-        return state
+    def share_keys(self, train_id: Any) -> dict:
+        broadcast = self._get_key_broadcast(train_id)
+        state = federated_trains.update_train_with_key_broadcast(self.db, train_id, broadcast)
+
+        share_keys_message = self._make_share_keys_message(broadcast)
+        response = self._upload_key_shares(share_keys_message)
+
+        return response
 
     @staticmethod
     def upload_masked_input(db: Session, train_id: Any):
@@ -108,6 +111,59 @@ class AggregationProtocolClient:
     @staticmethod
     def upload_unmasking_shares(db: Session, train_id: Any):
         pass
+
+    def _get_key_broadcast(self, train_id: int):
+        r = requests.get(self.conductor_url + f"/api/trains/{train_id}/broadcastKeys")
+        r.raise_for_status()
+        broadcast = BroadCastKeysSchema(**r.json())
+
+        # Check that all keys are unique
+        self._validate_key_broadcast(broadcast.keys)
+
+        return broadcast
+
+    def _make_share_keys_message(self, state: TrainState, broadcast_message: BroadCastKeysSchema):
+        n_participants = len(broadcast_message.keys)
+        seed, seed_shares = create_random_seed_and_shares(n_participants)
+
+        # update train state with seed
+        state.seed = seed
+        self.db.commit()
+        self.db.refresh(state)
+
+        keys = ProtocolKeys(state.signing_key, state.sharing_key)
+
+        # create key shares from sharing key
+        # todo add threshold value from config
+        key_shares = keys.create_key_shares(n=n_participants)
+
+        msg = ShareKeysMessage(self.db, state.signing_key, broadcast_message.keys, seed_shares, key_shares,
+                               state.iteration)
+
+        return msg
+
+    def _upload_key_shares(self, train_id: Any, msg: ShareKeysMessage):
+        r = requests.post(self.conductor_url + f"/api/trains/{train_id}/shareKeys", json=msg.serialize(format="dict"))
+        r.raise_for_status()
+
+        return r.json()
+
+    @staticmethod
+    def _validate_key_broadcast(keys: List[StationKeys], threshold: int = 3):
+        if threshold:
+            assert len(keys) >= threshold
+
+        def _all_unique(x):
+            seen = list()
+            return not any(i in seen or seen.append(i) for i in x)
+
+        signing_keys = [sk.signing_key for sk in keys]
+        sharing_keys = [sk.sharing_key for sk in keys]
+        # Check that all public keys are unique
+        if not _all_unique(signing_keys):
+            raise ProtocolError("Duplicate signing keys.")
+        if not _all_unique(sharing_keys):
+            raise ProtocolError("Duplicate sharing keys.")
 
 
 class ProtocolError(Exception):
