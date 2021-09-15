@@ -15,6 +15,25 @@ def test_protocol_keys_generate():
     assert isinstance(keys.signing_key, ECPrivateKey)
 
 
+def test_protocol_keys_initialization():
+    key = ec.generate_private_key(ec.SECP384R1())
+
+    key_hex = key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+    ).hex()
+
+    keys_hex = ProtocolKeys(key_hex, key_hex)
+
+    keys_instance = ProtocolKeys(key, key)
+
+    with pytest.raises(ValueError):
+        keys = ProtocolKeys(1, 0.5)
+
+
+
+
 def test_protocol_keys_serialization_and_loading():
     key = ec.generate_private_key(ec.SECP384R1())
 

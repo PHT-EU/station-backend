@@ -5,23 +5,25 @@ import os
 
 from station.app.api import dependencies
 from station.app.protocol.setup import initialize_train
-from station.app.protocol import execute_protocol
 from station.app.schemas.trains import Train
 from station.app.schemas.dl_models import DLModelCreate, DLModel
 from station.app.crud.train import read_train
 from station.app.crud import trains, torch_models, dl_models, datasets
 from station.clients.conductor import ConductorRESTClient
+from station.app.protocol.aggregation_protocol import AggregationProtocolClient
 
 router = APIRouter()
 
 
-@router.post("/trains/federated/{train_id}", response_model=Train)
-def add_new_train(train_id: str, db: Session = Depends(dependencies.get_db)) -> Any:
-    station_id = int(os.getenv("STATION_ID"))
+@router.post("/trains/federated/{train_name}", response_model=Train)
+def add_new_train(train_name: str, db: Session = Depends(dependencies.get_db)) -> Any:
     # TODO fix proposal id
-    if trains.get(db=db, id=train_id):
+    if trains.get_by_name(db=db, name=train_name):
         raise HTTPException(status_code=403, detail="Train already exists")
-    train = initialize_train(db, station_id=station_id, train_id=train_id, proposal_id=1)
+
+    protocol = AggregationProtocolClient(db)
+    train = protocol.initialize_train(train_name)
+
     return train
 
 

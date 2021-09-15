@@ -5,13 +5,14 @@ from fastapi import APIRouter, Body, Depends, HTTPException
 import os
 
 from station.app.api import dependencies
-from station.app.protocol import execute_protocol
 from station.app.schemas.trains import Train, TrainState
 from station.app.schemas.protocol import BroadCastKeysSchema
 from station.app.crud.train import read_train, update_train_state_with_key_broadcast
 from station.app.protocol import share_keys, masked_input_collection, AggregationProtocolClient
 
 router = APIRouter()
+
+
 
 
 @router.post("/trains/{train_id}/protocol")

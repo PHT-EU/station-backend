@@ -10,7 +10,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from .advertise_keys import advertise_keys
 from .share_keys import share_keys
 from station.app.crud import trains
-from station.app.models.train import TrainState
+from station.app.models.train import TrainState, Train
 
 
 class AggregationProtocolClient:
@@ -34,20 +34,41 @@ class AggregationProtocolClient:
         self.db.refresh(db_train)
         return db_train.state
 
-    def initialize_train(self, train_id: Any, station_id=None) -> TrainState:
+    def initialize_train(self, name: Any, station_id: Any = None) -> Train:
         # register train at conductor
         if not station_id:
             station_id = os.getenv("STATION_ID")
 
-        token = self.register_for_train(station_id, train_id)
+        if not station_id:
+            raise EnvironmentError("Station ID not defined")
+
+        token = self._register_for_train(station_id, name)
+        train = self._initialize_db_train(name, token)
+
+        return train
+
+    def _initialize_db_train(self, name, token: str, proposal_id: Any = None) -> Train:
+        db_train = Train(proposal_id=proposal_id, token=token, name=name)
+        self.db.add(db_train)
+        self.db.commit()
+        self.db.refresh(db_train)
+
+        # Initialize train state
+        db_train_state = TrainState(train_id=db_train.id)
+        self.db.add(db_train_state)
+        self.db.commit()
+
+        return db_train
 
     @staticmethod
-    def register_for_train(station_id: int, train_id: str, conductor_url: str = None):
+    def _register_for_train(station_id: Any, train_id: str, conductor_url: str = None):
         if not conductor_url:
             conductor_url = os.getenv("CONDUCTOR_URL")
 
+        if not conductor_url:
+            raise EnvironmentError("Conductor Url not defined.")
         r = requests.post(conductor_url + f"/api/trains/{train_id}/register",
-                          params={"station_id": os.getenv("STATION_ID")})
+                          params={"station_id": os.getenv("STATION_ID", station_id)})
         r.raise_for_status()
         token = r.json()["token"]
         return token
@@ -77,8 +98,6 @@ class AggregationProtocolClient:
         state = db_train.state
         c_sk, c_pk, s_sk, s_pk, c_sk_hex, s_sk_hex = self._generate_ec_key_pair()
         self._update_db_after_setup(state, c_sk_hex, s_sk_hex)
-
-
 
     def _update_db_after_setup(self, state: TrainState, signing_key: str, sharing_key: str):
         state
