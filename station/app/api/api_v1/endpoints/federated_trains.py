@@ -8,7 +8,7 @@ from station.app.protocol.setup import initialize_train
 from station.app.schemas.trains import Train
 from station.app.schemas.dl_models import DLModelCreate, DLModel
 from station.app.crud.train import read_train
-from station.app.crud import trains, torch_models, dl_models, datasets
+from station.app.crud import federated_trains, torch_models, dl_models, datasets
 from station.clients.conductor import ConductorRESTClient
 from station.app.protocol.aggregation_protocol import AggregationProtocolClient
 
@@ -18,7 +18,7 @@ router = APIRouter()
 @router.post("/trains/federated/{train_name}", response_model=Train)
 def add_new_train(train_name: str, db: Session = Depends(dependencies.get_db)) -> Any:
     # TODO fix proposal id
-    if trains.get_by_name(db=db, name=train_name):
+    if federated_trains.get_by_name(db=db, name=train_name):
         raise HTTPException(status_code=403, detail="Train already exists")
 
     protocol = AggregationProtocolClient(db)
@@ -29,19 +29,19 @@ def add_new_train(train_name: str, db: Session = Depends(dependencies.get_db)) -
 
 @router.get("/trains/federated/{train_id}", response_model=Train)
 def get_train(train_id: Any, db: Session = Depends(dependencies.get_db)) -> Any:
-    db_train = trains.get(db, id=train_id)
+    db_train = federated_trains.get(db, id=train_id)
     return db_train
 
 
 @router.delete("/trains/federated/{train_id}", response_model=Train)
 def delete_train_with_id(train_id: Any, db: Session = Depends(dependencies.get_db)) -> Any:
-    removed_train = trains.remove(db, id=train_id)
+    removed_train = federated_trains.remove(db, id=train_id)
     return removed_train
 
 
 @router.get("/trains/federated/", response_model=List[Train])
 def get_trains(db: Session = Depends(dependencies.get_db)):
-    return trains.get_multi(db)
+    return federated_trains.get_multi(db)
 
 
 @router.post("/trains/federated/sync/")
@@ -49,7 +49,7 @@ def synchronize_trains_with_conductor(db: Session = Depends(dependencies.get_db)
     # Get the station assigned trains from conductor
     client = ConductorRESTClient()
     conductor_trains = client.get_available_trains()
-    updated_trains, new_trains = trains.sync_local_trains_with_conductor(db, conductor_trains)
+    updated_trains, new_trains = federated_trains.sync_local_trains_with_conductor(db, conductor_trains)
     # TODO store which trains are updated/new somewhere to create notifications
 
     # Get the models for the new trains and store them
@@ -66,7 +66,7 @@ def synchronize_trains_with_conductor(db: Session = Depends(dependencies.get_db)
 
 @router.post("/trains/federated/{train_id}/model", response_model=DLModel)
 def add_model_to_train(train_id: int, model_in: DLModelCreate, db: Session = Depends(dependencies.get_db)):
-    db_train = trains.get(db, id=train_id)
+    db_train = federated_trains.get(db, id=train_id)
     if not db_train:
         raise HTTPException(400, detail="Train does not exist")
     db_model = dl_models.create_model_for_train(db, train_id=db_train.train_id, obj_in=model_in)
@@ -82,7 +82,7 @@ def get_train_model(train_id: Any, db: Session = Depends(dependencies.get_db)):
 
 @router.post("/trains/federated/{train_id}/dataset/{dataset_id}", response_model=Train)
 def assign_train_dataset(train_id: Any, dataset_id: Any, db: Session = Depends(dependencies.get_db)):
-    db_train = trains.get(db, id=train_id)
+    db_train = federated_trains.get(db, id=train_id)
     if not db_train:
         raise HTTPException(400, detail="Train does not exist")
     db_dataset = datasets.get(db, id=dataset_id)

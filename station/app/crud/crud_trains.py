@@ -71,4 +71,4 @@ class CRUDTrain(CRUDBase[Train, TrainCreate, TrainUpdate]):
         return db_train_state
 
 
-trains = CRUDTrain(Train)
+federated_trains = CRUDTrain(Train)

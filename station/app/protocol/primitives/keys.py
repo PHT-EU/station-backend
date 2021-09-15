@@ -36,26 +36,6 @@ class ProtocolKeys:
             else:
                 self.sharing_key = sharing_key
 
-    @staticmethod
-    def _load_private_key_from_hex(key: str):
-        private_key = serialization.load_pem_private_key(bytes.fromhex(key), password=None)
-        return private_key
-
-    @staticmethod
-    def _serialize_private_key_to_hex(key: ECPrivateKey) -> str:
-        return key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.NoEncryption()
-        ).hex()
-
-    @staticmethod
-    def _serialize_public_key_to_hex(key: ECPubKey) -> str:
-        return key.public_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PublicFormat.PKCS1
-        ).hex()
-
     @property
     def hex_signing_key(self) -> str:
         return self._serialize_private_key_to_hex(self.signing_key)
@@ -79,3 +59,23 @@ class ProtocolKeys:
     @property
     def hex_sharing_key_public(self) -> str:
         return self._serialize_public_key_to_hex(self.sharing_key_public)
+
+    @staticmethod
+    def _load_private_key_from_hex(key: str):
+        private_key = serialization.load_pem_private_key(bytes.fromhex(key), password=None)
+        return private_key
+
+    @staticmethod
+    def _serialize_private_key_to_hex(key: ECPrivateKey) -> str:
+        return key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption()
+        ).hex()
+
+    @staticmethod
+    def _serialize_public_key_to_hex(key: ECPubKey) -> str:
+        return key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.PKCS1
+        ).hex()

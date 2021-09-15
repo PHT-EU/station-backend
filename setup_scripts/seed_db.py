@@ -1,7 +1,7 @@
 import requests
 from station.app.db.session import SessionLocal
 from sqlalchemy.orm import Session
-from station.app.crud import dl_models, datasets, trains
+from station.app.crud import dl_models, datasets, federated_trains
 from station.app.schemas.dl_models import DLModelCreate
 from station.app.schemas.datasets import DataSetCreate
 from conductor_lib.examples.cifar_model import Cifar10Model

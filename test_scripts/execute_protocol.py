@@ -16,7 +16,7 @@ def add_train(train_id: Any):
         print(r.text)
 
 
-def execute_protocol(train_id: Any):
+def execute_protocol(train_id: int):
     for i, url in enumerate(STATION_URLS):
         r = requests.post(url + f"{train_id}/protocol")
         print(r.text)

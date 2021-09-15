@@ -11,12 +11,12 @@ from fastapi import HTTPException
 from station.app.crud.train import create_train, update_train_round_0
 from station.app.models.train import Train
 from station.app.protocol.vault import get_certified_ec_key_pair
-from station.app.crud import trains
+from station.app.crud import federated_trains
 
 
 # TODO Check consistency in train ids
 def initialize_train(db: Session, station_id: int, train_id: str, proposal_id: int):
-    db_train = trains.get(db, train_id)
+    db_train = federated_trains.get(db, train_id)
     if db_train:
         raise HTTPException(400, detail="Train already exists")
     token = register_for_train(station_id=station_id, train_id=train_id)
