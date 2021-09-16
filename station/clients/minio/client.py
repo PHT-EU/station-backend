@@ -56,6 +56,28 @@ class MinioClient:
 
         return data
 
+    async def store_files(self, bucket: str, name: str, file: Union[File, UploadFile]):
+        """
+        store files into minio
+        """
+        model_data = await file.read()
+        file = BytesIO(model_data)
+        res = self.client.put_object(bucket, object_name=name, data=file, length=len(file.getbuffer()))
+        return res
+
+    def get_file(self, bucket: str, name: str) -> bytes:
+        response = self.client.get_object(bucket_name=bucket, object_name=name)
+        data = response.read()
+        response.close()
+        response.release_conn()
+
+        return data
+
+    def add_bucket(self, bucket_name: str):
+        found = self.client.bucket_exists(bucket_name)
+        if not found:
+            self.client.make_bucket(bucket_name)
+
     def _init_server(self):
         """
         Checks if the required buckets are present on the minio server and creates them if necessary
@@ -79,8 +101,12 @@ class MinioClient:
 
     def list_buckets(self):
         buckets = self.client.list_buckets()
-
         return buckets
+
+    def list_elements_in_bucket(self, bucket):
+        elements = self.client.list_objects( bucket)
+        return [ds.object_name for ds in list(elements)]
+
 
     def load_data_set(self):
         pass

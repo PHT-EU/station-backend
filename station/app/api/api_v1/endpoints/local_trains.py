@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, File, UploadFile
+from typing import List
 from station.clients.airflow.client import airflow_client
 from station.app.schemas.local_trains import LocalTrainBase
 from station.app.local_train_builder.TrainBuilder import train_builder_local
+
 router = APIRouter()
 
 
@@ -17,8 +19,14 @@ def get_master_images():
     pass
 
 
+@router.post("/local_trains/upload_train_files")
+async def upload_train_files(files: List[UploadFile] = File(...)):
+    # TODO upload a hole folder for a train
+    pass
+
+
 @router.post("/local_trains/upload_endpoint")
-async def upload_endpoint_file( upload_file: UploadFile = File(...)):
+async def upload_endpoint_file(upload_file: UploadFile = File(...)):
     # TODO reseve and store endpoint file , save information in database
     await train_builder_local.store_endpoint(upload_file)
     return {"filename": upload_file.filename}
@@ -33,10 +41,29 @@ def create_local_train():
 
 
 @router.get("/local_trains/get_endpoint")
-def get_endpoint_file():
-    pass
+async def get_endpoint_file():
+    file = train_builder_local.read_endpoint()
+    return file
+
+
+@router.get("/local_trains/get_file/{file_name}")
+async def get_file(file_name: str):
+    file = train_builder_local.read_endpoint()
+    return file
 
 
 @router.get("/local_trains/get_all_uploaded_file_names")
 def get_all_uploaded_file_names():
-    return train_builder_local.get_all_uploaded_files()
+    return {"files": train_builder_local.get_all_uploaded_files()}
+
+
+@router.get("/local_trains/get_results/{train_id}")
+def get_results(train_id: str):
+    pass
+
+
+@router.get("/local_trains/get_train_status/{train_id}")
+def get_train_status(train_id: str):
+    pass
+
+
