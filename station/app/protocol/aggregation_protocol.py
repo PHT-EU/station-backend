@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 import os
 
 from .advertise_keys import advertise_keys
+from .messages import AdvertiseKeysMessage
 from .messages.share_keys import ShareKeysMessage
 from .primitives.keys import ProtocolKeys
 from .primitives.secret_sharing import create_random_seed_and_shares
@@ -29,6 +30,16 @@ class AggregationProtocolClient:
             raise EnvironmentError("Station ID not specified.")
 
     def execute_protocol_for_train(self, train_id: int) -> TrainState:
+        """
+        Executes the protocol for a train with the given id based on the state stored in the database
+
+        Args:
+            train_id:
+
+        Returns:
+
+        """
+
         db_train = federated_trains.get(self.db, train_id)
         if not db_train:
             raise ProtocolError(f"Train {train_id} does not exist in the database")
@@ -44,6 +55,17 @@ class AggregationProtocolClient:
         return db_train.state
 
     def initialize_train(self, name: Any, station_id: Any = None) -> Train:
+        """
+        Attempts to join a train specified by the name at the conductor, if the registration is successful a new
+        train will be created in the database
+
+        Args:
+            name: train name to query the conductor with
+            station_id: optional station id parameter will be loaded from env vars
+
+        Returns:
+
+        """
         # register train at conductor
         if not station_id:
             station_id = os.getenv("STATION_ID")
@@ -57,6 +79,16 @@ class AggregationProtocolClient:
         return train
 
     def setup_protocol(self, train_id: Any):
+        """
+        Sets up a new round of the protocol by generating a new set of EC keys and storing the private keys in the db
+
+        Args:
+            train_id: train_id to create keys for
+
+        Returns:
+
+        """
+
         db_train = federated_trains.get(self.db, id=train_id)
         assert db_train
         db_train.is_active = True
@@ -66,8 +98,27 @@ class AggregationProtocolClient:
         self._update_db_after_setup(state, keys.hex_signing_key, keys.hex_sharing_key)
 
     def advertise_keys(self, train_id: Any) -> TrainState:
-        train_state = advertise_keys(self.db, train_id, self.station_id, self.conductor_url)
-        return train_state
+
+        train = federated_trains.get(self.db, train_id)
+
+        keys = ProtocolKeys(signing_key=train.state.signing_key, sharing_key=train.state.sharing_key)
+
+        msg = AdvertiseKeysMessage(
+            station_id=self.station_id,
+            train_id=train_id,
+            iteration=train.state.iteration,
+            signing_key=keys.signing_key_public,
+            sharing_key=keys.sharing_key_public
+        )
+
+        train.state.round = 1
+
+        response = requests.post(self.conductor_url + f"/api/trains/{train_id}/advertiseKeys", json=msg.serialize())
+        response.raise_for_status()
+
+        self.db.commit()
+        self.db.refresh(train.state)
+        return train.state
 
     def share_keys(self, train_id: Any) -> dict:
         broadcast = self._get_key_broadcast(train_id)
