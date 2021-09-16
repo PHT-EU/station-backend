@@ -98,11 +98,23 @@ class AggregationProtocolClient:
         self._update_db_after_setup(state, keys.hex_signing_key, keys.hex_sharing_key)
 
     def advertise_keys(self, train_id: Any) -> TrainState:
+        """
+        Perform the initial communication round of the aggregation protocol, where the station creates a new set
+        of keys and advertises these keys to the aggregation server.
+
+        Args:
+            train_id: train id to advertise keys for
+
+        Returns:
+            state of the train after advertising the keys to the conductor
+        """
 
         train = federated_trains.get(self.db, train_id)
 
+        # initialize keys from db
         keys = ProtocolKeys(signing_key=train.state.signing_key, sharing_key=train.state.sharing_key)
 
+        # Create a key advertisement message containing the public keys of the previously generated private keys
         msg = AdvertiseKeysMessage(
             station_id=self.station_id,
             train_id=train_id,
@@ -111,16 +123,30 @@ class AggregationProtocolClient:
             sharing_key=keys.sharing_key_public
         )
 
-        train.state.round = 1
-
+        # send the message to the server
         response = requests.post(self.conductor_url + f"/api/trains/{train_id}/advertiseKeys", json=msg.serialize())
         response.raise_for_status()
+
+        # update state
+        train.state.round = 1
+        train.state.updated_at = datetime.datetime.now()
 
         self.db.commit()
         self.db.refresh(train.state)
         return train.state
 
     def share_keys(self, train_id: Any) -> dict:
+        """
+        Perform the second communication round of the aggregation protocol, where shares of the private sharing key
+        are created with shamir's secret sharing and signed with the public keys received in the key broadcast from
+        the conductor node
+
+        Args:
+            train_id: train id whose keys to share
+
+        Returns:
+            conductor response to the share keys message
+        """
         broadcast = self._get_key_broadcast(train_id)
         state = federated_trains.update_train_with_key_broadcast(self.db, train_id, broadcast)
 
@@ -129,6 +155,17 @@ class AggregationProtocolClient:
         return response
 
     def _initialize_db_train(self, name, token: str, proposal_id: Any = None) -> Train:
+        """
+        Create a new train object in the database, as well as the associated empty default state.
+
+        Args:
+            name: name of the train
+            token: token received from registering for the train at the conductor node
+            proposal_id: id of the proposal the train is associated with
+
+        Returns:
+            Train object submitted to the database
+        """
         db_train = Train(proposal_id=proposal_id, token=token, name=name)
         self.db.add(db_train)
         self.db.commit()
@@ -142,6 +179,16 @@ class AggregationProtocolClient:
         return db_train
 
     def _register_for_train(self, station_id: Any, train_id: str):
+        """
+        Register this station at for the given train
+
+        Args:
+            station_id: station id
+            train_id: identifier of the train to register for
+
+        Returns:
+            token for accessing the train in the future
+        """
         r = requests.post(self.conductor_url + f"/api/trains/{train_id}/register",
                           params={"station_id": os.getenv("STATION_ID", station_id)})
         r.raise_for_status()
@@ -149,6 +196,17 @@ class AggregationProtocolClient:
         return token
 
     def _update_db_after_setup(self, state: TrainState, signing_key: str, sharing_key: str):
+        """
+        Update the state in the database after initializing the keys for this iteration
+
+        Args:
+            state: train state from the database
+            signing_key: hex representation of the private signing key
+            sharing_key: hex representation of the private sharing key
+
+        Returns:
+
+        """
         # set train to active
         state.signing_key = signing_key
         state.sharing_key = sharing_key
@@ -164,7 +222,18 @@ class AggregationProtocolClient:
     def upload_unmasking_shares(db: Session, train_id: Any):
         pass
 
-    def _get_key_broadcast(self, train_id: int):
+    def _get_key_broadcast(self, train_id: int) -> BroadCastKeysSchema:
+        """
+        Query the key broadcast for the given train from the conductor and validate the received keys
+
+        Args:
+            train_id: identifier of the train
+
+        Returns:
+            key broadcast message from the conductor
+
+        """
+
         r = requests.get(self.conductor_url + f"/api/trains/{train_id}/broadcastKeys")
         r.raise_for_status()
         broadcast = BroadCastKeysSchema(**r.json())
@@ -174,7 +243,18 @@ class AggregationProtocolClient:
 
         return broadcast
 
-    def _make_share_keys_message(self, state: TrainState, broadcast_message: BroadCastKeysSchema):
+    def _make_share_keys_message(self, state: TrainState, broadcast_message: BroadCastKeysSchema) -> ShareKeysMessage:
+        """
+        Create a message containing key shares based on a key broadcast received from the conductor
+
+        Args:
+            state: database state of the train
+            broadcast_message: key broadcast received from the conductor
+
+        Returns:
+            Share keys message to be send to the condcutor
+
+        """
         n_participants = len(broadcast_message.keys)
         seed, seed_shares = create_random_seed_and_shares(n_participants)
 
@@ -195,6 +275,17 @@ class AggregationProtocolClient:
         return msg
 
     def _upload_key_shares(self, train_id: Any, msg: ShareKeysMessage):
+        """
+        Send a share keys message to the conductor and return the response
+
+        Args:
+            train_id: train identifier
+            msg: share keys message to be send to the conductor
+
+        Returns:
+            the conductors response to the share keys message (state of the train at the conductor)
+
+        """
         r = requests.post(self.conductor_url + f"/api/trains/{train_id}/shareKeys", json=msg.serialize(format="dict"))
         r.raise_for_status()
 
@@ -202,6 +293,18 @@ class AggregationProtocolClient:
 
     @staticmethod
     def _validate_key_broadcast(keys: List[StationKeys], threshold: int = 3):
+        """
+        Validate the keys received in a key broadcast from the conductor by asserting that they are all unique and
+        at least t keys are available
+
+        Args:
+            keys: list of key pairs received from the conductor
+            threshold: minimum number of keys required
+
+        Returns:
+
+        """
+
         if threshold:
             assert len(keys) >= threshold
 

@@ -63,6 +63,8 @@ class CRUDTrain(CRUDBase[Train, TrainCreate, TrainUpdate]):
                     **key_pair.dict()
                 )
                 db.add(db_broadcast)
+
+        # todo remove key broadcast from train state
         db_train_state.key_broadcast = key_broadcast.json()
         db_train_state.round = 2
         db.commit()
