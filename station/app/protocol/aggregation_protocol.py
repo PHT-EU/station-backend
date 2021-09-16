@@ -17,23 +17,27 @@ from ..schemas.protocol import BroadCastKeysSchema, StationKeys
 
 class AggregationProtocolClient:
 
-    def __init__(self, db: Session, conductor_url: str = None):
+    def __init__(self, db: Session, conductor_url: str = None, station_id: Any = None):
         self.db = db
         self.conductor_url = conductor_url if conductor_url else os.getenv("CONDUCTOR_URL")
+        self.station_id = station_id if station_id else os.getenv("STATION_ID")
 
         if not self.conductor_url:
             raise EnvironmentError("Conductor url not specified.")
+
+        if not self.station_id:
+            raise EnvironmentError("Station ID not specified.")
 
     def execute_protocol_for_train(self, train_id: int) -> TrainState:
         db_train = federated_trains.get(self.db, train_id)
         if not db_train:
             raise ProtocolError(f"Train {train_id} does not exist in the database")
-        round = db_train.state.round
+        protocol_round = db_train.state.round
 
-        if round == 0:
+        if protocol_round == 0:
             self.setup_protocol(train_id)
             state = self.advertise_keys(train_id)
-        elif round == 1:
+        elif protocol_round == 1:
             state = self.share_keys(train_id)
 
         self.db.refresh(db_train)
@@ -60,6 +64,18 @@ class AggregationProtocolClient:
         state = db_train.state
         keys = ProtocolKeys()
         self._update_db_after_setup(state, keys.hex_signing_key, keys.hex_sharing_key)
+
+    def advertise_keys(self, train_id: Any) -> TrainState:
+        train_state = advertise_keys(self.db, train_id, self.station_id, self.conductor_url)
+        return train_state
+
+    def share_keys(self, train_id: Any) -> dict:
+        broadcast = self._get_key_broadcast(train_id)
+        state = federated_trains.update_train_with_key_broadcast(self.db, train_id, broadcast)
+
+        share_keys_message = self._make_share_keys_message(state, broadcast)
+        response = self._upload_key_shares(train_id=train_id, msg=share_keys_message)
+        return response
 
     def _initialize_db_train(self, name, token: str, proposal_id: Any = None) -> Train:
         db_train = Train(proposal_id=proposal_id, token=token, name=name)
@@ -88,21 +104,6 @@ class AggregationProtocolClient:
 
         state.updated_at = datetime.datetime.now()
         self.db.commit()
-
-    def advertise_keys(self, train_id: Any) -> TrainState:
-        station_id = os.getenv("STATION_ID")
-        conductor_url = os.getenv("CONDUCTOR_URL")
-        train_state = advertise_keys(self.db, train_id, station_id, conductor_url)
-        return train_state
-
-    def share_keys(self, train_id: Any) -> dict:
-        broadcast = self._get_key_broadcast(train_id)
-        state = federated_trains.update_train_with_key_broadcast(self.db, train_id, broadcast)
-
-        share_keys_message = self._make_share_keys_message(broadcast)
-        response = self._upload_key_shares(share_keys_message)
-
-        return response
 
     @staticmethod
     def upload_masked_input(db: Session, train_id: Any):
