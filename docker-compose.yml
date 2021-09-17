@@ -22,7 +22,7 @@ services:
       - ENVIRONMENT=prod
     ports:
       - "8001:8001"
-    command: ["./wait-for-it.sh","--timeout=10", "postgres:5432", "--", "python", "/home/station/run_station.py"]
+    command: ["./wait-for-it.sh","--timeout=10", "pg_station:5432", "--", "python", "/home/station/run_station.py"]
 
   pg_station:
     image: postgres:13
@@ -36,7 +36,9 @@ services:
       - 5432:5432
 
   airflow:
-    build: './airflow'
+    build:
+      context: '.'
+      dockerfile: './airflow/Dockerfile'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       # Station Private Key needs to be set and registered

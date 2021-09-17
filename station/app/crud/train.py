@@ -8,7 +8,7 @@ from station.app.models.train import Train, TrainState
 from station.app.models.protocol import BroadCastKeys
 from station.app.schemas.protocol import BroadCastKeysSchema
 
-from station.app.crud import trains
+from station.app.crud import federated_trains
 
 
 def read_train(db: Session, train_id: int) -> Train:
@@ -35,7 +35,7 @@ def read_train_state(db: Session, train_id: int) -> TrainState:
 
 
 def update_rng_seed(db: Session, train_id: str, seed: int):
-    db_train = trains.get(db, train_id)
+    db_train = federated_trains.get(db, train_id)
     db_train_state: TrainState = db.query(TrainState).filter(TrainState.train_id == db_train.id).first()
     db_train_state.seed = seed
     db.commit()
@@ -45,7 +45,7 @@ def update_rng_seed(db: Session, train_id: str, seed: int):
 
 # TODO move to protocol/refactor
 def update_train_state_with_key_broadcast(db: Session, train_id: str, broadcast: BroadCastKeysSchema) -> TrainState:
-    db_train = trains.get_by_train_id(db, train_id)
+    db_train = federated_trains.get_by_train_id(db, train_id)
     db_train_state: TrainState = db.query(TrainState).filter(TrainState.train_id == train_id).first()
 
     for key_pair in broadcast.keys:
@@ -64,7 +64,7 @@ def update_train_state_with_key_broadcast(db: Session, train_id: str, broadcast:
 
 def update_train_round_0(db: Session, train_id: str, signing_key: str, sharing_key: str, iteration: int):
     # set train to active
-    db_train: Train = trains.get(db, train_id)
+    db_train: Train = federated_trains.get(db, train_id)
     db_train.is_active = True
     # Update train state
     db_train_state: TrainState = db.query(TrainState).filter(TrainState.train_id == db_train.id).first()

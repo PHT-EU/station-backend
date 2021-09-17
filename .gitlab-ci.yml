@@ -31,6 +31,8 @@ build:
     - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN registry.gitlab.com/personalhealthtrain/implementations/germanmii/difuture/incubating/pht/station
     - docker build -t registry.gitlab.com/personalhealthtrain/implementations/germanmii/difuture/incubating/pht/station .
     - docker push registry.gitlab.com/personalhealthtrain/implementations/germanmii/difuture/incubating/pht/station
+  only:
+    - master
 
 test:
   stage: test
@@ -39,3 +41,5 @@ test:
     - pip install pytest pytest-cov -r requirements.txt
     - pip install .
     - pytest station
+  only:
+    - master

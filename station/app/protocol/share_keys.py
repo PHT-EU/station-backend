@@ -13,7 +13,7 @@ from station.app.crud.train import (
     get_train_signing_key
 )
 from station.app.protocol.messages.share_keys import ShareKeysMessage
-from station.app.crud import trains
+from station.app.crud import federated_trains
 
 
 def share_keys(db: Session, train_id: int, conductor_url: str = None):
@@ -26,7 +26,7 @@ def share_keys(db: Session, train_id: int, conductor_url: str = None):
     # TODO get threshold from train config and pass to secret sharing
     validate_keys(broadcast.keys)
     # store the received keys
-    state = trains.update_train_with_key_broadcast(db, train_id=train_id, key_broadcast=broadcast)
+    state = federated_trains.update_train_with_key_broadcast(db, train_id=train_id, key_broadcast=broadcast)
 
     n_participants = len(broadcast.keys)
 
