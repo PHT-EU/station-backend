@@ -44,8 +44,9 @@ class AggregationProtocolClient:
         if not db_train:
             raise ProtocolError(f"Train {train_id} does not exist in the database")
         protocol_round = db_train.state.round
-
+        print(f"Executing round {protocol_round} of the protocol for train {train_id}")
         if protocol_round == 0:
+
             self.setup_protocol(train_id)
             state = self.advertise_keys(train_id)
         elif protocol_round == 1:
