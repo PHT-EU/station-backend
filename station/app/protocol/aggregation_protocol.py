@@ -5,16 +5,15 @@ import requests
 from sqlalchemy.orm import Session
 import os
 
-from .advertise_keys import advertise_keys
 from .messages import AdvertiseKeysMessage
 from .messages.share_keys import ShareKeysMessage
 from .primitives.keys import ProtocolKeys
 from .primitives.secret_sharing import create_random_seed_and_shares
-from .share_keys import share_keys
 from station.app.crud import federated_trains
 from station.app.models.train import TrainState, Train
 from ..models.protocol import Cypher
 from ..schemas.protocol import BroadCastKeysSchema, StationKeys
+from .primitives.input_masking import compute_masked_input_for_conductor
 
 
 class AggregationProtocolClient:
@@ -163,12 +162,22 @@ class AggregationProtocolClient:
 
         return response
 
-    def submit_masked_input(self, train_id, raw_input: dict = None):
+    def submit_masked_input(self, train_id: Any, raw_input: dict = None):
 
         cyphers = self.get_cyphers(train_id)
         print(len(cyphers))
 
-    def get_cyphers(self, train_id):
+    def get_cyphers(self, train_id: Any) -> List[Cypher]:
+        """
+        Access the cyphers obtained based on the shared keys in the protocol, initially looks in the database for
+        matching cyphers. If these are not available requests the cyphers from the conductor
+
+        Args:
+            train_id: train id for which to get the cyphers
+
+        Returns:
+
+        """
         db_train = federated_trains.get(self.db, train_id)
 
         state = db_train.state
@@ -179,14 +188,34 @@ class AggregationProtocolClient:
 
         return db_cyphers
 
-    def _read_cyphers_from_db(self, train_id, iteration):
+    def _read_cyphers_from_db(self, train_id, iteration) -> List[Cypher]:
+        """
+        Queries the available cyphers from the database for the train in the given iteration
+
+        Args:
+            train_id: identifier of the train
+            iteration: the iteration the train is currently in
+
+        Returns:
+            A list of cyphers containing senders and encrypted cyphers
+        """
+
         cyphers = self.db.query(Cypher).filter(
             Cypher.train_id == train_id,
             Cypher.iteration == iteration
         ).all()
         return cyphers
 
-    def _request_cyphers(self, train_id):
+    def _request_cyphers(self, train_id) -> List[Cypher]:
+        """
+        Request the cyphers submitted for this station from the conductor, stores them in the database and returns them
+
+        Args:
+            train_id: train id for which to request cyphers
+
+        Returns:
+            List of cyphers for this train adressed to this station
+        """
 
         db_train = federated_trains.get(self.db, train_id)
         state = db_train.state
@@ -202,20 +231,29 @@ class AggregationProtocolClient:
         db_cyphers = self._process_cyphers(r.json(), db_train.id, state.iteration)
         return db_cyphers
 
-    def _process_cyphers(self, cyphers: list, train_id: int, iteration: int):
+    def _process_cyphers(self, cyphers: list, train_id: int, iteration: int) -> List[Cypher]:
+        """
+        Store the cyphers received as a response from the conductor in the database
+
+        Args:
+            cyphers: list of cypher objects addressed to this station
+            train_id: train for which the cyphers were generated
+            iteration: iteration of the train
+
+        Returns:
+
+        """
         # Parse the cyphers from the message and store them in database with train_id and iteration
         db_cyphers = []
         for cypher_msg in cyphers:
-            if cypher_msg["sender"] != int(os.getenv("STATION_ID")):
-                db_cypher = Cypher(
-                    train_id=train_id,
-                    iteration=iteration,
-                    station_id=cypher_msg["sender"],
-                    cypher=cypher_msg["cypher"]
-                )
-                self.db.add(db_cypher)
-                self.db.refresh(db_cypher)
-                db_cyphers.append(db_cypher)
+            db_cypher = Cypher(
+                train_id=train_id,
+                iteration=iteration,
+                station_id=cypher_msg["sender"],
+                cypher=cypher_msg["cypher"]
+            )
+            self.db.add(db_cypher)
+            db_cyphers.append(db_cypher)
         self.db.commit()
         return db_cyphers
 
