@@ -13,6 +13,7 @@ from .primitives.secret_sharing import create_random_seed_and_shares
 from .share_keys import share_keys
 from station.app.crud import federated_trains
 from station.app.models.train import TrainState, Train
+from ..models.protocol import Cypher
 from ..schemas.protocol import BroadCastKeysSchema, StationKeys
 
 
@@ -51,6 +52,9 @@ class AggregationProtocolClient:
             state = self.advertise_keys(train_id)
         elif protocol_round == 1:
             state = self.share_keys(train_id)
+
+        elif protocol_round == 2:
+            state = self.submit_masked_input(train_id)
 
         self.db.refresh(db_train)
         return db_train.state
@@ -153,7 +157,52 @@ class AggregationProtocolClient:
 
         share_keys_message = self._make_share_keys_message(state, broadcast)
         response = self._upload_key_shares(train_id=train_id, msg=share_keys_message)
+
+        state.round = 2
+        self.db.commit()
+
         return response
+
+    def submit_masked_input(self, train_id):
+        participants = self.get_cyphers(train_id)
+
+    def get_cyphers(self, train_id):
+
+        db_train = federated_trains.get(self.db, train_id)
+        state = db_train.state
+
+        data = {
+            "station_id": os.getenv("STATION_ID"),
+            "iteration": state.iteration
+        }
+
+        r = requests.post(self.conductor_url + f"/api/trains/{train_id}/cyphers", json=data)
+        print(r.text)
+        r.raise_for_status()
+        other_participants = self._process_cyphers(r.json(), db_train.id, state.iteration)
+        print("other participants", other_participants)
+        return other_participants
+
+    def _process_cyphers(self, cyphers: list, train_id: int, iteration: int):
+        # Parse the cyphers from the message and store them in database with train_id and iteration
+        participants_round_2 = []
+        for cypher_msg in cyphers:
+            if cypher_msg["sender"] != int(os.getenv("STATION_ID")):
+                db_cypher = Cypher(
+                    train_id=train_id,
+                    iteration=iteration,
+                    station_id=cypher_msg["sender"],
+                    cypher=cypher_msg["cypher"]
+                )
+                self.db.add(db_cypher)
+                participants_round_2.append(cypher_msg["sender"])
+        self.db.commit()
+        return participants_round_2
+
+
+    def _load_input_data(self, train_id):
+        pass
+
 
     def _initialize_db_train(self, name, token: str, proposal_id: Any = None) -> Train:
         """
