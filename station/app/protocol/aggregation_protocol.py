@@ -163,29 +163,48 @@ class AggregationProtocolClient:
 
         return response
 
-    def submit_masked_input(self, train_id):
-        participants = self.get_cyphers(train_id)
+    def submit_masked_input(self, train_id, raw_input: dict = None):
+
+        cyphers = self.get_cyphers(train_id)
+        print(len(cyphers))
 
     def get_cyphers(self, train_id):
+        db_train = federated_trains.get(self.db, train_id)
+
+        state = db_train.state
+
+        db_cyphers = self._read_cyphers_from_db(train_id, state.iteration)
+        if not db_cyphers:
+            db_cyphers = self._request_cyphers(train_id)
+
+        return db_cyphers
+
+    def _read_cyphers_from_db(self, train_id, iteration):
+        cyphers = self.db.query(Cypher).filter(
+            Cypher.train_id == train_id,
+            Cypher.iteration == iteration
+        ).all()
+        return cyphers
+
+    def _request_cyphers(self, train_id):
 
         db_train = federated_trains.get(self.db, train_id)
         state = db_train.state
 
         data = {
-            "station_id": os.getenv("STATION_ID"),
+            "station_id": self.station_id,
             "iteration": state.iteration
         }
 
         r = requests.post(self.conductor_url + f"/api/trains/{train_id}/cyphers", json=data)
         print(r.text)
         r.raise_for_status()
-        other_participants = self._process_cyphers(r.json(), db_train.id, state.iteration)
-        print("other participants", other_participants)
-        return other_participants
+        db_cyphers = self._process_cyphers(r.json(), db_train.id, state.iteration)
+        return db_cyphers
 
     def _process_cyphers(self, cyphers: list, train_id: int, iteration: int):
         # Parse the cyphers from the message and store them in database with train_id and iteration
-        participants_round_2 = []
+        db_cyphers = []
         for cypher_msg in cyphers:
             if cypher_msg["sender"] != int(os.getenv("STATION_ID")):
                 db_cypher = Cypher(
@@ -195,14 +214,13 @@ class AggregationProtocolClient:
                     cypher=cypher_msg["cypher"]
                 )
                 self.db.add(db_cypher)
-                participants_round_2.append(cypher_msg["sender"])
+                self.db.refresh(db_cypher)
+                db_cyphers.append(db_cypher)
         self.db.commit()
-        return participants_round_2
-
+        return db_cyphers
 
     def _load_input_data(self, train_id):
         pass
-
 
     def _initialize_db_train(self, name, token: str, proposal_id: Any = None) -> Train:
         """
