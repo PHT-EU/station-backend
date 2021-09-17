@@ -19,10 +19,11 @@ def get_master_images():
     pass
 
 
-@router.post("/local_trains/upload_train_files")
-async def upload_train_files(files: List[UploadFile] = File(...)):
-    # TODO upload a hole folder for a train
-    pass
+@router.post("/local_trains/upload_train_file")
+async def upload_train_file(upload_file: UploadFile = File(...)):
+    await train_builder_local.store_train_file(upload_file)
+    return {"filename": upload_file.filename}
+
 
 
 @router.post("/local_trains/upload_endpoint")
@@ -42,15 +43,19 @@ def create_local_train():
 
 @router.get("/local_trains/get_endpoint")
 async def get_endpoint_file():
-    file = train_builder_local.read_endpoint()
+    file = train_builder_local.read_file("endpoint.py")
     return file
 
 
-@router.get("/local_trains/get_file/{file_name}")
+@router.get("/local_trains/get_file")
 async def get_file(file_name: str):
-    file = train_builder_local.read_endpoint()
+    file = train_builder_local.read_file(file_name)
     return file
 
+@router.delete("/local_trains/delete_file")
+async def delete_file(file_name: str):
+    await train_builder_local.delete_train_file(file_name)
+    return "deletetd " + file_name
 
 @router.get("/local_trains/get_all_uploaded_file_names")
 def get_all_uploaded_file_names():

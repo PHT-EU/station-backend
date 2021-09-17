@@ -73,6 +73,14 @@ class MinioClient:
 
         return data
 
+    def delete_file(self, bucket: str, name: str):
+        self.client.remove_object(bucket_name=bucket, object_name=name)
+
+    def get_file_names(self, bucket: str) -> [str]:
+        response = self.client.list_objects(bucket)
+        data = list(response)
+        return data
+
     def add_bucket(self, bucket_name: str):
         found = self.client.bucket_exists(bucket_name)
         if not found:
@@ -104,9 +112,8 @@ class MinioClient:
         return buckets
 
     def list_elements_in_bucket(self, bucket):
-        elements = self.client.list_objects( bucket)
+        elements = self.client.list_objects(bucket)
         return [ds.object_name for ds in list(elements)]
-
 
     def load_data_set(self):
         pass

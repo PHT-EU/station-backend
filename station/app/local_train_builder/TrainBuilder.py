@@ -10,7 +10,8 @@ class TrainBuilderLocal:
         self.docker_client = dockerClient
         # TODO do over env file
         self.path_to_resources = "./app/local_train_builder/local_trains_files/"
-        minio_client.add_bucket("localtrain")
+        self.bucket_name="localtrain"
+        minio_client.add_bucket(self.bucket_name)
 
     def build_train(self, build_data: dict):
         self.docker_client.get_master_images(build_data["masterImage"])
@@ -25,17 +26,24 @@ class TrainBuilderLocal:
             content = await upload_file.read()
             await save_file.write(content)
             """
-        await minio_client.store_files("localtrain", "endpoint.py", upload_file)
+        await minio_client.store_files(self.bucket_name, "endpoint.py", upload_file)
 
-    def read_endpoint(self):
+    async def store_train_file(self, upload_file: UploadFile):
+        #file_name = upload_file.filename.split("/")[-1]
+        #print(file_name)
+        await minio_client.store_files(self.bucket_name, upload_file.filename, upload_file)
+
+    async def delete_train_file(self, file_name):
+        minio_client.delete_file(self.bucket_name,file_name)
+
+    def read_file(self,file_name):
         # TODO make it so the file name can be other or ther can be multiple fiels
         # return open(self.path_to_resources + "endpoint.py")
-        print(minio_client.list_buckets())
-        print(minio_client.list_elements_in_bucket("localtrain"))
-        return minio_client.get_file("localtrain", "endpoint.py")
+        return minio_client.get_file(self.bucket_name, file_name)
 
     def get_all_uploaded_files(self):
-        return listdir(self.path_to_resources)
+        print(minio_client.get_file_names(self.bucket_name))
+        return minio_client.get_file_names(self.bucket_name)
 
 
 train_builder_local = TrainBuilderLocal()
