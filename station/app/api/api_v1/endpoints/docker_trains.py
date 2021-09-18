@@ -78,7 +78,7 @@ def update_docker_train_configuration(update_config: DockerTrainConfigUpdate, co
     return config
 
 
-@router.get("trains/docker/config/{config_id}", response_model=DockerTrainConfig)
+@router.get("/trains/docker/config/{config_id}", response_model=DockerTrainConfig)
 def get_docker_train_configuration(config_id: int, db: Session = Depends(dependencies.get_db)):
     config = docker_train_config.get(db, config_id)
     return config
