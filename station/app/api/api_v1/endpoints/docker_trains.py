@@ -12,9 +12,12 @@ from station.app.crud.crud_train_configs import docker_train_config
 router = APIRouter()
 
 
-@router.get("/trains/docker/", response_model=List[DockerTrain])
-def get_available_trains(active: bool = None, limit: int = 0, db: Session = Depends(dependencies.get_db)):
-    db_trains = docker_train.get_trains_by_active_status(db, active, limit)
+@router.get("/trains/docker", response_model=List[DockerTrain])
+def get_available_trains(limit: int = 0, db: Session = Depends(dependencies.get_db)):
+    if limit != 0:
+        db_trains = docker_train.get_multi(db, limit=limit)
+    else:
+        db_trains = docker_train.get_multi(db)
     return db_trains
 
 

@@ -48,6 +48,11 @@ def seed_db_for_testing():
 
         session.add_all(states)
 
+        config = docker_trains.DockerTrainConfig(
+            name="default"
+        )
+
+        session.add(config)
         session.commit()
 
     # create federated trains
@@ -69,10 +74,14 @@ def seed_db_for_testing():
             states.append(state)
 
         session.add_all(states)
+
+        config = train.FederatedTrainConfig(
+            name="default"
+        )
+        session.add(config)
         session.commit()
 
     session.close()
-
 
 
 if __name__ == '__main__':
