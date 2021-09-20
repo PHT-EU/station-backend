@@ -70,9 +70,28 @@ def run_aachen_pht_train():
     @task()
     def pull_docker_image(train_state):
         client = docker.from_env()
+        registry_address = os.getenv("HARBOR_AACHEN_API_URL").split("//")[-1]
+        print(registry_address)
+        client.login(username=os.getenv("HARBOR_AACHEN_API_URL"), password=os.getenv("HARBOR_PW"),
+                     registry=registry_address)
 
+        client.images.pull(repository=train_state["repository"], tag=train_state["tag"])
 
+        # Pull base image as well
+        client.images.pull(repository=train_state["repository"], tag='base')
+        # Make sure the image with the desired tag is there.
+        images = client.images.list()
+        image_tags = sum([i.tags for i in images], [])
+        assert (':'.join([train_state["repository"], train_state["tag"]]) in image_tags)
+        print("Image was successfully pulled.")
+        assert (':'.join([train_state["repository"], 'base']) in image_tags)
+        print("Base image was successfully pulled.")
 
+    @task()
+    def execute_container(train_state):
+        client = docker.from_env()
+        environment = train_state.get("env", {})
+        volumes = train_state.get("volumes", {})
 
     get_train_image_info()
 
