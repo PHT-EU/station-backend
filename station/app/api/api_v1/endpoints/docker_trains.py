@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends
 
 from station.app.api import dependencies
 from station.clients.airflow import docker_trains
-from station.app.schemas.docker_trains import DockerTrain, DockerTrainCreate, DockerTrainConfig, DockerTrainConfigCreate, DockerTrainConfigUpdate, DockerTrainExecution
+from station.app.schemas.docker_trains import DockerTrain, DockerTrainCreate, DockerTrainConfig, \
+    DockerTrainConfigCreate, DockerTrainConfigUpdate, DockerTrainExecution
 from station.app.crud.docker_trains import create_train, read_train_by_train_id, read_trains, read_train_config
 from station.app.crud.crud_docker_trains import docker_train
 from station.app.crud.crud_train_configs import docker_train_config
@@ -62,10 +63,10 @@ def get_state_for_train(train_id: str, db: Session = Depends(dependencies.get_db
     pass
 
 
-@router.get("/trains/docker/configs", response_model=List[DockerTrainConfig])
+@router.get("/trains/docker/configs/", response_model=List[DockerTrainConfig])
 def get_all_docker_train_configs(db: Session = Depends(dependencies.get_db), skip: int = 0, limit: int = 100):
-    configs = docker_train_config.get_multi(db, skip, limit)
-    return configs
+    db_configs = docker_train_config.get_multi(db, skip=skip, limit=limit)
+    return db_configs
 
 
 @router.post("/trains/docker/config", response_model=DockerTrainConfig)
@@ -75,7 +76,8 @@ def add_docker_train_configuration(config_in: DockerTrainConfigCreate, db: Sessi
 
 
 @router.put("/trains/docker/config/{config_id}", response_model=DockerTrainConfig)
-def update_docker_train_configuration(update_config: DockerTrainConfigUpdate, config_id: int, db: Session = Depends(dependencies.get_db)):
+def update_docker_train_configuration(update_config: DockerTrainConfigUpdate, config_id: int,
+                                      db: Session = Depends(dependencies.get_db)):
     old_config = docker_train_config.get(db, config_id)
     config = docker_train_config.update(db, old_config, update_config)
     return config

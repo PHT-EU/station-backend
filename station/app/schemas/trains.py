@@ -41,3 +41,9 @@ class Train(DBSchema):
     state: TrainState
     token: Optional[str] = None
     dataset: Optional[datasets.DataSet] = None
+
+
+class FederatedTrainConfigCreate(DBSchema):
+    name: str
+
+
