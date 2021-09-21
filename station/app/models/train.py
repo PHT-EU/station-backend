@@ -9,11 +9,11 @@ from station.app.db.base_class import Base
 class Train(Base):
     __tablename__ = "trains"
     id = Column(Integer, primary_key=True, index=True)
-    train_id = Column(String, default=str(uuid4()))
+    name = Column(String, default=str(uuid4()), unique=True)
     created_at = Column(DateTime, default=datetime.now())
     updated_at = Column(DateTime, nullable=True)
     is_active = Column(Boolean, default=False)
-    proposal_id = Column(Integer, default=0)
+    proposal_id = Column(Integer, nullable=True)
     state = relationship("TrainState", uselist=False, backref="trains")
     token = Column(String, nullable=True)
     model = relationship("DLModel", uselist=False, backref="trains")
@@ -32,3 +32,6 @@ class TrainState(Base):
     sharing_key = Column(String, nullable=True)
     seed = Column(BigInteger, nullable=True)
     key_broadcast = Column(String, nullable=True)
+
+
+# todo add train config

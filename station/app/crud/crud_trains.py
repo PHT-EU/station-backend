@@ -11,8 +11,8 @@ from station.app.models.protocol import BroadCastKeys
 
 
 class CRUDTrain(CRUDBase[Train, TrainCreate, TrainUpdate]):
-    def get_by_train_id(self, db: Session, train_id: str) -> Train:
-        return db.query(Train).filter(Train.train_id == train_id).first()
+    def get_by_name(self, db: Session, name: str) -> Train:
+        return db.query(Train).filter(Train.name == name).first()
 
     def get_trains_by_active_status(self, db: Session, active=True):
         return db.query(Train).filter(Train.is_active == active).all()
@@ -63,11 +63,14 @@ class CRUDTrain(CRUDBase[Train, TrainCreate, TrainUpdate]):
                     **key_pair.dict()
                 )
                 db.add(db_broadcast)
+
+        # todo remove key broadcast from train state
         db_train_state.key_broadcast = key_broadcast.json()
+        db_train_state.round = 2
         db.commit()
         db.refresh(db_train_state)
 
         return db_train_state
 
 
-trains = CRUDTrain(Train)
+federated_trains = CRUDTrain(Train)

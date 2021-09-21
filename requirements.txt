@@ -16,5 +16,5 @@ pytorch-lightning
 pytest
 torchvision
 python-keycloak
-git+https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/library/train-container-library.git
-git+https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/incubating/pht/conductor-library.git
+git+https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/train-container-library.git
+# git+https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/incubating/pht/conductor-library.git

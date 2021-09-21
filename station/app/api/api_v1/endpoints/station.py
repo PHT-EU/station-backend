@@ -8,7 +8,7 @@ from station.app.api import dependencies
 from station.app.schemas.dl_models import DLModelCreate, DLModel, DLModelUpdate
 from station.app.schemas.notifications import NotificationCreate, Notification
 from station.app.schemas.station import Trains
-from station.app.crud import torch_models, docker_train, trains, dl_models, notifications
+from station.app.crud import torch_models, docker_train, federated_trains, dl_models, notifications
 from station.app.docker_trains.update import sync_db_with_registry
 from station.clients.minio import MinioClient
 from station.clients.conductor import ConductorRESTClient
@@ -39,10 +39,10 @@ def get_available_trains(active: Optional[bool] = None,
 
     if active:
         db_docker_trains = docker_train.get_trains_by_active_status(db, active)
-        db_trains = trains.get_trains_by_active_status(db, active)
+        db_trains = federated_trains.get_trains_by_active_status(db, active)
     else:
         db_docker_trains = docker_train.get_multi(db)
-        db_trains = trains.get_multi(db)
+        db_trains = federated_trains.get_multi(db)
 
     response = Trains(
         docker_trains=db_docker_trains,
