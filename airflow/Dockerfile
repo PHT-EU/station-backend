@@ -20,12 +20,14 @@ RUN pip install -r /tmp/requirements.txt
 RUN pip install git+https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/train-container-library.git
 # RUN pip install git+https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/incubating/pht-federated.git
 
-#COPY ../../station /opt/station
-# RUN pip install /opt/station
+COPY ./station /opt/station/station
+COPY ./worker /opt/station/worker
+COPY ./setup.py /opt/station/setup.py
+RUN pip install /opt/station
 
-COPY airflow.cfg /root/airflow/airflow.cfg
+COPY ./airflow/airflow.cfg /root/airflow/airflow.cfg
 #COPY ./dags /root/airflow/dags
-COPY entrypoint.sh /root/entrypoint.sh
+COPY ./airflow/entrypoint.sh /root/entrypoint.sh
 RUN chmod +x /root/entrypoint.sh
 ENTRYPOINT ["/root/entrypoint.sh"]
 CMD ["webserver"]

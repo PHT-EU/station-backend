@@ -9,7 +9,7 @@ import tempfile
 
 from station.clients.minio import MinioClient
 from conductor_lib.src.torch import LightningTrainModel
-from station.app.crud import trains
+from station.app.crud import federated_trains
 
 
 class ModelLoader:
@@ -42,7 +42,7 @@ class ModelLoader:
         return model
 
     def load_train_model(self, db: Session, train_id: Any):
-        db_train = trains.get_by_train_id(db=db, train_id=train_id)
+        db_train = federated_trains.get_by_train_id(db=db, train_id=train_id)
 
         model = db_train.model
         assert model

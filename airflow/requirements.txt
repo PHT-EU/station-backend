@@ -7,3 +7,4 @@ minio
 # TODO check versions
 torch
 torchvision
+git+https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/library/train-container-library.git

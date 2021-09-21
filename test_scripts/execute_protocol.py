@@ -13,17 +13,15 @@ TRAIN_ID = 1
 def add_train(train_id: Any):
     for i, url in enumerate(STATION_URLS):
         r = requests.post(url + f"federated/{train_id}")
-        print(r)
-        print(r.json())
+        print(r.text)
 
 
-def execute_protocol(train_id: Any):
+def execute_protocol(train_id: int):
     for i, url in enumerate(STATION_URLS):
         r = requests.post(url + f"{train_id}/protocol")
-        print(r)
-        print(r.json())
+        print(r.text)
 
 
 if __name__ == '__main__':
-    # add_train(TRAIN_ID)
+    add_train(TRAIN_ID)
     execute_protocol(TRAIN_ID)

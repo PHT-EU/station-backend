@@ -4,7 +4,7 @@ from dotenv import load_dotenv, find_dotenv
 import os
 import torch
 
-from station.app.crud import trains
+from station.app.crud import federated_trains
 from worker.testing.db import SessionLocal
 from station.clients.conductor import ConductorRESTClient
 from station.clients.minio import MinioClient
@@ -22,7 +22,7 @@ class PHTWorker:
         self.minio_client = MinioClient()
 
     def perform_discovery(self, db: Session, train_id: Any):
-        db_train = trains.get_by_train_id(db=db, train_id=train_id)
+        db_train = federated_trains.get_by_train_id(db=db, train_id=train_id)
         assert db_train.dataset
         discovery_result = perform_discovery(db_train.dataset)
 
@@ -33,7 +33,7 @@ class PHTWorker:
         resp = self.conductor_client.post_discovery_results(train_id=train_id, discovery_results=discovery_post)
 
     def make_data_loader(self, db: Session, train_id: Any):
-        db_train = trains.get_by_train_id(db=db, train_id=train_id)
+        db_train = federated_trains.get_by_train_id(db=db, train_id=train_id)
         assert db_train.dataset
         # TODO get configuration setting on whether to load and store the data set/loader
         ds = MinioFolderDS(self.minio_client, data_set_id=db_train.dataset.access_path)

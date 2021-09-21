@@ -26,7 +26,7 @@ class DockerTrainExecution(Base):
 class DockerTrainConfig(Base):
     __tablename__ = "docker_train_configs"
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String)
+    name = Column(String, unique=True)
     created_at = Column(DateTime, default=datetime.now())
     updated_at = Column(DateTime, nullable=True)
     airflow_config_json = Column(JSON, nullable=True)
