@@ -52,7 +52,7 @@ async def get_file(file_name: str):
     file = train_builder_local.read_file(file_name)
     return file
 
-@router.delete("/local_trains/delete_file")
+@router.delete("/local_trains/delete_file/{file_name}")
 async def delete_file(file_name: str):
     await train_builder_local.delete_train_file(file_name)
     return "deletetd " + file_name

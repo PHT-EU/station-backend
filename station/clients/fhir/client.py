@@ -52,6 +52,9 @@ class FhirClient:
         except requests.exceptions.ConnectionError as e:
             print(e)
             pass
+        except requests.exceptions.HTTPError as e:
+            print(e)
+            pass
         return response
 
     def get_number_of_resource(self):
