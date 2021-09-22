@@ -18,6 +18,22 @@ def train_id():
     return "test_train"
 
 
+@pytest.fixture
+def docker_train_config():
+    config = {
+        "name": "test_config",
+        "airflow_config_json": {
+            "env": {
+                "FHIR_ADDRESS": "test_address"
+            }
+        },
+
+        "auto_execute": True
+    }
+
+    return config
+
+
 def test_docker_train_create(train_id):
     response = client.post("/api/trains/docker", json={
         "train_id": train_id
@@ -34,10 +50,13 @@ def test_docker_train_create(train_id):
 
 
 def test_docker_train_create_fails(train_id):
-    response = client.post("/api/trains/docker", json={
-        "train_id": train_id
+    response = client.post(
+        "/api/trains/docker",
+        json={
+            "train_id": train_id
 
-    })
+        }
+    )
 
     assert response.status_code == 400, response.text
 
@@ -53,3 +72,36 @@ def test_list_docker_trains():
     assert response.status_code == 200, response.text
 
     assert len(response.json()) == 1
+
+
+def test_docker_train_config_create(docker_train_config):
+    response = client.post(
+        "/api/trains/docker/config",
+        json=docker_train_config
+    )
+    assert response.status_code == 200, response.text
+
+    assert response.json()["name"] == docker_train_config["name"]
+    assert response.json()["auto_execute"] == True
+
+
+def test_get_docker_train_configs():
+    response = client.get(f"/api/trains/docker/configs/")
+    assert response.status_code == 200, response.text
+    assert len(response.json()) >= 1
+
+
+def test_get_docker_train_config_by_id():
+    response = client.get(f"/api/trains/docker/config/1")
+    assert response.status_code == 200, response.text
+
+
+def test_update_docker_train_config(docker_train_config):
+    docker_train_config["name"] = "updated name"
+    response = client.put("/api/trains/docker/config/1",
+                          json=docker_train_config)
+
+    assert response.status_code == 200, response.text
+    response = client.get(f"/api/trains/docker/config/1")
+
+    assert response.json()["name"] == "updated name"

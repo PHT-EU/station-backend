@@ -81,7 +81,7 @@ def add_docker_train_configuration(config_in: DockerTrainConfigCreate, db: Sessi
 def update_docker_train_configuration(update_config: DockerTrainConfigUpdate, config_id: int,
                                       db: Session = Depends(dependencies.get_db)):
     old_config = docker_train_config.get(db, config_id)
-    config = docker_train_config.update(db, old_config, update_config)
+    config = docker_train_config.update(db, db_obj=old_config, obj_in=update_config)
     return config
 
 
