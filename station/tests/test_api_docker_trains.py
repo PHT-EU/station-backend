@@ -85,6 +85,14 @@ def test_docker_train_config_create(docker_train_config):
     assert response.json()["auto_execute"] == True
 
 
+def test_docker_train_config_create_fails(docker_train_config):
+    response = client.post(
+        "/api/trains/docker/config",
+        json=docker_train_config
+    )
+    assert response.status_code == 400
+
+
 def test_get_docker_train_configs():
     response = client.get(f"/api/trains/docker/configs/")
     assert response.status_code == 200, response.text

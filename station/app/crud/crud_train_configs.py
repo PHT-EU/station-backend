@@ -22,6 +22,12 @@ class CRUDDockerTrainConfig(CRUDBase[DockerTrainConfig, DockerTrainConfigCreate,
         train.config_id = config_id
         return train
 
+    def get_by_name(self, db: Session, name: str) -> DockerTrainConfig:
+        config = db.query(DockerTrainConfig).filter(
+            DockerTrainConfig.name == name
+        ).first()
+        return config
+
     def update(self, db: Session, *, db_obj: ModelType, obj_in: Union[UpdateSchemaType, Dict[str, Any]]) -> ModelType:
         obj = super().update(db, db_obj=db_obj, obj_in=obj_in)
         obj.updated_at = datetime.now()

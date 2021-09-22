@@ -73,6 +73,9 @@ def get_all_docker_train_configs(db: Session = Depends(dependencies.get_db), ski
 
 @router.post("/trains/docker/config", response_model=DockerTrainConfig)
 def add_docker_train_configuration(config_in: DockerTrainConfigCreate, db: Session = Depends(dependencies.get_db)):
+    if docker_train_config.get_by_name(db, name=config_in.name):
+        raise HTTPException(status_code=400, detail="Config by this name already exists")
+
     config = docker_train_config.create(db, obj_in=config_in)
     return config
 
