@@ -25,6 +25,7 @@ def get_available_trains(limit: int = 0, db: Session = Depends(dependencies.get_
 @router.post("/trains/docker/", response_model=DockerTrain)
 def register_train(create_msg: DockerTrainCreate, db: Session = Depends(dependencies.get_db)):
     db_train = docker_train.create(db, obj_in=create_msg)
+    print(db_train.__dict__)
     return db_train
 
 
