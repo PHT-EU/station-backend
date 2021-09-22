@@ -8,7 +8,7 @@ from station.app.api import dependencies
 from station.app.crud import federated_trains
 from station.app.schemas.trains import Train, TrainState
 from station.app.schemas.protocol import BroadCastKeysSchema
-from station.app.crud.train import read_train, update_train_state_with_key_broadcast
+from station.app.crud.train import update_train_state_with_key_broadcast
 from station.app.protocol import share_keys, masked_input_collection, AggregationProtocolClient
 
 router = APIRouter()

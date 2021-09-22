@@ -6,7 +6,6 @@ from station.app.api import dependencies
 from station.clients.airflow import docker_trains
 from station.app.schemas.docker_trains import DockerTrain, DockerTrainCreate, DockerTrainConfig, \
     DockerTrainConfigCreate, DockerTrainConfigUpdate, DockerTrainExecution
-from station.app.crud.docker_trains import create_train, read_train_by_train_id, read_trains, read_train_config
 from station.app.crud.crud_docker_trains import docker_train
 from station.app.crud.crud_train_configs import docker_train_config
 
