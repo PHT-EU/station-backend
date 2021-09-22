@@ -124,6 +124,17 @@ def test_assign_docker_train_config(train_id):
 
     assert response.json()["config"]
 
+    # test non existing config error
+    response = client.post(f"/api/trains/docker/{train_id}/config/321")
+
+    assert response.status_code == 404
+
+    # test non existing train error
+
+    response = client.post(f"/api/trains/docker/no_train/config/1")
+    assert response.status_code == 404
+
+
 
 def test_get_config_for_train(train_id):
     response = client.get(f"/api/trains/docker/{train_id}/config")
