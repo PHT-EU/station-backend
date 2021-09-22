@@ -123,3 +123,21 @@ def test_assign_docker_train_config(train_id):
     response = client.get(f"/api/trains/docker/{train_id}")
 
     assert response.json()["config"]
+
+
+def test_get_config_for_train(train_id):
+    response = client.get(f"/api/trains/docker/{train_id}/config")
+    assert response.status_code == 200, response.text
+
+    new_train_id = "no_config_train"
+    response = client.post(
+        "/api/trains/docker",
+        json={
+            "train_id": new_train_id
+
+        }
+    )
+    assert response.status_code == 200
+    response = client.get(f"/api/trains/docker/{new_train_id}/config")
+
+    assert response.status_code == 404

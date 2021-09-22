@@ -51,6 +51,9 @@ def get_latest_train_execution_result(train_id: str, db: Session = Depends(depen
 @router.get("/trains/docker/{train_id}/config", response_model=DockerTrainConfig)
 def get_config_for_train(train_id: str, db: Session = Depends(dependencies.get_db)):
     train_config = docker_train_config.get_by_train_id(db, train_id)
+
+    if not train_config:
+        raise HTTPException(status_code=404, detail=f"Train {train_id} does not have an assigned config")
     return train_config
 
 

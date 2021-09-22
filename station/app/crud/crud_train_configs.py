@@ -14,8 +14,8 @@ class CRUDDockerTrainConfig(CRUDBase[DockerTrainConfig, DockerTrainConfigCreate,
 
     def get_by_train_id(self, db: Session, train_id: str) -> DockerTrainConfig:
         train = db.query(DockerTrain).filter(DockerTrain.train_id == train_id).first()
-        config_id = train.config_id
-        config = db.query(DockerTrainConfig).filter(DockerTrainConfig.id == config_id).first()
+
+        config = train.config
         return config
 
     def assign_to_train(self, db: Session, train_id: str, config_id: int) -> DockerTrain:
