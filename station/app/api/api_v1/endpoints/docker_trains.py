@@ -56,7 +56,15 @@ def get_config_for_train(train_id: str, db: Session = Depends(dependencies.get_d
 
 @router.post("/trains/docker/{train_id}/config/{config}")
 def assign_config_to_docker_train(train_id: str, config: int, db: Session = Depends(dependencies.get_db)):
-    train = docker_train_config.assign_to_train(db, train_id, config)
+    config = docker_train_config.get(db, config)
+    if not config:
+        raise HTTPException(status_code=404, detail=f"Config with id: {config} not found.")
+
+    train = docker_train.get_by_train_id(db, train_id=train_id)
+    if not train:
+        raise HTTPException(status_code=404, detail=f"Train with id: {train_id} not found")
+
+    train = docker_train_config.assign_to_train(db, train_id, config.id)
     return train
 
 

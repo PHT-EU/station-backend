@@ -1,3 +1,5 @@
+import uuid
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -15,7 +17,7 @@ client = TestClient(app)
 
 @pytest.fixture
 def train_id():
-    return "test_train"
+    return "testTrain"
 
 
 @pytest.fixture
@@ -82,7 +84,7 @@ def test_docker_train_config_create(docker_train_config):
     assert response.status_code == 200, response.text
 
     assert response.json()["name"] == docker_train_config["name"]
-    assert response.json()["auto_execute"] == True
+    assert response.json()["auto_execute"]
 
 
 def test_docker_train_config_create_fails(docker_train_config):
@@ -113,3 +115,11 @@ def test_update_docker_train_config(docker_train_config):
     response = client.get(f"/api/trains/docker/config/1")
 
     assert response.json()["name"] == "updated name"
+
+
+def test_assign_docker_train_config(train_id):
+    response = client.post(f"/api/trains/docker/{train_id}/config/1")
+    assert response.status_code == 200, response.text
+    response = client.get(f"/api/trains/docker/{train_id}")
+
+    assert response.json()["config"]
