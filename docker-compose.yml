@@ -5,6 +5,7 @@ volumes:
   pg_pht_station:
     external: True
 
+  fhir-data:
 services:
 
   station:
@@ -57,6 +58,7 @@ services:
       - STATION_ID=1
       - STATION_PRIVATE_KEY_PATH=/opt/private_key.pem
       - HARBOR_API_URL=https://harbor.personalhealthtrain.de/api/v2.0
+      - STATION_API_URL=http://station:8001/api
     ports:
       - 8080:8080
 
@@ -72,3 +74,11 @@ services:
       - MINIO_SECRET_KEY=minio_admin
 
     command: server /data
+
+  fhir-blaze:
+    image: samply/blaze
+    volumes:
+      - fhir-data:/app/data
+    ports:
+      - "8081:8080"
+
