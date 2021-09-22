@@ -1,6 +1,6 @@
 from typing import List
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from station.app.api import dependencies
 from station.clients.airflow import docker_trains
@@ -22,10 +22,11 @@ def get_available_trains(limit: int = 0, db: Session = Depends(dependencies.get_
     return db_trains
 
 
-@router.post("/trains/docker/", response_model=DockerTrain)
+@router.post("/trains/docker", response_model=DockerTrain)
 def register_train(create_msg: DockerTrainCreate, db: Session = Depends(dependencies.get_db)):
+    if docker_train.get_by_train_id(db, train_id=create_msg.train_id):
+        raise HTTPException(status_code=400, detail=f"Train with id: {create_msg.train_id} already exists")
     db_train = docker_train.create(db, obj_in=create_msg)
-    print(db_train.__dict__)
     return db_train
 
 
