@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime
+from fastapi import HTTPException
 
 from .base import CRUDBase, CreateSchemaType, ModelType
 
@@ -22,10 +23,9 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
                config_id = obj_in.config_id
                if obj_in.config:
                    if config != obj_in.config:
-                       print("Config will be updated")
-                       docker_train_config.update(db, db_obj=config, obj_in=obj_in.config)
+                       raise HTTPException(status_code=400, detail="Saved config differs from specified one")
             except:
-               print("Config does not exist")
+                raise HTTPException(status_code=404, detail="Config does not exist")
         elif obj_in.config:
             try:
                 new_config = docker_train_config.create(db, obj_in=obj_in.config.dict())
@@ -34,8 +34,11 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
                 db.commit()
             except:
                 print("Config could not be created")
-        db_train = super().create(db, obj_in=obj_in.dict(exclude={'config'}))
-        db_train.config_id = config_id
+        db_train = super().create(db, obj_in=obj_in.dict(exclude={'config', 'config_id'}))
+        try:
+            db_train.config_id = config_id
+        except:
+            print("Train created without config definition")
         train_state = DockerTrainState(train_id=db_train.id)
         db.add(train_state)
         db.commit()

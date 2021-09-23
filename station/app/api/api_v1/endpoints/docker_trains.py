@@ -12,13 +12,13 @@ from station.app.crud.crud_train_configs import docker_train_config
 router = APIRouter()
 
 
-@router.get("/trains/docker/", response_model=List[DockerTrain])
+@router.get("/trains/docker", response_model=List[DockerTrain])
 def get_available_trains(active: bool = None, limit: int = 0, db: Session = Depends(dependencies.get_db)):
     db_trains = docker_train.get_trains_by_active_status(db, active, limit)
     return db_trains
 
 
-@router.post("/trains/docker/", response_model=DockerTrain)
+@router.post("/trains/docker", response_model=DockerTrain)
 def register_train(create_msg: DockerTrainCreate, db: Session = Depends(dependencies.get_db)):
     db_train = docker_train.create(db, obj_in=create_msg)
     return db_train
@@ -59,7 +59,7 @@ def get_state_for_train(train_id: str, db: Session = Depends(dependencies.get_db
     pass
 
 
-@router.get("/trains/configs", response_model=List[DockerTrainConfig])
+@router.get("/trains/docker/configs", response_model=List[DockerTrainConfig])
 def get_all_docker_train_configs(db: Session = Depends(dependencies.get_db), limit: int = 100, skip: int = 0):
     config_all = docker_train_config.get_multi(db, limit=limit, skip=skip)
     return config_all

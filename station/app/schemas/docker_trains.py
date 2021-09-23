@@ -36,6 +36,10 @@ class DockerTrainConfig(DockerTrainConfigBase):
     updated_at: Optional[datetime] = None
     trains: Optional[List[DockerTrainMinimal]] = None
 
+class DockerTrainConfigMinimal(DockerTrainConfigBase):
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
 
 class DockerTrainExecution(BaseModel):
     config_id: Optional[Union[int, str]] = "default"
@@ -49,7 +53,7 @@ class DockerTrain(DBSchema):
     is_active: bool
     train_id: Optional[str] = None
     config_id: Optional[int] = None
-    config: Optional[DockerTrainConfigBase] = None
+    config: Optional[DockerTrainConfigMinimal] = None
     state: Optional[DockerTrainState] = None
 
 
