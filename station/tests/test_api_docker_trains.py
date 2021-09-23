@@ -135,7 +135,6 @@ def test_assign_docker_train_config(train_id):
     assert response.status_code == 404
 
 
-
 def test_get_config_for_train(train_id):
     response = client.get(f"/api/trains/docker/{train_id}/config")
     assert response.status_code == 200, response.text
