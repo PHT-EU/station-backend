@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, LargeBinary, Float, BigInteger
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, LargeBinary, Float, BigInteger, JSON
 from sqlalchemy.orm import relationship, backref
 from datetime import datetime
 from uuid import uuid4
@@ -19,6 +19,8 @@ class Train(Base):
     model = relationship("DLModel", uselist=False, backref="trains")
     dataset_id = Column(Integer, ForeignKey('datasets.id'), nullable=True)
     dataset = relationship("DataSet", back_populates="trains")
+    config_id = Column(Integer, ForeignKey("federated_train_configs.id"), nullable=True)
+    config = relationship("FederatedTrainConfig", back_populates="trains")
 
 
 class TrainState(Base):
@@ -33,5 +35,14 @@ class TrainState(Base):
     seed = Column(BigInteger, nullable=True)
     key_broadcast = Column(String, nullable=True)
 
+
+class FederatedTrainConfig(Base):
+    __tablename__ = 'federated_train_configs'
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True)
+    created_at = Column(DateTime, default=datetime.now())
+    updated_at = Column(DateTime, nullable=True)
+    airflow_config_json = Column(JSON, nullable=True)
+    trains = relationship("Train")
 
 # todo add train config
