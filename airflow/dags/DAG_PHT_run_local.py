@@ -41,9 +41,13 @@ def run_local():
     def get_train_configuration():
         context = get_current_context()
         local_train_client = DockerClientLocalTrain(context)
-        return local_train_client
+        local_train_client.pull_master_image()
+        local_train_client.build_train()
+        local_train_client.run()
+        local_train_client.save_results()
+        #return local_train_client
 
-    @task()
+    """@task()
     def pull_docker_image(local_train_client):
         local_train_client.pull_master_image()
         return local_train_client
@@ -60,14 +64,14 @@ def run_local():
 
     @task()
     def save_results(local_train_client):
-        local_train_client.save_results()
+        local_train_client.save_results()"""
 
 
-    local_train = get_train_configuration()
-    local_train = pull_docker_image(local_train)
+    get_train_configuration()
+    """local_train = pull_docker_image(local_train)
     local_train = build_train(local_train)
     local_train = run_train(local_train)
-    save_results(local_train)
+    save_results(local_train)"""
 
 
 run_local = run_local()
