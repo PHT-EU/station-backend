@@ -1,10 +1,12 @@
 import docker
 import os
-#from station.clients.minio import MinioClient
+from station.clients.minio import MinioClient
 
 class DockerClientLocalTrain:
 
     def __init__(self, context):
+        self.client = docker.from_env()
+        self.minio_client = MinioClient(minio_server="minio:9000")
         repository, tag, env, volumes, build_dir = [context['dag_run'].conf.get(_, None) for _ in
                                                     ['repository', 'tag', 'env', 'volumes', 'build_dir']]
         if repository is None:
@@ -22,8 +24,6 @@ class DockerClientLocalTrain:
             "volumes": volumes,
             "build_dir": build_dir,
         }
-        self.client = docker.from_env()
-        #self.minio_client = MinioClient(minio_server = "0.0.0.0:9000")
 
     def pull_master_image(self):
         harbor_address = os.getenv("HARBOR_API_URL")
@@ -49,8 +49,8 @@ class DockerClientLocalTrain:
 
     def _get_run_files(self):
         #TODO make selectet by configuraion.
-        #print(minio_client.get_file_names(self.bucket_name))
-        #endpoint_file = minio_client.get_file(self.bucket_name, "endpoint.py")
+        print(self.minio_client.get_file_names(self.bucket_name))
+        endpoint_file = self.minio_client.get_file(self.bucket_name, "endpoint.py")
         pass
 
     def _make_build_file(self):

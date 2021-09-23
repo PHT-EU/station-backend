@@ -169,7 +169,7 @@ class MinioClient:
             return {"status": "none"}
 
 
-minio_client = MinioClient()
+#minio_client = MinioClient()
 
 if __name__ == '__main__':
     load_dotenv(find_dotenv())
