@@ -1,13 +1,10 @@
 from typing import Any, List
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Body, Depends, HTTPException
-import os
 
 from station.app.api import dependencies
-from station.app.protocol.setup import initialize_train
 from station.app.schemas.trains import Train
 from station.app.schemas.dl_models import DLModelCreate, DLModel
-from station.app.crud.train import read_train
 from station.app.crud import federated_trains, torch_models, dl_models, datasets
 from station.clients.conductor import ConductorRESTClient
 from station.app.protocol.aggregation_protocol import AggregationProtocolClient
@@ -15,7 +12,7 @@ from station.app.protocol.aggregation_protocol import AggregationProtocolClient
 router = APIRouter()
 
 
-@router.post("/trains/federated/{train_name}", response_model=Train)
+@router.post("/federated/{train_name}", response_model=Train)
 def add_new_train(train_name: str, db: Session = Depends(dependencies.get_db)) -> Any:
     # TODO fix proposal id
     if federated_trains.get_by_name(db=db, name=train_name):
@@ -27,24 +24,29 @@ def add_new_train(train_name: str, db: Session = Depends(dependencies.get_db)) -
     return train
 
 
-@router.get("/trains/federated/{train_id}", response_model=Train)
+@router.get("/federated/{train_id}", response_model=Train)
 def get_train(train_id: Any, db: Session = Depends(dependencies.get_db)) -> Any:
     db_train = federated_trains.get(db, id=train_id)
     return db_train
 
 
-@router.delete("/trains/federated/{train_id}", response_model=Train)
+@router.delete("/federated/{train_id}", response_model=Train)
 def delete_train_with_id(train_id: Any, db: Session = Depends(dependencies.get_db)) -> Any:
     removed_train = federated_trains.remove(db, id=train_id)
     return removed_train
 
 
-@router.get("/trains/federated/", response_model=List[Train])
+@router.get("/federated", response_model=List[Train])
 def get_trains(db: Session = Depends(dependencies.get_db)):
     return federated_trains.get_multi(db)
 
 
-@router.post("/trains/federated/sync/")
+@router.post("/federated/update")
+def get_updates_from_conductor(db: Session = Depends(dependencies.get_db)):
+    pass
+
+
+@router.post("/federated/sync")
 def synchronize_trains_with_conductor(db: Session = Depends(dependencies.get_db)):
     # Get the station assigned trains from conductor
     client = ConductorRESTClient()

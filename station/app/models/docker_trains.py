@@ -39,7 +39,7 @@ class DockerTrainConfig(Base):
 class DockerTrain(Base):
     __tablename__ = "docker_trains"
     id = Column(Integer, primary_key=True, index=True)
-    train_id = Column(String)
+    train_id = Column(String, unique=True)
     created_at = Column(DateTime, default=datetime.now())
     updated_at = Column(DateTime, nullable=True)
     proposal_id = Column(Integer, default=0)
