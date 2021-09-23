@@ -56,7 +56,7 @@ def get_config_for_train(train_id: str, db: Session = Depends(dependencies.get_d
     return train_config
 
 
-@router.post("/trains/docker/{train_id}/config/{config}")
+@router.post("/trains/docker/{train_id}/config/{config}", response_model=DockerTrain)
 def assign_config_to_docker_train(train_id: str, config: int, db: Session = Depends(dependencies.get_db)):
     config = docker_train_config.get(db, config)
     if not config:
