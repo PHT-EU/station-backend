@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
 from typing import List
+from fastapi import HTTPException
+from fastapi.encoders import jsonable_encoder
 
 from .base import CRUDBase, CreateSchemaType, ModelType
 
@@ -22,8 +24,24 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
 
             config_id = db_config.id
 
+        elif obj_in.config_id:
+            config_id = obj_in.config_id
+
+        elif obj_in.config:
+            db_config: DockerTrainConfig = db.query(DockerTrainConfig).filter(
+                DockerTrainConfig.name == obj_in.config.name
+            ).first()
+            if db_config:
+                raise HTTPException(status_code=400, detail="A config with the given name already exists.")
+            else:
+                new_config = DockerTrainConfig(**jsonable_encoder(obj_in.config))
+                db.add(new_config)
+                db.commit()
+                db.refresh(new_config)
+                config_id = new_config.id
+
         else:
-            config_id = obj_in.config_id if obj_in.config_id else None
+            config_id = None
 
         db_train = DockerTrain(
             train_id=obj_in.train_id,
@@ -38,7 +56,8 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
         return db_train
 
     def get_by_train_id(self, db: Session, train_id: str) -> DockerTrain:
-        return db.query(DockerTrain).filter(DockerTrain.train_id == train_id).first()
+        train = db.query(DockerTrain).filter(DockerTrain.train_id == train_id).first()
+        return train
 
     def get_trains_by_active_status(self, db: Session, active=True, limit: int = 0) -> List[DockerTrain]:
         if limit != 0:
