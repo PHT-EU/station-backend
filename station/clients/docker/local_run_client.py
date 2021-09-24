@@ -1,21 +1,25 @@
+import tarfile
+
 import docker
 import os
+import io
+from io import BytesIO
+from docker.models.containers import Container
+
 from station.clients.minio import MinioClient
 
 class DockerClientLocalTrain:
 
     def __init__(self, context):
-        self.client = docker.from_env()
+        self.docker_client = docker.from_env()
         self.minio_client = MinioClient(minio_server="minio:9000")
         repository, tag, env, volumes, build_dir = [context['dag_run'].conf.get(_, None) for _ in
                                                     ['repository', 'tag', 'env', 'volumes', 'build_dir']]
-        if repository is None:
-            # docker pull harbor-pht.tada5hi.net/master/python/ubuntu@sha256:490012782ddf22e66c556ef837209cb75d4644430286b70f50f4b4edcdfdcc64
-            repository = "harbor-pht.tada5hi.net/master/python/ubuntu"
-        if tag is None:
-            tag = "latest"
+
         img = repository + ":" + tag
         self.bucket_name = "localtrain"
+        if  not os.path.isdir(build_dir):
+            os.mkdir(build_dir)
         self.train_state_dict = {
             "repository": repository,
             "tag": tag,
@@ -24,46 +28,55 @@ class DockerClientLocalTrain:
             "volumes": volumes,
             "build_dir": build_dir,
         }
+        self.image = None
 
     def pull_master_image(self):
         harbor_address = os.getenv("HARBOR_API_URL")
         print(harbor_address)
-        self.client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
-                          registry=harbor_address)
-        self.client.images.pull(repository=self.get_repository(), tag=self.get_tag())
+        self.docker_client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
+                                 registry=harbor_address)
+        self.docker_client.images.pull(repository=self.get_repository(), tag=self.get_tag())
         print("DAG run")
-        images = self.client.images.list()
+        images = self.docker_client.images.list()
         print(images)
 
     def build_train(self):
-        #self._make_build_file()
-        self._get_run_files()
-        image, logs = self.client.images.build(path=self.train_state_dict["build_dir"])
-        image.run()
+        docker_file = self._make_build_file()
+        self.image, logs = self.docker_client.images.build(fileobj=docker_file)
+        container = self.docker_client.containers.create(self.image.id)
+        self._add_run_files(container)
+
 
     def run(self):
-        pass
+        self.docker_client.containers.run(image=self.image)
+
 
     def save_results(self):
         pass
 
-    def _get_run_files(self):
+    def _add_run_files(self,container):
         #TODO make selectet by configuraion.
-        print(self.minio_client.get_file_names(self.bucket_name))
-        endpoint_file = self.minio_client.get_file(self.bucket_name, "endpoint.py")
-        pass
+        tar = self._minIO_bytes_to_tar( self.minio_client.get_file(self.bucket_name, "endpoint.py"), "endpoint.py")
+        tar.
+        container.put_archive("/opt/pht_train",  tar)
+        container.wait()
+
 
     def _make_build_file(self):
-        path = os.getcwd()
-        print(path)
-        os.mkdir(self.train_state_dict["build_dir"])
-        with open(os.path.join(os.path.abspath(self.train_state_dict["build_dir"]), "Dockerfile"), "w") as df:
-            df.write("From " + self.train_state_dict["img"] + "\n")
-            df.write("COPY " + "endpoint.py" + "/opt/pht_train\n")
-            df.write("RUN mkdir /opt/pht_results\n")
-            df.write('CMD ["python", "/opt/pht_train/endpoint.py"]')
+        docker_file = f'''
+                    FROM {self.train_state_dict["img"]}
+                    RUN mkdir /opt/pht_results
+                    RUN mkdir /opt/pht_train
+                    RUN chmod -R +x /opt/pht_train
+                    CMD ["python", "/opt/pht_train/endpoint.py"]
+                    '''
+        file_obj = BytesIO(docker_file.encode("utf-8"))
 
-        print(os.path.join(os.path.abspath(self.train_state_dict["build_dir"]), "Dockerfile"))
+        return file_obj
+
+    def _minIO_bytes_to_tar(self,bytes , name):
+        data = io.BytesIO(bytes)
+        return tarfile.open(name=name , fileobj=data, mode="w")
 
     def get_repository(self):
         return self.train_state_dict["repository"]
