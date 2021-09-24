@@ -68,6 +68,11 @@ def test_get_train_by_id(train_id):
     assert response.status_code == 200, response.text
 
 
+def test_get_train_by_id_fails():
+    response = client.get("/api/trains/docker/notthere")
+    assert response.status_code == 404, response.text
+
+
 def test_list_docker_trains():
     response = client.get("/api/trains/docker")
 
@@ -96,7 +101,7 @@ def test_docker_train_config_create_fails(docker_train_config):
 
 
 def test_get_docker_train_configs():
-    response = client.get(f"/api/trains/docker/configs/")
+    response = client.get(f"/api/trains/docker/configs/all")
     assert response.status_code == 200, response.text
     assert len(response.json()) >= 1
 
@@ -104,6 +109,10 @@ def test_get_docker_train_configs():
 def test_get_docker_train_config_by_id():
     response = client.get(f"/api/trains/docker/config/1")
     assert response.status_code == 200, response.text
+
+def test_get_docker_train_config_by_id_fails():
+    response = client.get("/api/trains/docker/config/2")
+    assert response.status_code == 404, response.text
 
 
 def test_update_docker_train_config(docker_train_config):
@@ -115,6 +124,12 @@ def test_update_docker_train_config(docker_train_config):
     response = client.get(f"/api/trains/docker/config/1")
 
     assert response.json()["name"] == "updated name"
+
+def test_update_docker_train_config_fails(docker_train_config):
+    docker_train_config["name"] = "updated name"
+    response = client.put("/api/trains/docker/config/2",
+                          json=docker_train_config)
+    assert response.status_code == 404, response.text
 
 
 def test_assign_docker_train_config(train_id):

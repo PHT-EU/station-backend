@@ -7,7 +7,7 @@ from .base import CRUDBase, CreateSchemaType, ModelType, UpdateSchemaType
 from station.app.models.docker_trains import DockerTrain, DockerTrainConfig
 from station.app.schemas.docker_trains import DockerTrainConfigCreate, DockerTrainConfigUpdate, DockerTrainConfigBase
 from dateutil import parser
-from station.app.crud import docker_train
+from station.app.crud.crud_docker_trains import docker_train
 
 
 class CRUDDockerTrainConfig(CRUDBase[DockerTrainConfig, DockerTrainConfigCreate, DockerTrainConfigUpdate]):
@@ -21,6 +21,7 @@ class CRUDDockerTrainConfig(CRUDBase[DockerTrainConfig, DockerTrainConfigCreate,
     def assign_to_train(self, db: Session, train_id: str, config_id: int) -> DockerTrain:
         train = docker_train.get_by_train_id(db, train_id)
         train.config_id = config_id
+        train.updated_at = datetime.now()
         db.commit()
         db.refresh(train)
         return train

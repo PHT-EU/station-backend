@@ -68,6 +68,7 @@ class DockerTrainCreate(BaseModel):
     train_id: str
     proposal_id: Optional[int] = None
     config: Optional[DockerTrainConfigCreate] = None
+    config_name: Optional[str] = None
     config_id: Optional[int] = None
 
 class DockerTrainUpdate(DockerTrainCreate):

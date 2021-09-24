@@ -37,6 +37,8 @@ def run_train(db: Session, train_id: Any, run_config: DockerTrainExecution):
 
     # Update the train state
     db_train = docker_train.get_by_train_id(db, train_id)
+    if not db_train:
+        raise HTTPException(status_code=404, detail=f"Train with id '{train_id}' not found.")
     db_train.is_active = True
     db_train.updated_at = datetime.now()
     if db_train.state:
