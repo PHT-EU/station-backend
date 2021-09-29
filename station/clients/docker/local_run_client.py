@@ -38,6 +38,7 @@ class DockerClientLocalTrain:
             "env": env,
             "volumes": volumes,
             "build_dir": build_dir,
+            "bucket_name": "localtrain"
         }
         self.image = None
 

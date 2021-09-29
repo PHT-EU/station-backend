@@ -13,14 +13,6 @@ class TrainBuilderLocal:
         self.bucket_name="localtrain"
         minio_client.add_bucket(self.bucket_name)
 
-    def build_train(self, build_data: dict):
-        self.docker_client.get_master_images(build_data["masterImage"])
-
-        docker_file_obj = self._make_dockerfile(
-            master_image=build_data["masterImage"],
-            executable=build_data["entrypointExecutable"],
-            entrypoint_file=build_data["entrypointPath"])
-
     async def store_endpoint(self, upload_file: UploadFile):
         """        async with aiofiles.open(self.path_to_resources + upload_file.filename, 'wb') as save_file:
             content = await upload_file.read()
@@ -29,8 +21,6 @@ class TrainBuilderLocal:
         await minio_client.store_files(self.bucket_name, "endpoint.py", upload_file)
 
     async def store_train_file(self, upload_file: UploadFile):
-        #file_name = upload_file.filename.split("/")[-1]
-        #print(file_name)
         await minio_client.store_files(self.bucket_name, upload_file.filename, upload_file)
 
     async def delete_train_file(self, file_name):
