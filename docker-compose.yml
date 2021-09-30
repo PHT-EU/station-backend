@@ -6,13 +6,15 @@ volumes:
     external: True
 
   fhir-data:
+
+
 services:
 
   station:
     build: .
     environment:
       - STATION_DB=postgresql+psycopg2://admin:admin@pg_station/pht_station
-      - ENVIRONMENT=dev
+      - ENVIRONMENT=prod
     env_file:
       - .env
     ports:
@@ -48,7 +50,7 @@ services:
     environment:
       - FHIR_ADDRESS=$FHIR_SERVER_URL
       - STATION_ID=$STATION_ID
-      - STATION_PRIVATE_KEY_PATH=/opt/private_key.pem
+      - PRIVATE_KEY_PATH=/opt/private_key.pem
       - STATION_DATA_DIR=$STATION_DATA_DIR
     ports:
       - "8080:8080"
