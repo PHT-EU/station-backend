@@ -1,3 +1,4 @@
+[![Build images](https://github.com/PHT-EU/station-backend/actions/workflows/Build.yml/badge.svg)](https://github.com/PHT-EU/station-backend/actions/workflows/Build.yml)
 # PHT Station
 This project contains the implementation of the station API, workers for training models, as well as the configuration for the station airflow instance and related workers
 
