@@ -21,7 +21,7 @@ or running trains. It should expose a simple API to be used in Airflow DAGs and 
 ## Development environment
 
 ### Running the third party services
-1. If it does not yet exist create volumes for the database `docker volume create pg_pht_station` and the 
+1. If it does not yet exist create volumes for the database `docker volume create pg_pht_station` and the
    [Blaze](https://github.com/samply/blaze) FHIR server `docker volume create blaze_data`
 1. Run the development docker-compose file `docker-compose -f docker-compose_dev.yml up -d`, which will spin up the third
    party services such as the postgres db, airflow and minio, allowing for development of the station API inside of an IDE.

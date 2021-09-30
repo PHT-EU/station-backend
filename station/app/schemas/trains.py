@@ -23,7 +23,7 @@ class TrainState(DBSchema):
 
 
 class TrainCreate(BaseModel):
-    train_id: str
+    name: Optional[str] = None
     proposal_id: Optional[str] = None
 
 
@@ -33,11 +33,17 @@ class TrainUpdate(TrainCreate):
 
 class Train(DBSchema):
     id: int
-    train_id: Optional[str] = None
+    name: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
     is_active: bool
-    proposal_id: int
+    proposal_id: Optional[str] = None
     state: TrainState
     token: Optional[str] = None
     dataset: Optional[datasets.DataSet] = None
+
+
+class FederatedTrainConfigCreate(DBSchema):
+    name: str
+
+

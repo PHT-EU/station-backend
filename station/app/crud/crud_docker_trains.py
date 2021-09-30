@@ -13,12 +13,28 @@ from dateutil import parser
 
 class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate]):
 
-    def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
-        db_train = super().create(db, obj_in=obj_in)
+    def create(self, db: Session, *, obj_in: DockerTrainCreate) -> ModelType:
+
+        if obj_in.config_name:
+            db_config: DockerTrainConfig = db.query(DockerTrainConfig).filter(
+                DockerTrainConfig.name == obj_in.config_name
+            ).first()
+
+            config_id = db_config.id
+
+        else:
+            config_id = obj_in.config_id if obj_in.config_id else None
+
+        db_train = DockerTrain(
+            train_id=obj_in.train_id,
+            config_id=config_id
+        )
+        db.add(db_train)
         train_state = DockerTrainState(train_id=db_train.id)
         db.add(train_state)
         db.commit()
 
+        db.refresh(db_train)
         return db_train
 
     def get_by_train_id(self, db: Session, train_id: str) -> DockerTrain:

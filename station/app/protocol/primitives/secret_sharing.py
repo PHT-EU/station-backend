@@ -12,6 +12,13 @@ uses the ssss tool http://point-at-infinity.org/ssss/
 """
 
 
+def create_random_seed_and_shares(n: int, threshold: int = 3) -> Tuple[int, List[Tuple[int, bytes]]]:
+    seed = os.urandom(6)
+    shares = share_secret_pycroptodome(seed, threshold, n)
+
+    return int.from_bytes(seed, byteorder="big"), shares
+
+
 # TODO implement this for larger secrets more efficiently
 
 def share_secret(secret: bytes, t: int, n: int, s: int = 1024) -> List[bytes]:
@@ -107,7 +114,6 @@ if __name__ == '__main__':
     recovered_seed = recover_seed(secrets)
     print(seed_hex)
     print(recovered_seed.hex())
-
 
     # print(data.hex())
     # shares = share_secret(data, 3, 5)
