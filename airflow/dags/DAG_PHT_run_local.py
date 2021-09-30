@@ -88,14 +88,14 @@ def run_local():
         container = docker_client.containers.create(image.id)
         print(image.id)
 
-        data = minio_client.get_file(train_state_dict["bucket_name"], "endpoint.py")
+        endpoint = minio_client.get_file(train_state_dict["bucket_name"], "endpoint.py")
         name = "endpoint.py"
 
         tarfile_name = f"{name}.tar"
         with tarfile.TarFile(tarfile_name, 'w') as tar:
             data_file = tarfile.TarInfo(name='endpoint.py')
-            data_file.size = len(data)
-            tar.addfile(data_file, io.BytesIO(data))
+            data_file.size = len(endpoint)
+            tar.addfile(data_file, io.BytesIO(endpoint))
 
         with open(tarfile_name, 'rb') as fd:
             respons = container.put_archive("/opt/pht_train", fd)
