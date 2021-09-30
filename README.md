@@ -1,3 +1,5 @@
+[![Build](https://github.com/PHT-EU/station-backend/actions/workflows/Build.yml/badge.svg)](https://github.com/PHT-EU/station-backend/actions/workflows/Build.yml)
+[![Tests](https://github.com/PHT-EU/station-backend/actions/workflows/tests.yml/badge.svg)](https://github.com/PHT-EU/station-backend/actions/workflows/tests.yml)
 # PHT Station
 This project contains the implementation of the station API, workers for training models, as well as the configuration for the station airflow instance and related workers
 

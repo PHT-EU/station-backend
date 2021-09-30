@@ -53,7 +53,7 @@ jobs:
           [ "$VERSION" == "master" ] && VERSION=latest
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
-          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker tag $API_IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
       - name: Push Airflow Image
         run: |
@@ -68,5 +68,5 @@ jobs:
           [ "$VERSION" == "master" ] && VERSION=latest
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
-          docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+          docker tag $AIRFLOW_IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
