@@ -21,7 +21,7 @@ RUN pip install git+https://gitlab.com/PersonalHealthTrain/implementations/germa
 # RUN pip install git+https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/incubating/pht-federated.git
 
 COPY ./station /opt/station/station
-COPY ./worker /opt/station/worker
+COPY ./station_worker /opt/station/station_worker
 COPY ./setup.py /opt/station/setup.py
 RUN pip install /opt/station
 
