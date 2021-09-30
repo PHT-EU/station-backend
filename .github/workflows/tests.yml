@@ -34,3 +34,14 @@ jobs:
         run: |
           pip install .
           pytest
+      - name: Generate coverage report
+        run: |
+          coverage run -m pytest
+          coverage xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          name: codecov-umbrella
+          verbose: true
