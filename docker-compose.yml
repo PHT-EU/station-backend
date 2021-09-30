@@ -12,15 +12,9 @@ services:
     build: .
     environment:
       - STATION_DB=postgresql+psycopg2://admin:admin@pg_station/pht_station
-      - STATION_ID=1
-      - MINIO_URL=127.0.0.1:9000
-      - MINIO_USER=minio_admin
-      - MINIO_PW=minio_admin
-      - CONDUCTOR_URL=http://127.0.0.1:8000
-      - HARBOR_API_URL=https://harbor.pht.medic.uni-tuebingen.de/api/v2.0
-      - HARBOR_USER=
-      - HARBOR_PW=
-      - ENVIRONMENT=prod
+      - ENVIRONMENT=dev
+    env_file:
+      - .env
     ports:
       - "8001:8001"
     command: [ "./wait-for-it.sh","--timeout=10", "pg_station:5432", "--", "python", "/home/station/run_station.py" ]
@@ -34,7 +28,7 @@ services:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
     ports:
-      - 5432:5432
+      - "5432:5432"
 
   airflow:
     build:
@@ -49,25 +43,20 @@ services:
       # - ./station /opt/station
     depends_on:
       - pg_station
+    env_file:
+      - .env
     environment:
       - FHIR_ADDRESS=$FHIR_SERVER_URL
-      - FHIR_USER=$FHIR_USER
-      - FHIR_PW=$FHIR_PW
-      - FHIR_TOKEN=$FHIR_TOKEN
-      - HARBOR_USER=$HARBOR_USER
-      - HARBOR_PW=$HARBOR_PW
-      - STATION_ID=1
+      - STATION_ID=$STATION_ID
       - STATION_PRIVATE_KEY_PATH=/opt/private_key.pem
-      - HARBOR_API_URL=https://harbor.personalhealthtrain.de/api/v2.0
-      - STATION_API_URL=http://station:8001/api
       - STATION_DATA_DIR=$STATION_DATA_DIR
     ports:
-      - 8080:8080
+      - "8080:8080"
 
   minio:
     image: minio/minio:latest
     ports:
-      - 9000:9000
+      - "9000:9000"
     volumes:
       - ./test_data:/data
 
