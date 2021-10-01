@@ -68,7 +68,6 @@ def run_local():
         docker_client.images.pull(repository=train_state_dict["repository"], tag=train_state_dict["tag"])
 
         images = docker_client.images.list()
-        print(images)
         return train_state_dict
 
     @task()
@@ -86,8 +85,6 @@ def run_local():
 
         image, logs = docker_client.images.build(fileobj=docker_file)
         container = docker_client.containers.create(image.id)
-        print(image.id)
-
         endpoint = minio_client.get_file(train_state_dict["bucket_name"], "endpoint.py")
         name = "endpoint.py"
 
@@ -100,7 +97,6 @@ def run_local():
         with open(tarfile_name, 'rb') as fd:
             respons = container.put_archive("/opt/pht_train", fd)
             container.wait()
-        print(respons)
         container.commit(repository="local_train", tag="latest")
         container.wait()
 
@@ -110,8 +106,6 @@ def run_local():
     def run_train(train_state_dict):
         docker_client = docker.from_env()
         container = docker_client.containers.run("local_train", detach=True)
-        exit_code = container.wait()["StatusCode"]
-        print(f"{exit_code} run fin")
         f = open(f'results.tar', 'wb')
         results = container.get_archive('opt/pht_results')
         bits, stat = results
