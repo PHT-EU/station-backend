@@ -87,7 +87,6 @@ def run_local():
         container = docker_client.containers.create(image.id)
         endpoint = minio_client.get_file(train_state_dict["bucket_name"], "endpoint.py")
         name = "endpoint.py"
-
         tarfile_name = f"{name}.tar"
         with tarfile.TarFile(tarfile_name, 'w') as tar:
             data_file = tarfile.TarInfo(name='endpoint.py')
@@ -106,6 +105,7 @@ def run_local():
     def run_train(train_state_dict):
         docker_client = docker.from_env()
         container = docker_client.containers.run("local_train", detach=True)
+        container.wait()
         f = open(f'results.tar', 'wb')
         results = container.get_archive('opt/pht_results')
         bits, stat = results
@@ -116,6 +116,11 @@ def run_local():
 
     @task()
     def save_results(train_state_dict):
+        # for testing
+        files = [f for f in os.listdir('.') if os.path.isfile(f)]
+        for f in files:
+            print(f)
+            print(os.path.getsize(f))
         minio_client = MinioClient(minio_server="minio:9000")
         with open(f'results.tar', 'rb') as results_tar:
             asyncio.run(
