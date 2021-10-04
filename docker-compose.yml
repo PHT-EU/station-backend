@@ -6,24 +6,20 @@ volumes:
     external: True
 
   fhir-data:
+
+
 services:
 
   station:
     build: .
     environment:
       - STATION_DB=postgresql+psycopg2://admin:admin@pg_station/pht_station
-      - STATION_ID=1
-      - MINIO_URL=127.0.0.1:9000
-      - MINIO_USER=minio_admin
-      - MINIO_PW=minio_admin
-      - CONDUCTOR_URL=http://127.0.0.1:8000
-      - HARBOR_API_URL=https://harbor.pht.medic.uni-tuebingen.de/api/v2.0
-      - HARBOR_USER=
-      - HARBOR_PW=
       - ENVIRONMENT=prod
+    env_file:
+      - .env
     ports:
       - "8001:8001"
-    command: ["./wait-for-it.sh","--timeout=10", "pg_station:5432", "--", "python", "/home/station/run_station.py"]
+    command: [ "./wait-for-it.sh","--timeout=10", "pg_station:5432", "--", "python", "/home/station/run_station.py" ]
 
   pg_station:
     image: postgres:13
@@ -34,7 +30,7 @@ services:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
     ports:
-      - 5432:5432
+      - "5432:5432"
 
   airflow:
     build:
@@ -43,29 +39,26 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       # Station Private Key needs to be set and registered
-      # - ./station/station_leipzig_private_key.pem:/opt/private_key.pem
+      - ./S_2_sk.pem:/opt/private_key.pem
       # Mount the dags directory as a volume
       - ./airflow/dags:/root/airflow/dags
       # - ./station /opt/station
     depends_on:
       - pg_station
+    env_file:
+      - .env
     environment:
-      - FHIR_ADDRESS=https://fhir.personalhealhtrain.de
-      - FHIR_USER=fhiruser
-      - FHIR_PW=
-      - HARBOR_USER=graf
-      - HARBOR_PW=
-      - STATION_ID=1
-      - STATION_PRIVATE_KEY_PATH=/opt/private_key.pem
-      - HARBOR_API_URL=https://harbor.personalhealthtrain.de/api/v2.0
-      - STATION_API_URL=http://station:8001/api
+      - FHIR_ADDRESS=$FHIR_SERVER_URL
+      - STATION_ID=$STATION_ID
+      - PRIVATE_KEY_PATH=/opt/private_key.pem
+      - STATION_DATA_DIR=$STATION_DATA_DIR
     ports:
-      - 8080:8080
+      - "8080:8080"
 
   minio:
     image: minio/minio:latest
     ports:
-      - 9000:9000
+      - "9000:9000"
     volumes:
       - ./test_data:/data
 

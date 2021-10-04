@@ -2,7 +2,7 @@ from typing import Any, Dict
 
 import requests
 from sqlalchemy.orm import Session
-from worker.testing.db import SessionLocal
+from station_worker.testing.db import SessionLocal
 import os
 
 
