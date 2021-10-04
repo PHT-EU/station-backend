@@ -1,8 +1,12 @@
+import io
+
 from fastapi import APIRouter, Depends, File, UploadFile
 from typing import List
 from station.clients.airflow.client import airflow_client
 from station.app.schemas.local_trains import LocalTrainBase
 from station.app.local_train_builder.TrainBuilder import train_builder_local
+from fastapi.responses import Response
+from fastapi.responses import FileResponse
 
 router = APIRouter()
 
@@ -64,7 +68,8 @@ def get_all_uploaded_file_names():
 
 @router.get("/local_trains/get_results/{train_id}")
 def get_results(train_id: str):
-    pass
+    file = train_builder_local.get_results(train_id)
+    return Response(file, media_type='bytes/tar')
 
 
 @router.get("/local_trains/get_train_status/{train_id}")

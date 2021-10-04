@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import APIRouter, Depends
 from station.clients.airflow.client import airflow_client
 from station.clients.harbor_client import harbor_client
-from station.clients.minio.client import minio_client
+from station.clients.minio.client import MinioClient
 from station.clients.fhir.client import FhirClient
 from station.clients.docker.client import dockerClient
 from station.app.api import dependencies
@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from station.app.crud import datasets
 import psutil
 
-
+minio_client = MinioClient()
 router = APIRouter()
 """
 The station status  endpoint returns the status of local and global components  (fhir  airflow harbo minio

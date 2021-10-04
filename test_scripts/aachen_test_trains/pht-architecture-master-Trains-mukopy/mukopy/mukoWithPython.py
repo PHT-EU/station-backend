@@ -7,10 +7,10 @@ import os
 
 
 ## Define (input) variables from Docker Container environment variables
-fhir_server = str(os.environ['FHIR_SERVER'])
-fhir_port = str(os.environ['FHIR_PORT'])
-# fhir_server = "137.226.232.119"
-# fhir_port = "8080"
+#fhir_server = str(os.environ['FHIR_SERVER'])
+#fhir_port = str(os.environ['FHIR_PORT'])
+fhir_server = "137.226.232.119"
+fhir_port = "8080"
 
 
 

@@ -9,8 +9,8 @@ class MinioUploadAachenTrain:
         self.bucket_name = "aachentrain"
         self.minio_client = MinioClient(minio_server="0.0.0.0:9000", access_key="minio_admin", secret_key="minio_admin")
         self.minio_client.add_bucket(self.bucket_name)
-        self.train_folder = "./pht-architecture-master-Trains-deutschebahn/deutschebahn"
-        #self.train_folder = "./pht-architecture-master-Trains-mukopy/mukopy"
+        #self.train_folder = "./pht-architecture-master-Trains-deutschebahn/deutschebahn"
+        self.train_folder = "./pht-architecture-master-Trains-mukopy/mukopy"
         self.files = []
 
     async def load_file(self):
