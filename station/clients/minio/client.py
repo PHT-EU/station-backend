@@ -82,8 +82,8 @@ class MinioClient:
     def delete_file(self, bucket: str, name: str):
         self.client.remove_object(bucket_name=bucket, object_name=name)
 
-    def get_file_names(self, bucket: str) -> [str]:
-        response = self.client.list_objects(bucket)
+    def get_file_names(self, bucket: str, prefix: str = "") -> [str]:
+        response = self.client.list_objects(bucket, prefix = prefix)
         data = list(response)
         return data
 

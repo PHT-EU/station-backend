@@ -31,9 +31,9 @@ async def upload_train_file(upload_file: UploadFile = File(...)):
 
 
 @router.post("/local_trains/upload_endpoint")
-async def upload_endpoint_file(upload_file: UploadFile = File(...)):
+async def upload_endpoint_file( train_id: str, upload_file: UploadFile = File(...)):
     # TODO reseve and store endpoint file , save information in database
-    await train_builder_local.store_endpoint(upload_file)
+    await train_builder_local.store_endpoint(upload_file, train_id)
     return {"filename": upload_file.filename}
 
 
@@ -66,6 +66,11 @@ def get_all_uploaded_file_names():
     return {"files": train_builder_local.get_all_uploaded_files()}
 
 
+@router.get("/local_trains/get_all_uploaded_file_names_train")
+def get_all_uploaded_file_names(train_id: str):
+    return {"files": train_builder_local.get_all_uploaded_files_train(train_id)}
+
+
 @router.get("/local_trains/get_results/{train_id}")
 def get_results(train_id: str):
     file = train_builder_local.get_results(train_id)
@@ -75,5 +80,3 @@ def get_results(train_id: str):
 @router.get("/local_trains/get_train_status/{train_id}")
 def get_train_status(train_id: str):
     pass
-
-

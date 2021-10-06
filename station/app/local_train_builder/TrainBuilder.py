@@ -14,12 +14,12 @@ class TrainBuilderLocal:
         self.bucket_name="localtrain"
         self.minio_client.add_bucket(self.bucket_name)
 
-    async def store_endpoint(self, upload_file: UploadFile):
+    async def store_endpoint(self, upload_file: UploadFile, train_id: str):
         """        async with aiofiles.open(self.path_to_resources + upload_file.filename, 'wb') as save_file:
             content = await upload_file.read()
             await save_file.write(content)
             """
-        await self.minio_client.store_files(self.bucket_name, "endpoint.py", upload_file)
+        await self.minio_client.store_files(self.bucket_name, f"{train_id}/endpoint.py", upload_file)
 
     async def store_train_file(self, upload_file: UploadFile):
         await self.minio_client.store_files(self.bucket_name, upload_file.filename, upload_file)
@@ -39,6 +39,10 @@ class TrainBuilderLocal:
     def get_all_uploaded_files(self):
         print(self.minio_client.get_file_names(self.bucket_name))
         return self.minio_client.get_file_names(self.bucket_name)
+
+    def get_all_uploaded_files_train(self, train_id):
+        print(self.minio_client.get_file_names(self.bucket_name))
+        return self.minio_client.get_file_names(self.bucket_name, train_id)
 
 
 train_builder_local = TrainBuilderLocal()
