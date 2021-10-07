@@ -29,13 +29,13 @@ class LocalTrain(Base):
     train_id = Column(String, unique=True)
     created_at = Column(DateTime, default=datetime.now())
     updated_at = Column(DateTime, nullable=True)
-    config_id = Column(Integer, ForeignKey("local_train_configs.id"), nullable=True)
-    config = relationship("LocalTrainConfig", back_populates="trains")
+    #config_id = Column(Integer, ForeignKey("local_train_configs.id"), nullable=True)
+    #config = relationship("LocalTrainConfig", back_populates="trains")
     is_active = Column(Boolean, default=False)
-    state = relationship("LocalTrainState")
-    executions = relationship("LocalTrainExecution")
+    #state = relationship("LocalTrainState")
+    #executions = relationship("LocalTrainExecution")
 
-
+'''
 class LocalTrainConfig(Base):
     __tablename__ = "Local_train_configs"
     id = Column(Integer, primary_key=True, index=True)
@@ -47,4 +47,5 @@ class LocalTrainConfig(Base):
     cpu_requirements = Column(JSON, nullable=True)
     gpu_requirements = Column(JSON, nullable=True)
     auto_execute = Column(Boolean, default=False)
+'''
 

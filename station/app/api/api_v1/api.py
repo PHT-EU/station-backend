@@ -1,5 +1,6 @@
 from fastapi import APIRouter
-from station.app.api.api_v1.endpoints import federated_trains, datasets, protocol, docker_trains, station, station_status, local_trains
+from station.app.api.api_v1.endpoints import federated_trains, datasets, protocol, docker_trains, station, \
+    station_status, local_trains
 
 api_router = APIRouter()
 

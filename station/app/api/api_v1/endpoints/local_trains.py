@@ -1,12 +1,18 @@
 import io
+import uuid
 
+from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, File, UploadFile
+from station.app.api import dependencies
 from typing import List
 from station.clients.airflow.client import airflow_client
 from station.app.schemas.local_trains import LocalTrainBase
 from station.app.local_train_builder.TrainBuilder import train_builder_local
 from fastapi.responses import Response
 from fastapi.responses import FileResponse
+from station.app.schemas.local_trains import LocalTrain, LocalTrainCreate
+
+from station.app.crud.crud_local_train import local_train
 
 router = APIRouter()
 
@@ -37,13 +43,24 @@ async def upload_endpoint_file( train_id: str, upload_file: UploadFile = File(..
     return {"filename": upload_file.filename}
 
 
-@router.post("/local_trains/create_local_train")
-def create_local_train():
-    # TODO create a databese opjekt with all the nesesery information about the local train
-    # (endpoint ,querry ,master image , etc )
-    print("hallo")
-    return {"hallo": 42}
+@router.post("/local_trains/create", response_model=LocalTrain)
+def create_local_train(create_msg: LocalTrainCreate, db: Session = Depends(dependencies.get_db)):
+    train = local_train.create(db, obj_in=create_msg)
+    return train
 
+@router.post("/local_trains/create_with_uuid", response_model=LocalTrain)
+def create_local_train(db: Session = Depends(dependencies.get_db)):
+    train = local_train.create(db, obj_in=None)
+    return train
+
+@router.get("/local_trains/getAllLocalTrains")
+def get_all_local_trains(db: Session = Depends(dependencies.get_db)):
+    return local_train.get_trains(db)
+
+@router.delete("/local_trains/deleteTrain/{train_id}")
+def delete_local_train(train_id: str,db: Session = Depends(dependencies.get_db)):
+
+    return f"{train_id} was deleted"
 
 @router.get("/local_trains/get_endpoint")
 async def get_endpoint_file():
