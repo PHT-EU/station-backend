@@ -18,9 +18,9 @@ router = APIRouter()
 
 
 @router.post("/local_trains/{local_train_id}/run")
-def run_docker_train(local_train_id: str):
-    print(local_train_id)
-    airflow_client.trigger_dag("run_local")
+def run_docker_train(train_id: str, db: Session = Depends(dependencies.get_db)):
+    config = local_train.get_train_config(db, train_id)
+    airflow_client.trigger_dag("run_local", config)
 
 
 @router.get("/local_trains/master_images")
@@ -59,7 +59,7 @@ def get_all_local_trains(db: Session = Depends(dependencies.get_db)):
 
 @router.delete("/local_trains/deleteTrain/{train_id}")
 def delete_local_train(train_id: str,db: Session = Depends(dependencies.get_db)):
-
+    obj = local_train.remove_train(db, train_id)
     return f"{train_id} was deleted"
 
 @router.get("/local_trains/get_endpoint")
@@ -69,7 +69,7 @@ async def get_endpoint_file():
 
 
 @router.get("/local_trains/get_file")
-async def get_file(file_name: str):
+async def get_file(train_id: str,file_name: str):
     file = train_builder_local.read_file(file_name)
     return file
 
@@ -95,5 +95,6 @@ def get_results(train_id: str):
 
 
 @router.get("/local_trains/get_train_status/{train_id}")
-def get_train_status(train_id: str):
-    pass
+def get_train_status(train_id: str, db: Session = Depends(dependencies.get_db)):
+    obj = local_train.get_train_status(db, train_id)
+    return obj

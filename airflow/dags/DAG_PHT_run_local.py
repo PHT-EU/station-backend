@@ -45,16 +45,17 @@ def run_local():
     @task()
     def get_train_configuration():
         context = get_current_context()
-        repository, tag, env, volumes, build_dir = [context['dag_run'].conf.get(_, None) for _ in
-                                                    ['repository', 'tag', 'env', 'volumes', 'build_dir']]
+        repository, tag, env, volumes ,train_id = [context['dag_run'].conf.get(_, None) for _ in
+                                                    ['repository', 'tag', 'env', 'volumes' , 'train_id']]
         img = repository + ":" + tag
         train_state_dict = {
             "repository": repository,
+            "train_id": train_id,
             "tag": tag,
             "img": img,
             "env": env,
             "volumes": volumes,
-            "build_dir": build_dir,
+            "build_dir": "./temp/",
             "bucket_name": "localtrain"
         }
         return train_state_dict

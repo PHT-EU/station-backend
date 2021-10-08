@@ -1,5 +1,5 @@
 {
   "repository":  "harbor-pht.tada5hi.net/master/python/ubuntu",
   "tag": "latest",
-  "build_dir": "./temp/"
+  "train_id": "acf725d6-b816-4a6a-bf0c-8a23f566e024"
 }

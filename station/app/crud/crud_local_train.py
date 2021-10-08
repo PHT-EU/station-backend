@@ -27,11 +27,17 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         trains = db.query(LocalTrain).all()
         return trains
 
-    def remove_train(self, db: Session, *, train_id: int) -> ModelType:
+    def remove_train(self, db: Session, train_id: str) -> ModelType:
+        # remove minIo entry
+        #remove sql database entry
         obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()
-        db.delete(obj)
+        if not obj:
+            return f"train_id {train_id} dose not exit"
+        db.delete(obj[0])
         db.commit()
         return obj
 
-
+    def get_train_status(self,db:Session, train_id: int):
+        obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()
+        return obj
 local_train = CRUDLocalTrain(LocalTrain)
