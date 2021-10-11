@@ -14,6 +14,8 @@ from station.app.schemas.local_trains import LocalTrain, LocalTrainCreate
 
 from station.app.crud.crud_local_train import local_train
 
+from station.clients.harbor_client import harbor_client
+
 router = APIRouter()
 
 
@@ -25,8 +27,7 @@ def run_docker_train(train_id: str, db: Session = Depends(dependencies.get_db)):
 
 @router.get("/local_trains/master_images")
 def get_master_images():
-    # TODO get all avialabel master images
-    pass
+    return harbor_client.get_master_images()
 
 
 @router.post("/local_trains/upload_train_file")
@@ -35,9 +36,8 @@ async def upload_train_file(upload_file: UploadFile = File(...)):
     return {"filename": upload_file.filename}
 
 
-
 @router.post("/local_trains/upload_endpoint")
-async def upload_endpoint_file( train_id: str, upload_file: UploadFile = File(...)):
+async def upload_endpoint_file(train_id: str, upload_file: UploadFile = File(...)):
     # TODO reseve and store endpoint file , save information in database
     await train_builder_local.store_endpoint(upload_file, train_id)
     return {"filename": upload_file.filename}
@@ -48,19 +48,23 @@ def create_local_train(create_msg: LocalTrainCreate, db: Session = Depends(depen
     train = local_train.create(db, obj_in=create_msg)
     return train
 
+
 @router.post("/local_trains/create_with_uuid", response_model=LocalTrain)
 def create_local_train(db: Session = Depends(dependencies.get_db)):
     train = local_train.create(db, obj_in=None)
     return train
 
+
 @router.get("/local_trains/getAllLocalTrains")
 def get_all_local_trains(db: Session = Depends(dependencies.get_db)):
     return local_train.get_trains(db)
 
+
 @router.delete("/local_trains/deleteTrain/{train_id}")
-def delete_local_train(train_id: str,db: Session = Depends(dependencies.get_db)):
+def delete_local_train(train_id: str, db: Session = Depends(dependencies.get_db)):
     obj = local_train.remove_train(db, train_id)
     return f"{train_id} was deleted"
+
 
 @router.get("/local_trains/get_endpoint")
 async def get_endpoint_file():
@@ -69,14 +73,16 @@ async def get_endpoint_file():
 
 
 @router.get("/local_trains/get_file")
-async def get_file(train_id: str,file_name: str):
+async def get_file(train_id: str, file_name: str):
     file = train_builder_local.read_file(file_name)
     return file
+
 
 @router.delete("/local_trains/delete_file/{file_name}")
 async def delete_file(file_name: str):
     await train_builder_local.delete_train_file(file_name)
     return "deletetd " + file_name
+
 
 @router.get("/local_trains/get_all_uploaded_file_names")
 def get_all_uploaded_file_names():

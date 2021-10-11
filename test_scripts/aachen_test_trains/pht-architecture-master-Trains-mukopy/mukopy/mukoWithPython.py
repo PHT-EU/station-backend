@@ -11,20 +11,22 @@ import asyncio
 ## Define (input) variables from Docker Container environment variables
 
 fhir_server = str(os.environ['FHIR_SERVER'])
-#fhir_port = str(os.environ['FHIR_PORT'])
+fhir_port = str(os.environ['FHIR_PORT'])
 fhir_token = str(os.environ['FHIR_TOKEN'])
 
 #fhir_server = "https://blaze-fhir.personalhealthtrain.de/fhir"
 #fhir_port = "443"
 #fhir_token = "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ5VmMwcnVQZjdrMDgxN2JWMWF0ZFoycWpJUUFqYnR3RUpiZklvZ3k3aElzIn0.eyJleHAiOjE2MzM0NjQ5NzksImlhdCI6MTYzMzQyODk3OSwianRpIjoiODM3MTExODUtZjljOC00YzVkLTgxNDItMmI3OTY4MTFhOTNiIiwiaXNzIjoiaHR0cHM6Ly9rZXljbG9hay1waHQudGFkYTVoaS5uZXQvYXV0aC9yZWFsbXMvYmxhemUiLCJzdWIiOiI3MmE3ZjM3ZS1iMzNmLTQ5MDgtOWFkOS0zM2JlMGQ0YzE2MjAiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJhY2NvdW50IiwiYWNyIjoiMSIsInJlc291cmNlX2FjY2VzcyI6eyJhY2NvdW50Ijp7InJvbGVzIjpbIm1hbmFnZS1hY2NvdW50Iiwidmlldy1hcHBsaWNhdGlvbnMiLCJ2aWV3LWNvbnNlbnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsImRlbGV0ZS1hY2NvdW50IiwibWFuYWdlLWNvbnNlbnQiLCJ2aWV3LXByb2ZpbGUiXX19LCJzY29wZSI6ImVtYWlsIHByb2ZpbGUiLCJjbGllbnRJZCI6ImFjY291bnQiLCJjbGllbnRIb3N0IjoiMTkyLjE2OC4wLjEiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsInByZWZlcnJlZF91c2VybmFtZSI6InNlcnZpY2UtYWNjb3VudC1hY2NvdW50IiwiY2xpZW50QWRkcmVzcyI6IjE5Mi4xNjguMC4xIn0.SgdVj1gdlDrkX7-PYJ3r8351HIVfYOtUsjy_1mX6K6m1vuoZAO4pRS2dEwNI78KxRGB00oD-ClnOICaIrSENwvp4ePavnslqoyy_kbhW2GclfUZgroivln8hCSCjRp9s7Y_mU5entEz-2mnWASN0SrhutvL7iWEj9DVpK5ldAm2c72XAfLF4VqkKkt_poLXnPsEa5C6AoCLharYZLQcthk071qeDLQoJFF2o90jvD1mXK3NAzX6QHbaTNaAZlAxj9VOUqriEcp2EnmXOph1qM_S33cmxi-V33hg9WaC3cRSfy0_4DUWD0w2kruoVD4MVy2tySwD6zb6qQzeFo5MZaw"
+print(fhir_server)
+print(fhir_port)
+print(fhir_token)
 
 ## Collect Data Statistic
 # Create an instance
 client = SyncFHIRClient(url=fhir_server, authorization=f"Bearer {fhir_token}")
 # Search for patients
 conditions = client.resources('Condition')# Return lazy search set
-conditions = conditions.search(code='O80,O80 Z37.0!').include('Condition', 'subject', 'Patient').fetch_all()
-
+conditions = conditions.search(code='K85.11').include('Condition', 'subject', 'Patient').fetch_all()
 
 condition_data = []
 patientIDs = []

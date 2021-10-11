@@ -45,71 +45,81 @@ def run_aachen_pht_train():
     @task()
     def get_train_configuration():
         context = get_current_context()
-        repository, tag, env, volumes, build_dir = [context['dag_run'].conf.get(_, None) for _ in
-                                                    ['repository', 'tag', 'env', 'volumes', 'build_dir']]
-        img = repository + ":" + tag
+        dockerfile, endpoint, requirements, dockerignore, bucket, build_dir, environment = [
+            context['dag_run'].conf.get(_, None) for _ in
+            ['dockerfile', 'endpoint', 'requirements', 'dockerignore', 'bucket', 'build_dir', 'environment']]
+
+        build_dir = "./temp/"
+        results = "./result/"
+        repo = f'aachen_{endpoint.lower()}_train'
+        print(repo)
         train_state_dict = {
-            "repository": repository,
-            "tag": tag,
-            "img": img,
-            "env": env,
-            "volumes": volumes,
+            "dockerfile": dockerfile,
+            "endpoint": endpoint,
+            "requirements": requirements,
+            "dockerignore": dockerignore,
+            "bucket": bucket,
             "build_dir": build_dir,
-            "bucket_name": "localtrain"
+            "results": results,
+            "repo": repo,
+            "environment": environment
         }
         return train_state_dict
 
     @task()
-    def pull_docker_image(train_state_dict):
-        docker_client = docker.from_env()
-        harbor_address = os.getenv("HARBOR_API_URL")
-        docker_client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
-                            registry=harbor_address)
-        docker_client.images.pull(repository=train_state_dict["repository"], tag=train_state_dict["tag"])
-
-        images = docker_client.images.list()
-        print(images)
-        return train_state_dict
-
-    @task()
-    def build_train(train_state_dict):
+    def build_image(train_state_dict):
+        # clients
         docker_client = docker.from_env()
         minio_client = MinioClient(minio_server="minio:9000")
-        docker_file = f'''
-                            FROM {train_state_dict["img"]}
-                            RUN mkdir /opt/pht_results
-                            RUN mkdir /opt/pht_train
-                            RUN chmod -R +x /opt/pht_train
-                            CMD ["python", "/opt/pht_train/endpoint.py"]
-                            '''
-        docker_file = BytesIO(docker_file.encode("utf-8"))
 
-        image, logs = docker_client.images.build(fileobj=docker_file)
+        # load the requierd files from min io and save them into minio
+        if not os.path.exists(train_state_dict["build_dir"]):
+            os.makedirs(train_state_dict["build_dir"])
+
+        requirements_file = minio_client.get_file(train_state_dict["bucket"],
+                                                  train_state_dict["requirements"])
+        requirements_file = BytesIO(requirements_file)
+
+        with open(train_state_dict["build_dir"] + train_state_dict["requirements"], 'wb') as f:
+            f.write(requirements_file.getbuffer())
+
+        dockerignore_file = minio_client.get_file(train_state_dict["bucket"],
+                                                  train_state_dict["dockerignore"])
+        dockerignore_file = BytesIO(dockerignore_file)
+        with open(train_state_dict["build_dir"] + train_state_dict["dockerignore"], 'wb') as f:
+            f.write(dockerignore_file.getbuffer())
+
+        docker_file = minio_client.get_file(train_state_dict["bucket"], train_state_dict["dockerfile"])
+        docker_file = BytesIO(docker_file)
+        with open(train_state_dict["build_dir"] + train_state_dict["dockerfile"], 'wb') as f:
+            f.write(docker_file.getbuffer())
+
+        # build image
+        image, logs = docker_client.images.build(path=train_state_dict["build_dir"], rm=True)
         container = docker_client.containers.create(image.id)
-        print(image.id)
 
-        data = minio_client.get_file(train_state_dict["bucket_name"], "endpoint.py")
-        name = "endpoint.py"
+        # add endpoint to image
+        endpoint = minio_client.get_file(train_state_dict["bucket"], train_state_dict["endpoint"])
 
-        tarfile_name = f"{name}.tar"
+        tarfile_name = f'{train_state_dict["endpoint"]}.tar'
         with tarfile.TarFile(tarfile_name, 'w') as tar:
-            data_file = tarfile.TarInfo(name='endpoint.py')
-            data_file.size = len(data)
-            tar.addfile(data_file, io.BytesIO(data))
+            data_file = tarfile.TarInfo(name=train_state_dict["endpoint"])
+            data_file.size = len(endpoint)
+            tar.addfile(data_file, io.BytesIO(endpoint))
 
         with open(tarfile_name, 'rb') as fd:
-            respons = container.put_archive("/opt/pht_train", fd)
+            respons = container.put_archive("/", fd)
             container.wait()
-        print(respons)
-        container.commit(repository="local_train", tag="latest")
-        container.wait()
 
+        container.commit(repository=train_state_dict["repo"], tag="latest")
+        container.wait()
         return train_state_dict
 
     @task()
     def run_train(train_state_dict):
         docker_client = docker.from_env()
-        container = docker_client.containers.run("local_train", detach=True)
+        container = docker_client.containers.run(train_state_dict["repo"], environment=train_state_dict["environment"], detach=True)
+
         exit_code = container.wait()["StatusCode"]
         print(f"{exit_code} run fin")
         f = open(f'results.tar', 'wb')
@@ -118,6 +128,7 @@ def run_aachen_pht_train():
         for chunk in bits:
             f.write(chunk)
         f.close()
+
         return train_state_dict
 
     @task()
@@ -125,11 +136,10 @@ def run_aachen_pht_train():
         minio_client = MinioClient(minio_server="minio:9000")
         with open(f'results.tar', 'rb') as results_tar:
             asyncio.run(
-                minio_client.store_files(bucket=train_state_dict["bucket_name"], name="results.tar", file=results_tar))
+                minio_client.store_files(bucket=train_state_dict["bucket"], name="results.tar", file=results_tar))
 
     local_train = get_train_configuration()
-    local_train = pull_docker_image(local_train)
-    local_train = build_train(local_train)
+    local_train = build_image(local_train)
     local_train = run_train(local_train)
     save_results(local_train)
 
