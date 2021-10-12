@@ -1,7 +1,7 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, LargeBinary, Float, BigInteger, JSON
 from sqlalchemy.orm import relationship, backref
 from datetime import datetime
-
+import uuid
 from station.app.db.base_class import Base
 
 
@@ -29,6 +29,7 @@ class LocalTrain(Base):
     train_id = Column(String, unique=True)
     created_at = Column(DateTime, default=datetime.now())
     updated_at = Column(DateTime, nullable=True)
+    airflow_config_json = Column(JSON, default=None , nullable=True)
     #config_id = Column(Integer, ForeignKey("local_train_configs.id"), nullable=True)
     #config = relationship("LocalTrainConfig", back_populates="trains")
     is_active = Column(Boolean, default=False)

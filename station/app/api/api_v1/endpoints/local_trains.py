@@ -1,5 +1,4 @@
 import io
-import uuid
 
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, File, UploadFile
@@ -19,40 +18,87 @@ from station.clients.harbor_client import harbor_client
 router = APIRouter()
 
 
-@router.post("/local_trains/{local_train_id}/run")
+@router.post("/localTrains/{localTrainId}/run")
 def run_docker_train(train_id: str, db: Session = Depends(dependencies.get_db)):
     config = local_train.get_train_config(db, train_id)
-    airflow_client.trigger_dag("run_local", config)
+    run_id = airflow_client.trigger_dag("run_local", config)
+    return run_id
 
 
-@router.get("/local_trains/master_images")
-def get_master_images():
-    return harbor_client.get_master_images()
-
-
-@router.post("/local_trains/upload_train_file")
+@router.post("/localTrains/uploadTrainFile")
 async def upload_train_file(upload_file: UploadFile = File(...)):
     await train_builder_local.store_train_file(upload_file)
     return {"filename": upload_file.filename}
 
 
-@router.post("/local_trains/upload_endpoint")
+@router.post("/localTrains/uploadEndpoint")
 async def upload_endpoint_file(train_id: str, upload_file: UploadFile = File(...)):
     # TODO reseve and store endpoint file , save information in database
     await train_builder_local.store_endpoint(upload_file, train_id)
     return {"filename": upload_file.filename}
 
 
-@router.post("/local_trains/create", response_model=LocalTrain)
+@router.post("/localTrains/create", response_model=LocalTrain)
 def create_local_train(create_msg: LocalTrainCreate, db: Session = Depends(dependencies.get_db)):
     train = local_train.create(db, obj_in=create_msg)
     return train
 
 
-@router.post("/local_trains/create_with_uuid", response_model=LocalTrain)
+@router.post("/localTrains/createWithUuid", response_model=LocalTrain)
 def create_local_train(db: Session = Depends(dependencies.get_db)):
     train = local_train.create(db, obj_in=None)
     return train
+
+
+@router.put("/localTrains/addMasterImage")
+def add_master_image(train_id: str, image: str, db: Session = Depends(dependencies.get_db)):
+    new_config = local_train.update_config_add_repostory(db, train_id, image)
+    return new_config
+
+
+@router.put("/localTrains/addTag")
+def add_master_image(train_id: str, tag: str, db: Session = Depends(dependencies.get_db)):
+    new_config = local_train.update_config_add_tag(db, train_id, tag)
+    return new_config
+
+
+@router.delete("/localTrains/deleteTrain/{train_id}")
+def delete_local_train(train_id: str, db: Session = Depends(dependencies.get_db)):
+    obj = local_train.remove_train(db, train_id)
+    return f"{train_id} was deleted"
+
+
+@router.delete("/localTrains/deleteFile/{file_name}")
+async def delete_file(file_name: str):
+    await train_builder_local.delete_train_file(file_name)
+    return "deletetd " + file_name
+
+
+@router.get("/localTrains/getAllUploadedFileNames")
+def get_all_uploaded_file_names():
+    return {"files": train_builder_local.get_all_uploaded_files()}
+
+
+@router.get("/localTrains/getAllUploadedFileNamesTrain")
+def get_all_uploaded_file_names(train_id: str):
+    return {"files": train_builder_local.get_all_uploaded_files_train(train_id)}
+
+
+@router.get("/localTrains/getResults/{train_id}")
+def get_results(train_id: str):
+    file = train_builder_local.get_results(train_id)
+    return Response(file, media_type='bytes/tar')
+
+
+@router.get("/localTrains/getTrainStatus/{train_id}")
+def get_train_status(train_id: str, db: Session = Depends(dependencies.get_db)):
+    obj = local_train.get_train_status(db, train_id)
+    return obj
+
+
+@router.get("/localTrains/masterImages")
+def get_master_images():
+    return harbor_client.get_master_images()
 
 
 @router.get("/local_trains/getAllLocalTrains")
@@ -60,47 +106,19 @@ def get_all_local_trains(db: Session = Depends(dependencies.get_db)):
     return local_train.get_trains(db)
 
 
-@router.delete("/local_trains/deleteTrain/{train_id}")
-def delete_local_train(train_id: str, db: Session = Depends(dependencies.get_db)):
-    obj = local_train.remove_train(db, train_id)
-    return f"{train_id} was deleted"
-
-
-@router.get("/local_trains/get_endpoint")
+@router.get("/localTrains/getEndpoint")
 async def get_endpoint_file():
     file = train_builder_local.read_file("endpoint.py")
     return file
 
 
-@router.get("/local_trains/get_file")
+@router.get("/localTrains/getConfig")
+def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
+    config = local_train.get_train_config(db, train_id)
+    return config
+
+
+@router.get("/localTrains/getFile")
 async def get_file(train_id: str, file_name: str):
     file = train_builder_local.read_file(file_name)
     return file
-
-
-@router.delete("/local_trains/delete_file/{file_name}")
-async def delete_file(file_name: str):
-    await train_builder_local.delete_train_file(file_name)
-    return "deletetd " + file_name
-
-
-@router.get("/local_trains/get_all_uploaded_file_names")
-def get_all_uploaded_file_names():
-    return {"files": train_builder_local.get_all_uploaded_files()}
-
-
-@router.get("/local_trains/get_all_uploaded_file_names_train")
-def get_all_uploaded_file_names(train_id: str):
-    return {"files": train_builder_local.get_all_uploaded_files_train(train_id)}
-
-
-@router.get("/local_trains/get_results/{train_id}")
-def get_results(train_id: str):
-    file = train_builder_local.get_results(train_id)
-    return Response(file, media_type='bytes/tar')
-
-
-@router.get("/local_trains/get_train_status/{train_id}")
-def get_train_status(train_id: str, db: Session = Depends(dependencies.get_db)):
-    obj = local_train.get_train_status(db, train_id)
-    return obj
