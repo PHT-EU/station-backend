@@ -38,7 +38,6 @@ class LocalTrainMinIO:
         return self.minio_client.get_file_names(self.bucket_name)
 
     def get_all_uploaded_files_train(self, train_id: str):
-        print(self.minio_client.get_file_names(self.bucket_name))
         return self.minio_client.get_file_names(self.bucket_name, f"{train_id}/")
 
 

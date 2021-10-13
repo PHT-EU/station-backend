@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from fastapi import UploadFile
 from .base import CRUDBase, CreateSchemaType, ModelType
+import asyncio
 
 from station.app.models.local_trains import LocalTrain
 from station.app.schemas.local_trains import LocalTrainCreate, LocalTrainUpdate
@@ -24,7 +25,11 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
 
     def remove_train(self, db: Session, train_id: str) -> ModelType:
         # remove minIo entry
-
+        files = self.get_all_uploaded_files(train_id)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        for file in files:
+            loop.run_until_complete(train_data.delete_train_file(file.object_name))
         # remove sql database entry
 
         obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()
