@@ -31,13 +31,6 @@ async def upload_train_file(train_id: str, upload_file: UploadFile = File(...)):
     return {"filename": upload_file.filename}
 
 
-@router.post("/localTrains/uploadEndpoint")
-async def upload_endpoint_file(train_id: str, upload_file: UploadFile = File(...)):
-    # TODO reseve and store endpoint file , save information in database
-    await train_data.store_endpoint(upload_file, train_id)
-    return {"filename": upload_file.filename}
-
-
 @router.post("/localTrains/create", response_model=LocalTrain)
 def create_local_train(create_msg: LocalTrainCreate, db: Session = Depends(dependencies.get_db)):
     train = local_train.create(db, obj_in=create_msg)
@@ -61,6 +54,16 @@ def add_master_image(train_id: str, tag: str, db: Session = Depends(dependencies
     new_config = local_train.update_config_add_tag(db, train_id, tag)
     return new_config
 
+
+@router.put("/localTrains/addEntrypoint")
+def upload_endpoint_file(train_id: str, entrypoint: str, db: Session = Depends(dependencies.get_db)):
+    new_config = local_train.update_config_add_entrypoint(db, train_id, entrypoint)
+    return new_config
+
+@router.put("/localTrains/addQuery")
+def upload_endpoint_file(train_id: str, query: str, db: Session = Depends(dependencies.get_db)):
+    new_config = local_train.update_config_add_query(db, train_id, query)
+    return new_config
 
 @router.delete("/localTrains/deleteTrain/{train_id}")
 def delete_local_train(train_id: str, db: Session = Depends(dependencies.get_db)):

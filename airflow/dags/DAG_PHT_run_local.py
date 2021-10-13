@@ -47,8 +47,8 @@ def run_local():
     @task()
     def get_train_configuration():
         context = get_current_context()
-        repository, tag, env, volumes ,train_id = [context['dag_run'].conf.get(_, None) for _ in
-                                                    ['repository', 'tag', 'env', 'volumes' , 'train_id']]
+        repository, tag, env, entrypoint, volumes ,query ,train_id = [context['dag_run'].conf.get(_, None) for _ in
+                                                    ['repository', 'tag', 'env', 'entrypoint', 'volumes', 'query', 'train_id']]
         img = repository + ":" + tag
         train_state_dict = {
             "repository": repository,
@@ -57,6 +57,8 @@ def run_local():
             "img": img,
             "env": env,
             "volumes": volumes,
+            "query": query,
+            "entrypoint": entrypoint,
             "build_dir": "./temp/",
             "bucket_name": "localtrain"
         }
@@ -86,15 +88,14 @@ def run_local():
                             RUN mkdir /opt/pht_results
                             RUN mkdir /opt/pht_train
                             RUN chmod -R +x /opt/pht_train
-                            CMD ["python", "/opt/pht_train/endpoint.py"]
+                            CMD ["python", "/opt/pht_train/entrypoint.py"]
                             '''
-
         docker_file = BytesIO(docker_file.encode("utf-8"))
 
         image, logs = docker_client.images.build(fileobj=docker_file)
         container = docker_client.containers.create(image.id)
-        endpoint = minio_client.get_file(train_state_dict["bucket_name"], f"{train_state_dict['train_id']}/entrypoint.py")
-        name = "endpoint.py"
+        endpoint = minio_client.get_file(train_state_dict["bucket_name"], f"{train_state_dict['train_id']}/{train_state_dict['entrypoint']}")
+        name = "entrypoint.py"
         tarfile_name = f"{train_state_dict['build_dir']}/{name}.tar"
         with tarfile.TarFile(tarfile_name, 'w') as tar:
             data_file = tarfile.TarInfo(name='endpoint.py')

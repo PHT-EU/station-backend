@@ -24,7 +24,9 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
 
     def remove_train(self, db: Session, train_id: str) -> ModelType:
         # remove minIo entry
+
         # remove sql database entry
+
         obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()
         if not obj:
             return f"train_id {train_id} dose not exit"
@@ -33,34 +35,28 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         return obj
 
     def update_config_add_repostory(self, db: Session, train_id: str, repository: str):
-        """
-        add a config json to the train database entry
-        """
-        obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()[0]
-        old_cofig = obj.airflow_config_json
-        # TODO change with env
+        config = self.get_config(db, train_id)
+        # TODO get from env
         harbor_url = "harbor-pht.tada5hi.net"
-        if old_cofig is None:
-            config = self._new_cofig(train_id)
-        else:
-            config = old_cofig
-
         config["repository"] = f"{harbor_url}/{repository}"
         self._update_config(db, train_id, config)
         return config
 
     def update_config_add_tag(self, db: Session, train_id: str, tag: str):
-        """
-        add a config json to the train database entry
-        """
-        obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()[0]
-        old_cofig = obj.airflow_config_json
-        if old_cofig is None:
-            config = self._new_cofig(train_id)
-        else:
-            config = old_cofig
-
+        config = self.get_config(db, train_id)
         config["tag"] = f"{tag}"
+        self._update_config(db, train_id, config)
+        return config
+
+    def update_config_add_entrypoint(self, db: Session, train_id: str, entrypoint: str):
+        config = self.get_config(db, train_id)
+        config["tag"] = f"{entrypoint}"
+        self._update_config(db, train_id, config)
+        return config
+
+    def update_config_add_query(self, db: Session, train_id: str, query: str):
+        config = self.get_config(db, train_id)
+        config["tag"] = f"{query}"
         self._update_config(db, train_id, config)
         return config
 
@@ -69,14 +65,22 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         db.query(LocalTrain).filter(LocalTrain.train_id == train_id).update({"airflow_config_json": config})
         db.commit()
 
-    def _new_cofig(self, train_id: str):
-        return {
+    def get_config(self, db,train_id: str):
+        obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()[0]
+        old_config = obj.airflow_config_json
+        if old_config is None:
+            return {
             "repository": None,
             "tag": None,
             "env": None,
+            "query": None,
+            "entrypoint": None,
             "volumes": None,
             "train_id": train_id
-        }
+            }
+        else:
+            return old_config
+
 
     async def add_file_minio(self, upload_file: UploadFile, train_id: str):
 
