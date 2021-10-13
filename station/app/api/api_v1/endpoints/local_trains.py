@@ -6,7 +6,7 @@ from station.app.api import dependencies
 from typing import List
 from station.clients.airflow.client import airflow_client
 from station.app.schemas.local_trains import LocalTrainBase
-from station.app.local_train_builder.TrainBuilder import train_builder_local
+from station.app.local_train_minio.LocalTrainMinIO import train_data
 from fastapi.responses import Response
 from fastapi.responses import FileResponse
 from station.app.schemas.local_trains import LocalTrain, LocalTrainCreate
@@ -26,15 +26,15 @@ def run_docker_train(train_id: str, db: Session = Depends(dependencies.get_db)):
 
 
 @router.post("/localTrains/uploadTrainFile")
-async def upload_train_file(upload_file: UploadFile = File(...)):
-    await train_builder_local.store_train_file(upload_file)
+async def upload_train_file(train_id: str, upload_file: UploadFile = File(...)):
+    await local_train.add_file_minio(upload_file, train_id)
     return {"filename": upload_file.filename}
 
 
 @router.post("/localTrains/uploadEndpoint")
 async def upload_endpoint_file(train_id: str, upload_file: UploadFile = File(...)):
     # TODO reseve and store endpoint file , save information in database
-    await train_builder_local.store_endpoint(upload_file, train_id)
+    await train_data.store_endpoint(upload_file, train_id)
     return {"filename": upload_file.filename}
 
 
@@ -70,23 +70,19 @@ def delete_local_train(train_id: str, db: Session = Depends(dependencies.get_db)
 
 @router.delete("/localTrains/deleteFile/{file_name}")
 async def delete_file(file_name: str):
-    await train_builder_local.delete_train_file(file_name)
+    await train_data.delete_train_file(file_name)
     return "deletetd " + file_name
 
 
 @router.get("/localTrains/getAllUploadedFileNames")
-def get_all_uploaded_file_names():
-    return {"files": train_builder_local.get_all_uploaded_files()}
-
-
-@router.get("/localTrains/getAllUploadedFileNamesTrain")
 def get_all_uploaded_file_names(train_id: str):
-    return {"files": train_builder_local.get_all_uploaded_files_train(train_id)}
+    # make search for train
+    return {"files": local_train.get_all_uploaded_files(train_id)}
 
 
 @router.get("/localTrains/getResults/{train_id}")
 def get_results(train_id: str):
-    file = train_builder_local.get_results(train_id)
+    file = train_data.get_results(train_id)
     return Response(file, media_type='bytes/tar')
 
 
@@ -108,7 +104,7 @@ def get_all_local_trains(db: Session = Depends(dependencies.get_db)):
 
 @router.get("/localTrains/getEndpoint")
 async def get_endpoint_file():
-    file = train_builder_local.read_file("endpoint.py")
+    file = train_data.read_file("endpoint.py")
     return file
 
 
@@ -120,5 +116,5 @@ def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
 
 @router.get("/localTrains/getFile")
 async def get_file(train_id: str, file_name: str):
-    file = train_builder_local.read_file(file_name)
+    file = train_data.read_file(file_name)
     return file

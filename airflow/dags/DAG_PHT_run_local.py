@@ -58,6 +58,7 @@ def run_local():
             "build_dir": "./temp/",
             "bucket_name": "localtrain"
         }
+        print(train_state_dict)
         return train_state_dict
 
     @task()
@@ -82,11 +83,12 @@ def run_local():
                             RUN chmod -R +x /opt/pht_train
                             CMD ["python", "/opt/pht_train/endpoint.py"]
                             '''
+
         docker_file = BytesIO(docker_file.encode("utf-8"))
 
         image, logs = docker_client.images.build(fileobj=docker_file)
         container = docker_client.containers.create(image.id)
-        endpoint = minio_client.get_file(train_state_dict["bucket_name"], "endpoint.py")
+        endpoint = minio_client.get_file(train_state_dict["bucket_name"], f"{train_state_dict['train_id']}/entrypoint.py")
         name = "endpoint.py"
         tarfile_name = f"{name}.tar"
         with tarfile.TarFile(tarfile_name, 'w') as tar:
@@ -125,7 +127,7 @@ def run_local():
         minio_client = MinioClient(minio_server="minio:9000")
         with open(f'results.tar', 'rb') as results_tar:
             asyncio.run(
-                minio_client.store_files(bucket=train_state_dict["bucket_name"], name="results.tar", file=results_tar))
+                minio_client.store_files(bucket=train_state_dict["bucket_name"], name=f"{train_state_dict['train_id']}/results.tar", file=results_tar))
 
     local_train = get_train_configuration()
     local_train = pull_docker_image(local_train)

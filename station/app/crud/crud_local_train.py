@@ -1,11 +1,12 @@
 import uuid
 from datetime import datetime
 from sqlalchemy.orm import Session
-
+from fastapi import UploadFile
 from .base import CRUDBase, CreateSchemaType, ModelType
 
 from station.app.models.local_trains import LocalTrain
 from station.app.schemas.local_trains import LocalTrainCreate, LocalTrainUpdate
+from station.app.local_train_minio.LocalTrainMinIO import train_data
 
 
 class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
@@ -76,6 +77,14 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
             "volumes": None,
             "train_id": train_id
         }
+
+    async def add_file_minio(self, upload_file: UploadFile, train_id: str):
+
+        await train_data.store_train_file(upload_file, train_id)
+
+    def get_all_uploaded_files(self, train_id: str):
+        return train_data.get_all_uploaded_files_train(train_id)
+
 
     def get_trains(self, db: Session):
         trains = db.query(LocalTrain).all()
