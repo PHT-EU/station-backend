@@ -6,6 +6,8 @@ from datetime import timedelta
 import json
 import os
 from io import BytesIO
+from pathlib import Path
+import shutil
 
 import docker
 from airflow.decorators import dag, task
@@ -58,7 +60,7 @@ def run_local():
             "build_dir": "./temp/",
             "bucket_name": "localtrain"
         }
-        print(train_state_dict)
+
         return train_state_dict
 
     @task()
@@ -76,6 +78,9 @@ def run_local():
     def build_train(train_state_dict):
         docker_client = docker.from_env()
         minio_client = MinioClient(minio_server="minio:9000")
+        # create temp folder for saving files from minIO and results.
+        Path(train_state_dict["build_dir"]).mkdir(parents=True, exist_ok=True)
+
         docker_file = f'''
                             FROM {train_state_dict["img"]}
                             RUN mkdir /opt/pht_results
@@ -90,7 +95,7 @@ def run_local():
         container = docker_client.containers.create(image.id)
         endpoint = minio_client.get_file(train_state_dict["bucket_name"], f"{train_state_dict['train_id']}/entrypoint.py")
         name = "endpoint.py"
-        tarfile_name = f"{name}.tar"
+        tarfile_name = f"{train_state_dict['build_dir']}/{name}.tar"
         with tarfile.TarFile(tarfile_name, 'w') as tar:
             data_file = tarfile.TarInfo(name='endpoint.py')
             data_file.size = len(endpoint)
@@ -109,7 +114,7 @@ def run_local():
         docker_client = docker.from_env()
         container = docker_client.containers.run("local_train", detach=True)
         container.wait()
-        f = open(f'results.tar', 'wb')
+        f = open(f'{train_state_dict["build_dir"]}/results.tar', 'wb')
         results = container.get_archive('opt/pht_results')
         bits, stat = results
         for chunk in bits:
@@ -119,21 +124,24 @@ def run_local():
 
     @task()
     def save_results(train_state_dict):
-        # for testing
-        files = [f for f in os.listdir('.') if os.path.isfile(f)]
-        for f in files:
-            print(f)
-            print(os.path.getsize(f))
         minio_client = MinioClient(minio_server="minio:9000")
-        with open(f'results.tar', 'rb') as results_tar:
+        with open(f'{train_state_dict["build_dir"]}/results.tar', 'rb') as results_tar:
             asyncio.run(
                 minio_client.store_files(bucket=train_state_dict["bucket_name"], name=f"{train_state_dict['train_id']}/results.tar", file=results_tar))
+        return train_state_dict
+    @task()
+    def clean_up(train_state_dict):
+        print(train_state_dict["build_dir"])
+        try:
+            shutil.rmtree(str(train_state_dict["build_dir"]))
+        except OSError as e:
+            print("Error: %s - %s." % (e.filename, e.strerror))
 
     local_train = get_train_configuration()
     local_train = pull_docker_image(local_train)
     local_train = build_train(local_train)
     local_train = run_train(local_train)
-    save_results(local_train)
-
+    local_train = save_results(local_train)
+    clean_up(local_train)
 
 run_local = run_local()
