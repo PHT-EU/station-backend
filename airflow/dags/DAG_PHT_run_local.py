@@ -8,6 +8,7 @@ import os
 from io import BytesIO
 from pathlib import Path
 import shutil
+import ast
 
 import docker
 from airflow.decorators import dag, task
@@ -60,7 +61,8 @@ def run_local():
             "query": query,
             "entrypoint": entrypoint,
             "build_dir": "./temp/",
-            "bucket_name": "localtrain"
+            "bucket_name": "localtrain",
+            "query_file": "query_results"
         }
 
         return train_state_dict
@@ -111,9 +113,72 @@ def run_local():
         return train_state_dict
 
     @task()
+    def execute_query(train_state_dict):
+        if train_state_dict["query"] is None:
+            return train_state_dict
+
+        fhir_url = os.getenv("FHIR_ADDRESS", None)
+        fhir_user = os.getenv("FHIR_USER", None)
+        fhir_pw = os.getenv("FHIR_PW", None)
+        fhir_token = os.getenv("FHIR_TOKEN", None)
+        fhir_server_type = os.getenv("FHIR_SERVER_TYPE", None)
+
+        fhir_client = PHTFhirClient(
+            server_url=fhir_url,
+            username=fhir_user,
+            password=fhir_pw,
+            token=fhir_token,
+            fhir_server_type=fhir_server_type,
+            disable_k_anon=True
+        )
+        loop = asyncio.get_event_loop()
+
+        minio_client = MinioClient(minio_server="minio:9000")
+        query_string = minio_client.get_file(train_state_dict["bucket_name"],
+                                         f"{train_state_dict['train_id']}/{train_state_dict['query']}").decode("utf-8")
+        query = ast.literal_eval(query_string)
+        query_result = loop.run_until_complete(fhir_client.execute_query(query=query))
+
+        output_file_name = train_state_dict["query_file"]
+
+        # Create the file path in which to store the FHIR query results
+        data_dir = os.getenv("AIRFLOW_DATA_DIR", "/opt/station_data")
+        train_data_dir = os.path.join(data_dir, train_state_dict["train_id"])
+        Path(train_data_dir).mkdir(parents=True, exist_ok=True)
+        print(train_data_dir)
+
+        train_data_dir = os.path.abspath(train_data_dir)
+        print("train data dir: ", train_data_dir)
+
+        train_data_path = fhir_client.store_query_results(query_result, storage_dir=train_data_dir,
+                                                          filename=output_file_name)
+        print("train data path: ", train_data_path)
+        host_data_path = os.path.join(os.getenv("STATION_DATA_DIR"), train_state_dict["train_id"], output_file_name)
+        # Add the file containing the fhir query results to the volumes configuration
+        query_data_volume = {
+            host_data_path: {
+                "bind": f"/opt/train_data/{output_file_name}",
+                "mode": "ro"
+            }
+        }
+        train_state_dict["volumes"] = query_data_volume
+        data_dir_env = {
+            "TRAIN_DATA_PATH": f"/opt/train_data/{output_file_name}"
+        }
+
+        train_state_dict["env"] = data_dir_env
+
+
+        return train_state_dict
+
+    @task()
     def run_train(train_state_dict):
         docker_client = docker.from_env()
-        container = docker_client.containers.run("local_train", detach=True)
+
+        environment = train_state_dict.get("env", {})
+        volumes = train_state_dict.get("volumes", {})
+        container = docker_client.containers.run("local_train", environment=environment, volumes=volumes,
+                                                 detach=True)
         container.wait()
         f = open(f'{train_state_dict["build_dir"]}/results.tar', 'wb')
         results = container.get_archive('opt/pht_results')
@@ -141,6 +206,7 @@ def run_local():
     local_train = get_train_configuration()
     local_train = pull_docker_image(local_train)
     local_train = build_train(local_train)
+    local_train = execute_query(local_train)
     local_train = run_train(local_train)
     local_train = save_results(local_train)
     clean_up(local_train)
