@@ -55,13 +55,13 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
 
     def update_config_add_entrypoint(self, db: Session, train_id: str, entrypoint: str):
         config = self.get_config(db, train_id)
-        config["tag"] = f"{entrypoint}"
+        config["entrypoint"] = f"{entrypoint}"
         self._update_config(db, train_id, config)
         return config
 
     def update_config_add_query(self, db: Session, train_id: str, query: str):
         config = self.get_config(db, train_id)
-        config["tag"] = f"{query}"
+        config["query"] = f"{query}"
         self._update_config(db, train_id, config)
         return config
 

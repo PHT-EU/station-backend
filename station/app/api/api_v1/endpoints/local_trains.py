@@ -1,4 +1,5 @@
 import io
+import tarfile
 
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, File, UploadFile
@@ -85,8 +86,14 @@ def get_all_uploaded_file_names(train_id: str):
 
 @router.get("/localTrains/getResults/{train_id}")
 def get_results(train_id: str):
-    file = train_data.get_results(train_id)
-    return Response(file, media_type='bytes/tar')
+    data = train_data.get_results(train_id)
+
+    with tarfile.TarFile('results.tar', 'w') as tar:
+        data_file = tarfile.TarInfo()
+        data_file.size = len(data)
+        tar.addfile(data_file, io.BytesIO(data))
+
+    return FileResponse('results.tar', media_type='bytes/tar')
 
 
 @router.get("/localTrains/getTrainStatus/{train_id}")

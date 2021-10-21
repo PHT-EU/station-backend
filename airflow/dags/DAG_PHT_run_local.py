@@ -24,7 +24,6 @@ from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from airflow.operators.bash import BashOperator
 from airflow.utils.dates import days_ago
 
-from station.clients.docker.local_run_client import DockerClientLocalTrain
 
 from train_lib.docker_util.docker_ops import extract_train_config, extract_query_json
 from train_lib.security.SecurityProtocol import SecurityProtocol
@@ -62,7 +61,6 @@ def run_local():
             "entrypoint": entrypoint,
             "build_dir": "./temp/",
             "bucket_name": "localtrain",
-            "query_file": "query_results"
         }
 
         return train_state_dict
@@ -100,7 +98,7 @@ def run_local():
         name = "entrypoint.py"
         tarfile_name = f"{train_state_dict['build_dir']}/{name}.tar"
         with tarfile.TarFile(tarfile_name, 'w') as tar:
-            data_file = tarfile.TarInfo(name='endpoint.py')
+            data_file = tarfile.TarInfo(name='entrypoint.py')
             data_file.size = len(endpoint)
             tar.addfile(data_file, io.BytesIO(endpoint))
 
@@ -133,28 +131,32 @@ def run_local():
         )
         loop = asyncio.get_event_loop()
 
+
         minio_client = MinioClient(minio_server="minio:9000")
         query_string = minio_client.get_file(train_state_dict["bucket_name"],
                                          f"{train_state_dict['train_id']}/{train_state_dict['query']}").decode("utf-8")
         query = ast.literal_eval(query_string)
+        print(f"query = {query}")
         query_result = loop.run_until_complete(fhir_client.execute_query(query=query))
 
-        output_file_name = train_state_dict["query_file"]
+        output_file_name = query["data"]["filename"]
 
         # Create the file path in which to store the FHIR query results
         data_dir = os.getenv("AIRFLOW_DATA_DIR", "/opt/station_data")
+
         train_data_dir = os.path.join(data_dir, train_state_dict["train_id"])
         Path(train_data_dir).mkdir(parents=True, exist_ok=True)
-        print(train_data_dir)
 
         train_data_dir = os.path.abspath(train_data_dir)
-        print("train data dir: ", train_data_dir)
-
         train_data_path = fhir_client.store_query_results(query_result, storage_dir=train_data_dir,
                                                           filename=output_file_name)
-        print("train data path: ", train_data_path)
+
+        print(f"train data  path: {train_data_path}")
+
         host_data_path = os.path.join(os.getenv("STATION_DATA_DIR"), train_state_dict["train_id"], output_file_name)
-        # Add the file containing the fhir query results to the volumes configuration
+
+        print(f'host_data_path: {host_data_path}')
+
         query_data_volume = {
             host_data_path: {
                 "bind": f"/opt/train_data/{output_file_name}",
@@ -173,10 +175,17 @@ def run_local():
 
     @task()
     def run_train(train_state_dict):
+        """
+
+        @param train_state_dict:
+        @return:
+        """
         docker_client = docker.from_env()
 
         environment = train_state_dict.get("env", {})
         volumes = train_state_dict.get("volumes", {})
+        print(environment)
+        print(volumes)
         container = docker_client.containers.run("local_train", environment=environment, volumes=volumes,
                                                  detach=True)
         container.wait()
@@ -185,16 +194,23 @@ def run_local():
         bits, stat = results
         for chunk in bits:
             f.write(chunk)
+        print(f"restults size {sys.getsizeof(f)}")
         f.close()
         return train_state_dict
 
     @task()
     def save_results(train_state_dict):
+        """
+
+        @rtype: object
+        """
         minio_client = MinioClient(minio_server="minio:9000")
+
         with open(f'{train_state_dict["build_dir"]}/results.tar', 'rb') as results_tar:
             asyncio.run(
                 minio_client.store_files(bucket=train_state_dict["bucket_name"], name=f"{train_state_dict['train_id']}/results.tar", file=results_tar))
         return train_state_dict
+
     @task()
     def clean_up(train_state_dict):
         print(train_state_dict["build_dir"])

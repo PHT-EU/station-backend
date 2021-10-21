@@ -21,7 +21,6 @@ from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from airflow.operators.bash import BashOperator
 from airflow.utils.dates import days_ago
 
-from station.clients.docker.local_run_client import DockerClientLocalTrain
 
 from train_lib.docker_util.docker_ops import extract_train_config, extract_query_json
 from train_lib.security.SecurityProtocol import SecurityProtocol
