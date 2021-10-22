@@ -21,7 +21,7 @@ class LocalTrain(DBSchema):
 
 
 class LocalTrainCreate(BaseModel):
-    train_id: str
+    train_name: str
 
 
 class LocalTrainUpdate(LocalTrainCreate):

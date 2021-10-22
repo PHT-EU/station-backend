@@ -19,11 +19,14 @@ from train_lib.train.build_test_train import build_test_train
 from train_lib.fhir import PHTFhirClient
 from train_lib.security import SecurityProtocol
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
-
 # Operators; we need this to operate!
 from airflow.operators.bash import BashOperator
 from airflow.utils.dates import days_ago
 
+from station.app.models.local_trains import LocalTrain
+from fastapi import Depends
+from station.app.api import dependencies
+from sqlalchemy.orm import Session
 
 from train_lib.docker_util.docker_ops import extract_train_config, extract_query_json
 from train_lib.security.SecurityProtocol import SecurityProtocol
@@ -62,7 +65,9 @@ def run_local():
             "build_dir": "./temp/",
             "bucket_name": "localtrain",
         }
-
+        db = dependencies.get_db()
+        db.query(LocalTrain).filter(LocalTrain.train_id == train_id).update({"is_active": True})
+        db.commit()
         return train_state_dict
 
     @task()
@@ -218,7 +223,9 @@ def run_local():
             shutil.rmtree(str(train_state_dict["build_dir"]))
         except OSError as e:
             print("Error: %s - %s." % (e.filename, e.strerror))
-
+        db = dependencies.get_db()
+        db.query(LocalTrain).filter(LocalTrain.train_id == train_id).update({"is_active": False})
+        db.commit()
     local_train = get_train_configuration()
     local_train = pull_docker_image(local_train)
     local_train = build_train(local_train)

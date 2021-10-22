@@ -27,6 +27,7 @@ class LocalTrain(Base):
     __tablename__ = "local_trains"
     id = Column(Integer, primary_key=True, index=True)
     train_id = Column(String, unique=True)
+    train_name = Column(String, unique=True)
     created_at = Column(DateTime, default=datetime.now())
     updated_at = Column(DateTime, nullable=True)
     airflow_config_json = Column(JSON, default=None , nullable=True)

@@ -13,10 +13,13 @@ from station.app.local_train_minio.LocalTrainMinIO import train_data
 class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
     def create(self, db: Session, *, obj_in: LocalTrainCreate) -> ModelType:
         if obj_in == None:
-            train = LocalTrain(train_id=uuid.uuid4())
+            id = uuid.uuid4()
+            train = LocalTrain(train_id=id,
+                               train_name=id)
         else:
             train = LocalTrain(
-                train_id=obj_in.train_id
+                train_id=uuid.uuid4(),
+                train_name=obj_in.train_name
             )
         db.add(train)
         db.commit()
@@ -107,6 +110,16 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()[0]
         config = obj.airflow_config_json
         return config
+
+    def get_train_name(self, db: Session, train_id: str):
+        obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()[0]
+        train_name = obj.train_name
+        return train_name
+
+    def get_train_id(self, db: Session, train_name: str):
+        obj = db.query(LocalTrain).filter(LocalTrain.train_name == train_name).all()[0]
+        train_id = obj.train_id
+        return train_id
 
 
 local_train = CRUDLocalTrain(LocalTrain)

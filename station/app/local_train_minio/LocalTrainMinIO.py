@@ -30,7 +30,7 @@ class LocalTrainMinIO:
         return self.minio_client.get_file(self.bucket_name, file_name)
 
     def get_results(self,train_id):
-        file = self.minio_client.get_file(self.bucket_name, "results.tar")
+        file = self.minio_client.get_file(self.bucket_name, f"{train_id}/results.tar")
         return file
 
     def get_all_uploaded_files(self):

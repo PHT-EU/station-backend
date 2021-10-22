@@ -87,11 +87,9 @@ def get_all_uploaded_file_names(train_id: str):
 @router.get("/localTrains/getResults/{train_id}")
 def get_results(train_id: str):
     data = train_data.get_results(train_id)
-
-    with tarfile.TarFile('results.tar', 'w') as tar:
-        data_file = tarfile.TarInfo()
-        data_file.size = len(data)
-        tar.addfile(data_file, io.BytesIO(data))
+    file_like_objekt = io.BytesIO(data)
+    with tarfile.open(name="results.tar", fileobj=file_like_objekt, mode='a') as tar:
+       print(tar)
 
     return FileResponse('results.tar', media_type='bytes/tar')
 
@@ -123,6 +121,16 @@ def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
     config = local_train.get_train_config(db, train_id)
     return config
 
+
+@router.get("/localTrains/getName")
+def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
+    config = local_train.get_train_name(db, train_id)
+    return config
+
+@router.get("/localTrains/getID")
+def get_config(train_name: str, db: Session = Depends(dependencies.get_db)):
+    config = local_train.get_train_id(db, train_name)
+    return config
 
 @router.get("/localTrains/getFile")
 async def get_file(train_id: str, file_name: str):
