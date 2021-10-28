@@ -13,14 +13,19 @@ from station.app.local_train_minio.LocalTrainMinIO import train_data
 class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
     def create(self, db: Session, *, obj_in: LocalTrainCreate) -> ModelType:
         if obj_in == None:
-            id = uuid.uuid4()
+            id = str(uuid.uuid4())
             train = LocalTrain(train_id=id,
-                               train_name=id)
+                               train_name=id,
+                               airflow_config_json=self._create_emty_config(id)
+                               )
         else:
+            train_id = str(uuid.uuid4())
             train = LocalTrain(
-                train_id=uuid.uuid4(),
-                train_name=obj_in.train_name
+                train_id=train_id,
+                train_name=obj_in.train_name,
+                airflow_config_json=self._create_emty_config(train_id)
             )
+
         db.add(train)
         db.commit()
         db.refresh(train)
@@ -73,11 +78,16 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         db.query(LocalTrain).filter(LocalTrain.train_id == train_id).update({"airflow_config_json": config})
         db.commit()
 
-    def get_config(self, db,train_id: str):
+    def get_config(self, db, train_id: str):
         obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()[0]
         old_config = obj.airflow_config_json
         if old_config is None:
-            return {
+            self._create_emty_config(train_id)
+        else:
+            return old_config
+
+    def _create_emty_config(self, train_id):
+        return {
             "repository": None,
             "tag": None,
             "env": None,
@@ -85,10 +95,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
             "entrypoint": None,
             "volumes": None,
             "train_id": train_id
-            }
-        else:
-            return old_config
-
+        }
 
     async def add_file_minio(self, upload_file: UploadFile, train_id: str):
 
@@ -96,7 +103,6 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
 
     def get_all_uploaded_files(self, train_id: str):
         return train_data.get_all_uploaded_files_train(train_id)
-
 
     def get_trains(self, db: Session):
         trains = db.query(LocalTrain).all()

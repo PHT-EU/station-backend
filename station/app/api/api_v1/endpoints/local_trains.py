@@ -23,10 +23,11 @@ router = APIRouter()
 def run_docker_train(train_id: str, db: Session = Depends(dependencies.get_db)):
     config = local_train.get_train_config(db, train_id)
     run_id = airflow_client.trigger_dag("run_local", config)
+
     return run_id
 
 
-@router.post("/localTrains/uploadTrainFile")
+@router.post("/localTrains/uploadTrainFile/{train_id}")
 async def upload_train_file(train_id: str, upload_file: UploadFile = File(...)):
     await local_train.add_file_minio(upload_file, train_id)
     return {"filename": upload_file.filename}
@@ -72,13 +73,13 @@ def delete_local_train(train_id: str, db: Session = Depends(dependencies.get_db)
     return f"{train_id} was deleted"
 
 
-@router.delete("/localTrains/deleteFile/{file_name}")
-async def delete_file(file_name: str):
-    await train_data.delete_train_file(file_name)
+@router.delete("/localTrains/deleteFile/{train_id}/{file_name}")
+async def delete_file(train_id: str,file_name: str):
+    await train_data.delete_train_file(f"{train_id}/{file_name}")
     return "deletetd " + file_name
 
 
-@router.get("/localTrains/getAllUploadedFileNames")
+@router.get("/localTrains/getAllUploadedFileNames/{train_id}")
 def get_all_uploaded_file_names(train_id: str):
     # make search for train
     return {"files": local_train.get_all_uploaded_files(train_id)}
@@ -105,7 +106,7 @@ def get_master_images():
     return harbor_client.get_master_images()
 
 
-@router.get("/local_trains/getAllLocalTrains")
+@router.get("/localTrains/getAllLocalTrains")
 def get_all_local_trains(db: Session = Depends(dependencies.get_db)):
     return local_train.get_trains(db)
 

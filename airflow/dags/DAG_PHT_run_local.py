@@ -65,9 +65,9 @@ def run_local():
             "build_dir": "./temp/",
             "bucket_name": "localtrain",
         }
-        db = dependencies.get_db()
-        db.query(LocalTrain).filter(LocalTrain.train_id == train_id).update({"is_active": True})
-        db.commit()
+        #db = dependencies.get_db()
+        #db.query(LocalTrain).filter(LocalTrain.train_id == train_id).update({"is_active": True})
+        #db.commit()
         return train_state_dict
 
     @task()
@@ -223,9 +223,9 @@ def run_local():
             shutil.rmtree(str(train_state_dict["build_dir"]))
         except OSError as e:
             print("Error: %s - %s." % (e.filename, e.strerror))
-        db = dependencies.get_db()
-        db.query(LocalTrain).filter(LocalTrain.train_id == train_id).update({"is_active": False})
-        db.commit()
+        #db = dependencies.get_db()
+        #db.query(LocalTrain).filter(LocalTrain.train_id == train_id).update({"is_active": False})
+        #db.commit()
     local_train = get_train_configuration()
     local_train = pull_docker_image(local_train)
     local_train = build_train(local_train)
