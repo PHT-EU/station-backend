@@ -45,27 +45,29 @@ def create_local_train(db: Session = Depends(dependencies.get_db)):
     return train
 
 
-@router.put("/localTrains/addMasterImage")
+@router.put("/localTrains/addMasterImage/{train_id}/{image}")
 def add_master_image(train_id: str, image: str, db: Session = Depends(dependencies.get_db)):
     new_config = local_train.update_config_add_repostory(db, train_id, image)
     return new_config
 
 
-@router.put("/localTrains/addTag")
-def add_master_image(train_id: str, tag: str, db: Session = Depends(dependencies.get_db)):
+@router.put("/localTrains/addTag/{train_id}/{image}")
+def add_tag_image(train_id: str, tag: str, db: Session = Depends(dependencies.get_db)):
     new_config = local_train.update_config_add_tag(db, train_id, tag)
     return new_config
 
 
-@router.put("/localTrains/addEntrypoint")
+@router.put("/localTrains/addEntrypoint/{train_id}/{entrypoint}")
 def upload_endpoint_file(train_id: str, entrypoint: str, db: Session = Depends(dependencies.get_db)):
     new_config = local_train.update_config_add_entrypoint(db, train_id, entrypoint)
     return new_config
 
-@router.put("/localTrains/addQuery")
+
+@router.put("/localTrains/addQuery/{train_id}/{query}")
 def upload_endpoint_file(train_id: str, query: str, db: Session = Depends(dependencies.get_db)):
     new_config = local_train.update_config_add_query(db, train_id, query)
     return new_config
+
 
 @router.delete("/localTrains/deleteTrain/{train_id}")
 def delete_local_train(train_id: str, db: Session = Depends(dependencies.get_db)):
