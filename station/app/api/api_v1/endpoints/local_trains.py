@@ -10,7 +10,7 @@ from station.app.schemas.local_trains import LocalTrainBase
 from station.app.local_train_minio.LocalTrainMinIO import train_data
 from fastapi.responses import Response
 from fastapi.responses import FileResponse
-from station.app.schemas.local_trains import LocalTrain, LocalTrainCreate
+from station.app.schemas.local_trains import LocalTrain, LocalTrainCreate, LocalTrainAddMasterImage, LocalTrainGetFile
 
 from station.app.crud.crud_local_train import local_train
 
@@ -19,7 +19,7 @@ from station.clients.harbor_client import harbor_client
 router = APIRouter()
 
 
-@router.post("/localTrains/{localTrainId}/run")
+@router.post("/localTrains/{train_id}/run")
 def run_docker_train(train_id: str, db: Session = Depends(dependencies.get_db)):
     config = local_train.get_train_config(db, train_id)
     run_id = airflow_client.trigger_dag("run_local", config)
@@ -45,13 +45,14 @@ def create_local_train(db: Session = Depends(dependencies.get_db)):
     return train
 
 
-@router.put("/localTrains/addMasterImage/{train_id}/{image}")
-def add_master_image(train_id: str, image: str, db: Session = Depends(dependencies.get_db)):
-    new_config = local_train.update_config_add_repostory(db, train_id, image)
+@router.put("/localTrains/addMasterImage")
+def add_master_image(add_master_image_msg: LocalTrainAddMasterImage, db: Session = Depends(dependencies.get_db)):
+    new_config = local_train.update_config_add_repostory(db, add_master_image_msg.train_id, add_master_image_msg.image)
+    print(f"{add_master_image_msg.train_id}, {add_master_image_msg.image}")
     return new_config
 
 
-@router.put("/localTrains/addTag/{train_id}/{image}")
+@router.put("/localTrains/addTag/{train_id}/{tag}")
 def add_tag_image(train_id: str, tag: str, db: Session = Depends(dependencies.get_db)):
     new_config = local_train.update_config_add_tag(db, train_id, tag)
     return new_config
@@ -130,12 +131,14 @@ def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
     config = local_train.get_train_name(db, train_id)
     return config
 
+
 @router.get("/localTrains/getID")
 def get_config(train_name: str, db: Session = Depends(dependencies.get_db)):
     config = local_train.get_train_id(db, train_name)
     return config
 
+
 @router.get("/localTrains/getFile")
 async def get_file(train_id: str, file_name: str):
-    file = train_data.read_file(file_name)
+    file = train_data.read_file(f"{train_id}/{file_name}")
     return file

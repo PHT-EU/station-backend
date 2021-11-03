@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import List, Optional, Union, Any, Dict
 
+
 class DBSchema(BaseModel):
     class Config:
         orm_mode = True
@@ -22,6 +23,16 @@ class LocalTrain(DBSchema):
 
 class LocalTrainCreate(BaseModel):
     train_name: str
+
+
+class LocalTrainAddMasterImage(BaseModel):
+    train_id: str
+    image: str
+
+
+class LocalTrainGetFile(BaseModel):
+    train_id: str
+    file_name: str
 
 
 class LocalTrainUpdate(LocalTrainCreate):

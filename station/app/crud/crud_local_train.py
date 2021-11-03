@@ -89,7 +89,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
     def _create_emty_config(self, train_id):
         return {
             "repository": None,
-            "tag": None,
+            "tag": "latest",
             "env": None,
             "query": None,
             "entrypoint": None,

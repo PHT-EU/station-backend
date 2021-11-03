@@ -189,8 +189,6 @@ def run_local():
 
         environment = train_state_dict.get("env", {})
         volumes = train_state_dict.get("volumes", {})
-        print(environment)
-        print(volumes)
         container = docker_client.containers.run("local_train", environment=environment, volumes=volumes,
                                                  detach=True)
         container.wait()
