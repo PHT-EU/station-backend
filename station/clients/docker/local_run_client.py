@@ -91,6 +91,7 @@ def run_local(context):
         container = docker_client.containers.create(image.id)
         endpoint = minio_client.get_file(train_state_dict["bucket_name"], f"{train_state_dict['train_id']}/{train_state_dict['entrypoint']}")
         name = "entrypoint.py"
+        print(endpoint)
         tarfile_name = f"{train_state_dict['build_dir']}/{name}.tar"
         with tarfile.TarFile(tarfile_name, 'w') as tar:
             data_file = tarfile.TarInfo(name=name)
@@ -192,11 +193,13 @@ def run_local(context):
         container = docker_client.containers.run("local_train", environment=environment, volumes=volumes,
                                                  detach=True)
         container.wait()
+
         f = open(f'{train_state_dict["build_dir"]}/results.tar', 'wb')
-        results = container.get_archive('opt/pht_results')
-        bits, stat = results
+        bits, stat  = container.get_archive('/opt/pht_results')
+
         for chunk in bits:
             f.write(chunk)
+
         print(f"restults size {sys.getsizeof(f)}")
         f.close()
         return train_state_dict
@@ -236,12 +239,14 @@ def run_local(context):
 
 if __name__ == '__main__':
     context = {
-            "repository": "harbor-pht.tada5hi.net/master/python/slim",
+            "repository": "harbor-pht.tada5hi.net/master/python/base",
             "tag": "latest",
             "env": None,
-            "query": "query.json",
+            #"query": 'query.json',
+            "query": None,
             "entrypoint": "entrypoint.py",
             "volumes": None,
-            "train_id": "99e40a07-1f0d-4248-a345-7745a7ec1ec6"
+            #"train_id": "38c356f7-f159-4fda-aae1-824c9e75cded"
+            "train_id": "3ee05aef-f49f-4f09-bbc8-01b708031df0"
         }
     run_local(context)

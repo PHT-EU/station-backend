@@ -141,4 +141,4 @@ def get_config(train_name: str, db: Session = Depends(dependencies.get_db)):
 @router.get("/localTrains/getFile")
 async def get_file(train_id: str, file_name: str):
     file = train_data.read_file(f"{train_id}/{file_name}")
-    return file
+    return Response(file)
