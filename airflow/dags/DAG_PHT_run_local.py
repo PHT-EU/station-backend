@@ -48,7 +48,12 @@ default_args = {
 @dag(default_args=default_args, schedule_interval=None, start_date=days_ago(2), tags=['pht', 'train'])
 def run_local():
     @task()
-    def get_train_configuration():
+    def get_train_configuration() -> object:
+        """
+        extra the train state dict form airflow context
+
+        @return: train_state_dict
+        """
         context = get_current_context()
         repository, tag, env, entrypoint, volumes ,query ,train_id = [context['dag_run'].conf.get(_, None) for _ in
                                                     ['repository', 'tag', 'env', 'entrypoint', 'volumes', 'query', 'train_id']]
@@ -69,6 +74,12 @@ def run_local():
 
     @task()
     def pull_docker_image(train_state_dict):
+        """
+        pull the master Image from harbor
+
+        @param train_state_dict:
+        @return: train_state_dict
+        """
         docker_client = docker.from_env()
         harbor_address = os.getenv("HARBOR_API_URL")
         docker_client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
