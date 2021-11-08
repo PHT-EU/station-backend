@@ -47,8 +47,13 @@ default_args = {
 
 @dag(default_args=default_args, schedule_interval=None, start_date=days_ago(2), tags=['pht', 'train'])
 def run_local():
+    """
+    Defins a DAG simular to the run train only for local execution of test Trains dosent contain any of the sequrety
+    and stores the restults not ecripted into the minIO.
+    @return:
+    """
     @task()
-    def get_train_configuration() -> object:
+    def get_train_configuration() -> dict:
         """
         extra the train state dict form airflow context
 
@@ -73,7 +78,7 @@ def run_local():
         return train_state_dict
 
     @task()
-    def pull_docker_image(train_state_dict):
+    def pull_docker_image(train_state_dict)-> dict:
         """
         pull the master Image from harbor
 
@@ -90,17 +95,21 @@ def run_local():
         return train_state_dict
 
     @task()
-    def build_train(train_state_dict):
+    def build_train(train_state_dict)-> dict:
         """
         Build the train by extracting the entrypoint from minIO and adding it to the pulled image
+
         @param train_state_dict:
         @return:
         """
+        # create minIO client
         docker_client = docker.from_env()
         minio_client = MinioClient(minio_server="minio:9000")
+
         # create temp folder for saving files from minIO and results.
         Path(train_state_dict["build_dir"]).mkdir(parents=True, exist_ok=True)
 
+        # create the docker File like object that can be added to the master image
         docker_file = f'''
                             FROM {train_state_dict["img"]}
                             RUN mkdir /opt/pht_results
@@ -110,8 +119,11 @@ def run_local():
                             '''
         docker_file = BytesIO(docker_file.encode("utf-8"))
 
+        # create docker container
         image, logs = docker_client.images.build(fileobj=docker_file)
         container = docker_client.containers.create(image.id)
+
+        # load teh endpoint form minIO into to a local tar file
         endpoint = minio_client.get_file(train_state_dict["bucket_name"], f"{train_state_dict['train_id']}/{train_state_dict['entrypoint']}")
         name = "entrypoint.py"
         tarfile_name = f"{train_state_dict['build_dir']}/{name}.tar"
@@ -120,6 +132,7 @@ def run_local():
             data_file.size = len(endpoint)
             tar.addfile(data_file, io.BytesIO(endpoint))
 
+        # add teh endpoint tar file to the train container in /opt/pht_train
         with open(tarfile_name, 'rb') as fd:
             respons = container.put_archive("/opt/pht_train", fd)
             container.wait()
@@ -129,10 +142,21 @@ def run_local():
         return train_state_dict
 
     @task()
-    def execute_query(train_state_dict):
+    def execute_query(train_state_dict)-> dict:
+        """
+        if a query is defind in the train parameters, the query file is loaded  and executed in the same way
+        as the normal trains.
+        the query results are saved localy into the AIRFLOW_DATA_DIR if exists(if not "/opt/station_data")
+        The train_state_dict gets updateted with the enviroment variabls and the volume information for the data folder
+
+        @param dict train_state_dict: train parameters
+        @return: dict train_state_dict: train parameters
+        """
+        # check if a query is defind
         if train_state_dict["query"] is None:
             return train_state_dict
 
+        # start the FHIR client
         fhir_url = os.getenv("FHIR_ADDRESS", None)
         fhir_user = os.getenv("FHIR_USER", None)
         fhir_pw = os.getenv("FHIR_PW", None)
@@ -149,13 +173,14 @@ def run_local():
         )
         loop = asyncio.get_event_loop()
 
-
+        # load the query
         minio_client = MinioClient(minio_server="minio:9000")
         query_string = minio_client.get_file(train_state_dict["bucket_name"],
                                          f"{train_state_dict['train_id']}/{train_state_dict['query']}").decode("utf-8")
         query = ast.literal_eval(query_string)
-        query_result = loop.run_until_complete(fhir_client.execute_query(query=query))
 
+        # execute the query
+        query_result = loop.run_until_complete(fhir_client.execute_query(query=query))
         output_file_name = query["data"]["filename"]
 
         # Create the file path in which to store the FHIR query results
@@ -171,29 +196,37 @@ def run_local():
 
         host_data_path = os.path.join(os.getenv("STATION_DATA_DIR"), train_state_dict["train_id"], output_file_name)
 
-
+        # add the informaiton to the train parameters
         query_data_volume = {
             host_data_path: {
                 "bind": f"/opt/train_data/{output_file_name}",
                 "mode": "ro"
             }
         }
-        train_state_dict["volumes"] = query_data_volume
         data_dir_env = {
             "TRAIN_DATA_PATH": f"/opt/train_data/{output_file_name}"
         }
 
-        train_state_dict["env"] = data_dir_env
+        if isinstance(train_state_dict.get("volumes"), dict):
+            train_state_dict["volumes"] = {**query_data_volume, **train_state_dict["volumes"]}
+        else:
+            train_state_dict["volumes"] = query_data_volume
 
+        if train_state_dict.get("env", None):
+            train_state_dict["env"] = {**train_state_dict["env"], **data_dir_env}
+        else:
+            train_state_dict["env"] = data_dir_env
 
         return train_state_dict
 
     @task()
-    def run_train(train_state_dict):
+    def run_train(train_state_dict)-> dict:
         """
+        The container gets executetd with the enviroment varibals and volumes
+        whait
 
-        @param train_state_dict:
-        @return:
+        @param dict train_state_dict: train parameters
+        @return: dict train_state_dict: train parameters
         """
         docker_client = docker.from_env()
 
@@ -202,19 +235,20 @@ def run_local():
         container = docker_client.containers.run("local_train", environment=environment, volumes=volumes,
                                                  detach=True)
         container.wait()
-        f = open(f'{train_state_dict["build_dir"]}/results.tar', 'wb')
-        bits, stat = container.get_archive('opt/pht_results')
+        with open(f'{train_state_dict["build_dir"]}/results.tar', 'wb')  as f:
+            bits, stat = container.get_archive('opt/pht_results')
+            for chunk in bits:
+                f.write(chunk)
 
-        for chunk in bits:
-            f.write(chunk)
-        f.close()
         return train_state_dict
 
     @task()
-    def save_results(train_state_dict):
+    def save_results(train_state_dict)-> dict:
         """
+        Stores the results form the container inot minIO
 
-        @rtype: object
+        @param dict train_state_dict: train parameters
+        @return: dict train_state_dict: train parameters
         """
         minio_client = MinioClient(minio_server="minio:9000")
 
@@ -225,10 +259,18 @@ def run_local():
 
     @task()
     def clean_up(train_state_dict):
+        """
+        Remove all tempory data form the build dir
+
+        @param dict train_state_dict: train parameters
+        @return:
+        """
         try:
             shutil.rmtree(str(train_state_dict["build_dir"]))
         except OSError as e:
             print("Error: %s - %s." % (e.filename, e.strerror))
+
+        #TODO add the removeing or storage of query results
     local_train = get_train_configuration()
     local_train = pull_docker_image(local_train)
     local_train = build_train(local_train)
