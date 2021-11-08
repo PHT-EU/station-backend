@@ -91,6 +91,11 @@ def run_local():
 
     @task()
     def build_train(train_state_dict):
+        """
+        Build the train by extracting the entrypoint from minIO and adding it to the pulled image
+        @param train_state_dict:
+        @return:
+        """
         docker_client = docker.from_env()
         minio_client = MinioClient(minio_server="minio:9000")
         # create temp folder for saving files from minIO and results.
