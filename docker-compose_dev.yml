@@ -37,8 +37,8 @@ services:
       - FHIR_ADDRESS=https://fhir.personalhealhtrain.de
       - FHIR_USER=fhiruser
       - FHIR_PW=
-      - HARBOR_USER=dhieber
-      - HARBOR_PW=Start123
+      - HARBOR_USER=
+      - HARBOR_PW=
       - STATION_ID=1
       - STATION_PRIVATE_KEY_PATH=/opt/private_key.pem
       - HARBOR_API_URL=https://harbor-pht.tada5hi.net/api/v2.0/
