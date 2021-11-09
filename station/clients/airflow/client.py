@@ -49,11 +49,26 @@ class AirflowClient:
         print(r.json())
         r.raise_for_status()
 
-    def health_check(self):
+    def health_check(self)-> dict:
+        """
+
+        @return: dict: Airflow Status
+        """
         url = self.airflow_url + "health"
         r = requests.get(url=url)
         return r.json()
 
+    def get_run_information(self, dag_id: str, run_id: str)-> dict:
+        """
+        requests the information about a dag run state from airflow.
+        @param dag_id: ID of the dag (e.g. "run_train" or "run_local"
+        @param run_id: Airflow ID of the run ( has the form of e.g. " "manual__2021-11-09T14:12:24.622670+00:00")
+        @return: dict: information about the run
+        """
+        url = self.airflow_url + f"dags/{dag_id}/dagRuns/{run_id}"
+        r = requests.get(url=url, auth=self.auth)
+        r.raise_for_status()
+        return r.json()
 
 airflow_client = AirflowClient()
 

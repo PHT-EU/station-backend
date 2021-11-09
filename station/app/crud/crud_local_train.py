@@ -12,6 +12,12 @@ from station.app.local_train_minio.LocalTrainMinIO import train_data
 
 class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
     def create(self, db: Session, *, obj_in: LocalTrainCreate) -> ModelType:
+        """
+
+        @param db:
+        @param obj_in:
+        @return:
+        """
         if obj_in == None:
             id = str(uuid.uuid4())
             train = LocalTrain(train_id=id,
@@ -32,6 +38,12 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         return train
 
     def remove_train(self, db: Session, train_id: str) -> ModelType:
+        """
+
+        @param db:
+        @param train_id:
+        @return:
+        """
         # remove minIo entry
         files = self.get_all_uploaded_files(train_id)
         loop = asyncio.new_event_loop()
@@ -48,6 +60,13 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         return obj
 
     def update_config_add_repostory(self, db: Session, train_id: str, repository: str):
+        """
+
+        @param db:
+        @param train_id:
+        @param repository:
+        @return:
+        """
         config = self.get_config(db, train_id)
         # TODO get from env
         harbor_url = "harbor-pht.tada5hi.net"
@@ -56,29 +75,63 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         return config
 
     def update_config_add_tag(self, db: Session, train_id: str, tag: str):
+        """
+
+        @param db:
+        @param train_id:
+        @param tag:
+        @return:
+        """
         config = self.get_config(db, train_id)
         config["tag"] = f"{tag}"
         self._update_config(db, train_id, config)
         return config
 
     def update_config_add_entrypoint(self, db: Session, train_id: str, entrypoint: str):
+        """
+
+        @param db:
+        @param train_id:
+        @param entrypoint:
+        @return:
+        """
         config = self.get_config(db, train_id)
         config["entrypoint"] = f"{entrypoint}"
         self._update_config(db, train_id, config)
         return config
 
     def update_config_add_query(self, db: Session, train_id: str, query: str):
+        """
+
+        @param db:
+        @param train_id:
+        @param query:
+        @return:
+        """
         config = self.get_config(db, train_id)
         config["query"] = f"{query}"
         self._update_config(db, train_id, config)
         return config
 
     def _update_config(self, db, train_id, config):
+        """
+
+        @param db:
+        @param train_id:
+        @param config:
+        @return:
+        """
         db.query(LocalTrain).filter(LocalTrain.train_id == train_id).update({"updated_at": datetime.now()})
         db.query(LocalTrain).filter(LocalTrain.train_id == train_id).update({"airflow_config_json": config})
         db.commit()
 
     def get_config(self, db, train_id: str):
+        """
+
+        @param db:
+        @param train_id:
+        @return:
+        """
         obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()[0]
         old_config = obj.airflow_config_json
         if old_config is None:
@@ -87,6 +140,11 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
             return old_config
 
     def _create_emty_config(self, train_id):
+        """
+
+        @param train_id:
+        @return:
+        """
         return {
             "repository": None,
             "tag": "latest",
@@ -98,31 +156,70 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         }
 
     async def add_file_minio(self, upload_file: UploadFile, train_id: str):
+        """
 
+        @param upload_file:
+        @param train_id:
+        @return:
+        """
         await train_data.store_train_file(upload_file, train_id)
 
     def get_all_uploaded_files(self, train_id: str):
+        """
+
+        @param train_id:
+        @return:
+        """
         return train_data.get_all_uploaded_files_train(train_id)
 
     def get_trains(self, db: Session):
+        """
+
+        @param db:
+        @return:
+        """
         trains = db.query(LocalTrain).all()
         return trains
 
     def get_train_status(self, db: Session, train_id: str):
+        """
+
+        @param db:
+        @param train_id:
+        @return:
+        """
         obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()
         return obj
 
     def get_train_config(self, db: Session, train_id: str):
+        """
+
+        @param db:
+        @param train_id:
+        @return:
+        """
         obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()[0]
         config = obj.airflow_config_json
         return config
 
     def get_train_name(self, db: Session, train_id: str):
+        """
+
+        @param db:
+        @param train_id:
+        @return:
+        """
         obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()[0]
         train_name = obj.train_name
         return train_name
 
     def get_train_id(self, db: Session, train_name: str):
+        """
+
+        @param db:
+        @param train_name:
+        @return:
+        """
         obj = db.query(LocalTrain).filter(LocalTrain.train_name == train_name).all()[0]
         train_id = obj.train_id
         return train_id

@@ -39,6 +39,10 @@ class HarborClient:
         return [repositori["name"] for repositori in r.json()]
 
     def health_check(self):
+        """
+        requests the central service
+        @return: dict: status of central harbor instance
+        """
         url = self.url + "health"
         try:
             r = requests.get(url=url, auth=(self.username, self.password))
