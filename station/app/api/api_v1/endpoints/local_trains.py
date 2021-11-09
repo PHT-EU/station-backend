@@ -36,6 +36,12 @@ def run_docker_train(train_id: str, db: Session = Depends(dependencies.get_db)):
 
 @router.post("/localTrains/uploadTrainFile/{train_id}")
 async def upload_train_file(train_id: str, upload_file: UploadFile = File(...)):
+    """
+
+    @param train_id:
+    @param upload_file:
+    @return:
+    """
     await local_train.add_file_minio(upload_file, train_id)
     return {"filename": upload_file.filename}
 
