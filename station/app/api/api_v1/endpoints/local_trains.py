@@ -21,6 +21,13 @@ router = APIRouter()
 
 @router.post("/localTrains/{train_id}/run")
 def run_docker_train(train_id: str, db: Session = Depends(dependencies.get_db)):
+    """
+    sends a command to the the airflow client to trigger a run with the trains configurations
+
+    @param train_id: UID of the local train
+    @param db: reference to the postgres database
+    @return: airflow run ID
+    """
     config = local_train.get_train_config(db, train_id)
     run_id = airflow_client.trigger_dag("run_local", config)
 
