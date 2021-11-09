@@ -60,6 +60,11 @@ def create_local_train(create_msg: LocalTrainCreate, db: Session = Depends(depen
 
 @router.post("/localTrains/createWithUuid", response_model=LocalTrain)
 def create_local_train(db: Session = Depends(dependencies.get_db)):
+    """
+
+    @param db:
+    @return:
+    """
     train = local_train.create(db, obj_in=None)
     return train
 
