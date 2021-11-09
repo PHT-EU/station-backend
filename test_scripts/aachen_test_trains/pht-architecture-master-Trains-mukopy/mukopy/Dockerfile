@@ -11,4 +11,4 @@ ENV FHIR_PORT=''
 ENV FHIR_TOKEN=''
 #LABEL envs="[{\"name\":\"FHIR_SERVER\",\"type\":\"string\",\"required\":true},{\"name\":\"FHIR_PORT\",\"type\":\"string\",\"required\":true},{\"name\":\"FHIR_TOKEN\",\"type\":\"string\",\"required\":true}]"
 
-CMD [ "python", "./mukoWithPython.py" ]
+CMD [ "python", "./mukoWithPython.py" ]a

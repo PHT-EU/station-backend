@@ -42,6 +42,12 @@ async def upload_train_file(train_id: str, upload_file: UploadFile = File(...)):
 
 @router.post("/localTrains/create", response_model=LocalTrain)
 def create_local_train(create_msg: LocalTrainCreate, db: Session = Depends(dependencies.get_db)):
+    """
+
+    @param create_msg: information about the new train
+    @param db: reference to the postgres database
+    @return:
+    """
     train = local_train.create(db, obj_in=create_msg)
     return train
 
