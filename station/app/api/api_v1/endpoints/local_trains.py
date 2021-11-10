@@ -268,3 +268,15 @@ def get_airflow_run_information(run_id: str):
     run_info = airflow_client.get_run_information("run_local", run_id)
     return run_info
 
+@router.get("/localTrains/getLastAirflowRun/{train_id}")
+def get_last_airflow_run_information(train_id: str, db: Session = Depends(dependencies.get_db)):
+    """
+
+    @param train_id:
+    @param db:
+    @return:
+    """
+    run_id = local_train.get_last_run()
+    run_info = airflow_client.get_run_information("run_local", run_id)
+    return run_info
+

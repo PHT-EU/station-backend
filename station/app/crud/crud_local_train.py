@@ -224,5 +224,9 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         train_id = obj.train_id
         return train_id
 
+    def get_last_run(self, db: Session, train_id: str):
+        #TODO get last run id
+        pass
+
 
 local_train = CRUDLocalTrain(LocalTrain)
