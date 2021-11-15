@@ -34,9 +34,7 @@ RUN pip install /opt/station
 RUN curl -LO https://storage.googleapis.com/container-diff/latest/container-diff-linux-amd64 && \
     install container-diff-linux-amd64 /usr/local/bin/container-diff
 
-COPY ./airflow/airflow.cfg /root/airflow/airflow.cfg
-COPY ./airflow/dags /root/airflow/dags
-COPY ./airflow/entrypoint.sh /root/entrypoint.sh
+COPY ./airflow/ /root/
 RUN chmod +x /root/entrypoint.sh
 ENTRYPOINT ["/root/entrypoint.sh"]
 CMD ["webserver"]

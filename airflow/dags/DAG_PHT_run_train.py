@@ -1,5 +1,7 @@
 import asyncio
 import sys
+from datetime import timedelta
+import json
 import os
 import os.path
 
@@ -8,12 +10,13 @@ from airflow.decorators import dag, task
 from airflow.operators.python import get_current_context
 
 from docker.errors import APIError
+from docker.types import Mount
 
 from airflow.utils.dates import days_ago
 
 from train_lib.docker_util.docker_ops import extract_train_config, extract_query_json
 from train_lib.security.SecurityProtocol import SecurityProtocol
-from train_lib.fhir import PHTFhirClient
+from train_lib.clients import PHTFhirClient
 from train_lib.docker_util.validate_master_image import validate_train_image
 
 default_args = {
@@ -47,7 +50,27 @@ def run_pht_train():
         context = get_current_context()
         repository, tag, env, volumes = [context['dag_run'].conf.get(_, None) for _ in
                                          ['repository', 'tag', 'env', 'volumes']]
+
+        if not tag:
+            tag = "latest"
         img = repository + ":" + tag
+
+        # check an process the volumes passed to the dag via the config
+        if volumes:
+            assert isinstance(volumes, dict)
+            # if a volume in the dictionary follows the docker format pass it as is
+
+            for key, item in volumes.items():
+                # check if docker volume keys are present and raise an error if not
+                if isinstance(item, dict):
+                    if not ("bind" in item and "mode" in item):
+                        raise ValueError("Incorrectly formatted docker volume, 'bind' and 'mode' keys are required")
+                # transform simple path:path volumes into correctly formatted docker read only volumes
+                elif isinstance(item, str):
+                    volumes[key] = {
+                        "bind": item,
+                        "mode": "ro"
+                    }
 
         train_id = repository.split("/")[-1]
         train_state_dict = {
@@ -66,7 +89,7 @@ def run_pht_train():
         client = docker.from_env()
 
         registry_address = os.getenv("HARBOR_API_URL").split("//")[-1]
-        registry_address = registry_address.split("/")[0]
+        print(registry_address)
         client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
                      registry=registry_address)
         client.images.pull(repository=train_state["repository"], tag=train_state["tag"])
@@ -86,13 +109,16 @@ def run_pht_train():
     @task()
     def extract_config_and_query(train_state):
         config = extract_train_config(train_state["img"])
+        train_state["config"] = config
+
+        # try to extract th query json if it exists under the specified path
         try:
             query = extract_query_json(train_state["img"])
             train_state["query"] = query
-        except:
+        except Exception as e:
+            print(e)
             train_state["query"] = None
             print("No query file found ")
-        train_state["config"] = config
 
         return train_state
 
@@ -106,7 +132,6 @@ def run_pht_train():
     @task()
     def pre_run_protocol(train_state):
         config = train_state["config"]
-        print(train_state["img"])
         sp = SecurityProtocol(os.getenv("STATION_ID"), config=config)
         sp.pre_run_protocol(train_state["img"], os.getenv("PRIVATE_KEY_PATH"))
 
@@ -114,35 +139,27 @@ def run_pht_train():
 
     @task()
     def execute_query(train_state):
+        print(train_state)
+        query = train_state.get("query", None)
+        if query:
+            print("Query found, setting up connection to FHIR server")
 
-        # todo improve this
-        if train_state["query"]:
             env_dict = train_state.get("env", None)
             if env_dict:
                 fhir_url = env_dict.get("FHIR_ADDRESS", None)
-                fhir_user = env_dict.get("FHIR_USER", None)
-                fhir_pw = env_dict.get("FHIR_PW", None)
-                fhir_token = env_dict.get("FHIR_TOKEN", None)
-                fhir_server_type = env_dict.get("FHIR_SERVER_TYPE", None)
+                # Check that there is a FHIR server specified in the configuration dictionary
+                if fhir_url:
+                    fhir_client = PHTFhirClient.from_dict(env_dict)
+
+                else:
+                    fhir_client = PHTFhirClient.from_env()
             else:
-                fhir_url = os.getenv("FHIR_ADDRESS", None)
-                fhir_user = os.getenv("FHIR_USER", None)
-                fhir_pw = os.getenv("FHIR_PW", None)
-                fhir_token = os.getenv("FHIR_TOKEN", None)
-                fhir_server_type = os.getenv("FHIR_SERVER_TYPE", None)
+                fhir_client = PHTFhirClient.from_env()
 
-            fhir_client = PHTFhirClient(
-                server_url=fhir_url,
-                username=fhir_user,
-                password=fhir_pw,
-                token=fhir_token,
-                fhir_server_type=fhir_server_type,
-                disable_k_anon=True
-            )
-            loop = asyncio.get_event_loop()
-            query_result = loop.run_until_complete(fhir_client.execute_query(query=train_state["query"]))
+            fhir_client.disable_k_anon = True
+            query_result = fhir_client.execute_query(query=train_state["query"])
 
-            output_file_name = train_state["query"]["data"]["filename"]
+            output_file_name = query["data"]["filename"]
 
             # Create the file path in which to store the FHIR query results
             data_dir = os.getenv("AIRFLOW_DATA_DIR", "/opt/station_data")
@@ -191,15 +208,22 @@ def run_pht_train():
         print("Env dict: ", environment)
 
         try:
+            print("Running image", train_state["img"])
             container = client.containers.run(train_state["img"], environment=environment, volumes=volumes,
-                                              detach=True)
+                                              detach=True, network_disabled=True, stderr=True, stdout=True)
         # If the container is already in use remove it
         except APIError as e:
-            # print(e)
-            # client.containers.remove(container_name)
+            print(e)
             container = client.containers.run(train_state["img"], environment=environment, volumes=volumes,
-                                              detach=True)
-        exit_code = container.wait()["StatusCode"]
+                                              detach=True, network_disabled=True, stderr=True, stdout=True)
+        container_output = container.wait()
+        exit_code = container_output["StatusCode"]
+        logs = container.logs()
+        print(f"Container logs: \n {logs}")
+
+        if exit_code != 0:
+            print(container_output)
+            raise ValueError(f"The train execution returned a non zero exit code: {exit_code}")
 
         def _copy(from_cont, from_path, to_cont, to_path):
             """
@@ -223,8 +247,6 @@ def run_pht_train():
 
         to_container.commit(repository=train_state["repository"], tag=train_state["tag"])
         container.remove(v=True, force=True)
-        if exit_code != 0:
-            raise ValueError(f"The train execution returned a non zero exit code: {exit_code}")
 
         return train_state
 
@@ -306,7 +328,6 @@ def run_pht_train():
     train_state = get_train_image_info()
     train_state = pull_docker_image(train_state)
     train_state = extract_config_and_query(train_state)
-    # todo comment back in
     # train_state = validate_against_master_image(train_state)
     train_state = pre_run_protocol(train_state)
     train_state = execute_query(train_state)

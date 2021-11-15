@@ -7,7 +7,7 @@ from station.app.models.train import Train, TrainState, FederatedTrainConfig  # 
 from station.app.models.dl_models import DLModel, ModelCheckpoint, TorchModel, TorchModelCheckPoint
 from station.app.models.protocol import BroadCastKeys, Cypher
 from station.app.models.docker_trains import DockerTrain, DockerTrainConfig, DockerTrainExecution, DockerTrainState
-from station.app.models.data import DataSet
+from station.app.models.data import DataSet, FHIRServer
 from station.app.models.notification import Notification
 
 
