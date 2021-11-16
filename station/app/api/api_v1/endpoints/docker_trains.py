@@ -88,6 +88,7 @@ def add_docker_train_configuration(config_in: DockerTrainConfigCreate, db: Sessi
     if docker_train_config.get_by_name(db, name=config_in.name):
         raise HTTPException(status_code=400, detail="A config with the given name already exists.")
 
+    print(config_in)
     config = docker_train_config.create(db, obj_in=config_in)
     return config
 

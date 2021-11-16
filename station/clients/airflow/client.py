@@ -42,6 +42,14 @@ class AirflowClient:
 
         return r.json()
 
+    def get_dags(self):
+        url = self.airflow_url + "dags"
+        r = requests.get(url=url, auth=self.auth)
+        print(r.json())
+        r.raise_for_status()
+
+        return r.json()
+
     # TODO create arguments for individual connection options
     def create_connection(self, connection_dict: dict):
         url = self.airflow_url + "connections"
