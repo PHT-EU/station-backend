@@ -1,5 +1,6 @@
 from io import BytesIO
 from io import BufferedReader
+from io import TextIOWrapper
 from minio import Minio
 import os
 from fastapi import File, UploadFile
@@ -60,10 +61,14 @@ class MinioClient:
         """
         store files into minio
         """
+        print(name)
+        print(type(file))
         if isinstance(file, BufferedReader):
             model_data = file.read()
         elif isinstance(file, str):
             model_data = file.encode('utf-8')
+        elif isinstance(file, TextIOWrapper):
+            model_data = file.read().encode('utf-8')
         else:
             model_data = await file.read()
 

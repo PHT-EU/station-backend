@@ -1,6 +1,7 @@
 from station.clients.docker.client import dockerClient
 from fastapi import UploadFile
 from station.clients.minio.client import MinioClient
+from  minio.error import MinioException
 import aiofiles
 from os import listdir
 
@@ -27,7 +28,12 @@ class LocalTrainMinIO:
     def read_file(self,file_name):
         # TODO make it so the file name can be other or ther can be multiple fiels
         # return open(self.path_to_resources + "endpoint.py")
-        return self.minio_client.get_file(self.bucket_name, file_name)
+        try:
+            file = self.minio_client.get_file(self.bucket_name, file_name)
+        except MinioException as e:
+            print(e)
+            return None
+        return file
 
     def get_results(self,train_id):
         file = self.minio_client.get_file(self.bucket_name, f"{train_id}/results.tar")

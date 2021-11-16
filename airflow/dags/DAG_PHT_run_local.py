@@ -155,67 +155,72 @@ def run_local():
         # check if a query is defind
         if train_state_dict["query"] is None:
             return train_state_dict
+        #try to cache errors and save to logs
+        try:
+            # start the FHIR client
+            fhir_url = os.getenv("FHIR_ADDRESS", None)
+            fhir_user = os.getenv("FHIR_USER", None)
+            fhir_pw = os.getenv("FHIR_PW", None)
+            fhir_token = os.getenv("FHIR_TOKEN", None)
+            fhir_server_type = os.getenv("FHIR_SERVER_TYPE", None)
 
-        # start the FHIR client
-        fhir_url = os.getenv("FHIR_ADDRESS", None)
-        fhir_user = os.getenv("FHIR_USER", None)
-        fhir_pw = os.getenv("FHIR_PW", None)
-        fhir_token = os.getenv("FHIR_TOKEN", None)
-        fhir_server_type = os.getenv("FHIR_SERVER_TYPE", None)
+            fhir_client = PHTFhirClient(
+                server_url=fhir_url,
+                username=fhir_user,
+                password=fhir_pw,
+                token=fhir_token,
+                fhir_server_type=fhir_server_type,
+                disable_k_anon=True
+            )
+            loop = asyncio.get_event_loop()
 
-        fhir_client = PHTFhirClient(
-            server_url=fhir_url,
-            username=fhir_user,
-            password=fhir_pw,
-            token=fhir_token,
-            fhir_server_type=fhir_server_type,
-            disable_k_anon=True
-        )
-        loop = asyncio.get_event_loop()
+            # load the query
+            minio_client = MinioClient(minio_server="minio:9000")
+            query_string = minio_client.get_file(train_state_dict["bucket_name"],
+                                             f"{train_state_dict['train_id']}/{train_state_dict['query']}").decode("utf-8")
+            query = ast.literal_eval(query_string)
 
-        # load the query
-        minio_client = MinioClient(minio_server="minio:9000")
-        query_string = minio_client.get_file(train_state_dict["bucket_name"],
-                                         f"{train_state_dict['train_id']}/{train_state_dict['query']}").decode("utf-8")
-        query = ast.literal_eval(query_string)
+            # execute the query
+            query_result = loop.run_until_complete(fhir_client.execute_query(query=query))
+            output_file_name = query["data"]["filename"]
 
-        # execute the query
-        query_result = loop.run_until_complete(fhir_client.execute_query(query=query))
-        output_file_name = query["data"]["filename"]
+            # Create the file path in which to store the FHIR query results
+            data_dir = os.getenv("AIRFLOW_DATA_DIR", "/opt/station_data")
 
-        # Create the file path in which to store the FHIR query results
-        data_dir = os.getenv("AIRFLOW_DATA_DIR", "/opt/station_data")
+            train_data_dir = os.path.join(data_dir, train_state_dict["train_id"])
+            Path(train_data_dir).mkdir(parents=True, exist_ok=True)
 
-        train_data_dir = os.path.join(data_dir, train_state_dict["train_id"])
-        Path(train_data_dir).mkdir(parents=True, exist_ok=True)
-
-        train_data_dir = os.path.abspath(train_data_dir)
-        train_data_path = fhir_client.store_query_results(query_result, storage_dir=train_data_dir,
-                                                          filename=output_file_name)
+            train_data_dir = os.path.abspath(train_data_dir)
+            train_data_path = fhir_client.store_query_results(query_result, storage_dir=train_data_dir,
+                                                              filename=output_file_name)
 
 
-        host_data_path = os.path.join(os.getenv("STATION_DATA_DIR"), train_state_dict["train_id"], output_file_name)
+            host_data_path = os.path.join(os.getenv("STATION_DATA_DIR"), train_state_dict["train_id"], output_file_name)
 
-        # add the informaiton to the train parameters
-        query_data_volume = {
-            host_data_path: {
-                "bind": f"/opt/train_data/{output_file_name}",
-                "mode": "ro"
+            # add the informaiton to the train parameters
+            query_data_volume = {
+                host_data_path: {
+                    "bind": f"/opt/train_data/{output_file_name}",
+                    "mode": "ro"
+                }
             }
-        }
-        data_dir_env = {
-            "TRAIN_DATA_PATH": f"/opt/train_data/{output_file_name}"
-        }
+            data_dir_env = {
+                "TRAIN_DATA_PATH": f"/opt/train_data/{output_file_name}"
+            }
 
-        if isinstance(train_state_dict.get("volumes"), dict):
-            train_state_dict["volumes"] = {**query_data_volume, **train_state_dict["volumes"]}
-        else:
-            train_state_dict["volumes"] = query_data_volume
+            if isinstance(train_state_dict.get("volumes"), dict):
+                train_state_dict["volumes"] = {**query_data_volume, **train_state_dict["volumes"]}
+            else:
+                train_state_dict["volumes"] = query_data_volume
 
-        if train_state_dict.get("env", None):
-            train_state_dict["env"] = {**train_state_dict["env"], **data_dir_env}
-        else:
-            train_state_dict["env"] = data_dir_env
+            if train_state_dict.get("env", None):
+                train_state_dict["env"] = {**train_state_dict["env"], **data_dir_env}
+            else:
+                train_state_dict["env"] = data_dir_env
+        except Exception as e:
+            # save logs for errors that happend during query execution
+            with open(f'{train_state_dict["build_dir"]}log.txt', 'a+') as f:
+                f.write(e)
 
         return train_state_dict
 
@@ -235,26 +240,36 @@ def run_local():
         container = docker_client.containers.run("local_train", environment=environment, volumes=volumes,
                                                  detach=True)
         container.wait()
-        with open(f'{train_state_dict["build_dir"]}/results.tar', 'wb')  as f:
+        with open(f'{train_state_dict["build_dir"]}results.tar', 'wb')  as f:
             bits, stat = container.get_archive('opt/pht_results')
             for chunk in bits:
                 f.write(chunk)
 
+        with open(f'{train_state_dict["build_dir"]}log.txt', 'a+')  as f:
+            logs = container.logs().decode("utf-8")
+            f.write(logs)
+        container.remove(v=True, force=True)
         return train_state_dict
 
     @task()
     def save_results(train_state_dict)-> dict:
         """
-        Stores the results form the container inot minIO
+        Stores the results and logs form the container inot minIO
 
         @param dict train_state_dict: train parameters
         @return: dict train_state_dict: train parameters
         """
         minio_client = MinioClient(minio_server="minio:9000")
-
-        with open(f'{train_state_dict["build_dir"]}/results.tar', 'rb') as results_tar:
+        #Store results
+        with open(f'{train_state_dict["build_dir"]}results.tar', 'rb') as results_tar:
             asyncio.run(
                 minio_client.store_files(bucket=train_state_dict["bucket_name"], name=f"{train_state_dict['train_id']}/results.tar", file=results_tar))
+        #Store logs
+        with open(f'{train_state_dict["build_dir"]}log.txt', 'rb') as logs:
+            asyncio.run(
+                minio_client.store_files(bucket=train_state_dict["bucket_name"],
+                                         name=f"{train_state_dict['train_id']}/log.", file=logs))
+
         return train_state_dict
 
     @task()

@@ -191,8 +191,11 @@ def run_local(context):
         print(environment)
         print(volumes)
         container = docker_client.containers.run("local_train", environment=environment, volumes=volumes,
-                                                 detach=True)
+                                                 detach=True, stderr=True, stdout= True)
         container.wait()
+        logs = container.logs()
+        print(logs.decode("utf-8") )
+
 
         f = open(f'{train_state_dict["build_dir"]}/results.tar', 'wb')
         bits, stat  = container.get_archive('/opt/pht_results')
@@ -244,7 +247,7 @@ if __name__ == '__main__':
             "env": None,
             #"query": 'query.json',
             "query": None,
-            "entrypoint": "entrypoint.py",
+            "entrypoint": "entrypoint_with_error.py",
             "volumes": None,
             #"train_id": "38c356f7-f159-4fda-aae1-824c9e75cded"
             "train_id": "3ee05aef-f49f-4f09-bbc8-01b708031df0"

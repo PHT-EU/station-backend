@@ -13,11 +13,12 @@ from station.app.local_train_minio.LocalTrainMinIO import train_data
 class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
     def create(self, db: Session, *, obj_in: LocalTrainCreate) -> ModelType:
         """
-
-        @param db:
-        @param obj_in:
-        @return:
+        Create the data base entry for a local train
+        @param db: reference to the postgres database
+        @param obj_in: LocalTrainCreate json as defined in the schemas
+        @return: local train object
         """
+        # if no name is given in the local train the uid  is set as train id and train name
         if obj_in == None:
             id = str(uuid.uuid4())
             train = LocalTrain(train_id=id,
@@ -31,7 +32,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
                 train_name=obj_in.train_name,
                 airflow_config_json=self._create_emty_config(train_id)
             )
-
+        # add and commit the new entry
         db.add(train)
         db.commit()
         db.refresh(train)

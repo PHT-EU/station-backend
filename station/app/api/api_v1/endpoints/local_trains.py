@@ -36,9 +36,10 @@ def run_docker_train(train_id: str, db: Session = Depends(dependencies.get_db)):
 @router.post("/localTrains/uploadTrainFile/{train_id}")
 async def upload_train_file(train_id: str, upload_file: UploadFile = File(...)):
     """
+    upload a singel file to minIO into the subfolder of the Train
 
-    @param train_id:
-    @param upload_file:
+    @param train_id: Id of the train the file belongs
+    @param upload_file: UploadFile that has to be stored
     @return:
     """
     await local_train.add_file_minio(upload_file, train_id)
@@ -48,6 +49,7 @@ async def upload_train_file(train_id: str, upload_file: UploadFile = File(...)):
 @router.post("/localTrains/create", response_model=LocalTrain)
 def create_local_train(create_msg: LocalTrainCreate, db: Session = Depends(dependencies.get_db)):
     """
+    creae a database entry for a new train with preset names from the create_msg
 
     @param create_msg: information about the new train
     @param db: reference to the postgres database
@@ -60,8 +62,8 @@ def create_local_train(create_msg: LocalTrainCreate, db: Session = Depends(depen
 @router.post("/localTrains/createWithUuid", response_model=LocalTrain)
 def create_local_train(db: Session = Depends(dependencies.get_db)):
     """
-
-    @param db:
+     creae a database entry for a new train, the name is set as the train_id
+    @param db: reference to the postgres database
     @return:
     """
     train = local_train.create(db, obj_in=None)
@@ -71,20 +73,23 @@ def create_local_train(db: Session = Depends(dependencies.get_db)):
 @router.put("/localTrains/addMasterImage")
 def add_master_image(add_master_image_msg: LocalTrainAddMasterImage, db: Session = Depends(dependencies.get_db)):
     """
+    Modifies the train configuration with a MasterImage that is defined in add_master_image_msg in the train
+    specified by the train id
 
-    @param add_master_image_msg:
-    @param db:
+    @param add_master_image_msg:  message with  train_id: str, image: str
+    @param db: reference to the postgres database
     @return:
     """
     new_config = local_train.update_config_add_repostory(db, add_master_image_msg.train_id, add_master_image_msg.image)
-    print(f"{add_master_image_msg.train_id}, {add_master_image_msg.image}")
     return new_config
 
 
 @router.put("/localTrains/addTag/{train_id}/{tag}")
 def add_tag_image(train_id: str, tag: str, db: Session = Depends(dependencies.get_db)):
     """
-
+    #TODO change to pedantic same as add master image
+    Modifies the train configuration with a MasterImage that is defined in add_master_image_msg in the train
+    specified by the train id
     @param train_id:
     @param tag:
     @param db:
@@ -94,6 +99,9 @@ def add_tag_image(train_id: str, tag: str, db: Session = Depends(dependencies.ge
     return new_config
 
 
+#TODO Remove it shoudent be used in the UI, upload handelt over the geneneral upload system and entrypoint defind by config
+'''
+@deprecated
 @router.put("/localTrains/addEntrypoint/{train_id}/{entrypoint}")
 def upload_endpoint_file(train_id: str, entrypoint: str, db: Session = Depends(dependencies.get_db)):
     """
@@ -105,7 +113,7 @@ def upload_endpoint_file(train_id: str, entrypoint: str, db: Session = Depends(d
     """
     new_config = local_train.update_config_add_entrypoint(db, train_id, entrypoint)
     return new_config
-
+'''
 
 @router.put("/localTrains/addQuery/{train_id}/{query}")
 def upload_endpoint_file(train_id: str, query: str, db: Session = Depends(dependencies.get_db)):
@@ -280,3 +288,16 @@ def get_last_airflow_run_information(train_id: str, db: Session = Depends(depend
     run_info = airflow_client.get_run_information("run_local", run_id)
     return run_info
 
+@router.get("/localTrains/getLogs/{train_id}")
+def get_logs(train_id: str):
+    """
+    Returns the run logs for the last run of the train
+
+    @param train_id:
+    @return:
+    """
+
+    logs = train_data.read_file(f"{train_id}/log.")
+    if logs is None:
+        return "No logs available"
+    return logs
