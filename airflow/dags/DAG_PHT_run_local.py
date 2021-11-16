@@ -60,8 +60,8 @@ def run_local():
         @return: train_state_dict
         """
         context = get_current_context()
-        repository, tag, env, entrypoint, volumes ,query ,train_id = [context['dag_run'].conf.get(_, None) for _ in
-                                                    ['repository', 'tag', 'env', 'entrypoint', 'volumes', 'query', 'train_id']]
+        repository, tag, env, entrypoint, volumes ,query ,train_id, run_id = [context['dag_run'].conf.get(_, None) for _ in
+                                                    ['repository', 'tag', 'env', 'entrypoint', 'volumes', 'query', 'train_id', 'run_id']]
         img = repository + ":" + tag
         train_state_dict = {
             "repository": repository,
@@ -74,6 +74,7 @@ def run_local():
             "entrypoint": entrypoint,
             "build_dir": "./temp/",
             "bucket_name": "localtrain",
+            "run_id" : context['dag_run'].run_id
         }
         return train_state_dict
 

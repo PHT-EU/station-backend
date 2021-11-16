@@ -17,10 +17,11 @@ class LocalTrainState(Base):
 class LocalTrainExecution(Base):
     __tablename__ = "local_train_executions"
     id = Column(Integer, primary_key=True, index=True)
-    train_id = Column(Integer, ForeignKey('local_trains.id'))
+    train_id = Column(String, ForeignKey('local_trains.id'))
+    airflow_dag_run = Column(String, nullable=True, unique=True)
     start = Column(DateTime, default=datetime.now())
     end = Column(DateTime, nullable=True)
-    airflow_dag_run = Column(String, nullable=True)
+
 
 
 class LocalTrain(Base):
@@ -36,6 +37,7 @@ class LocalTrain(Base):
     is_active = Column(Boolean, default=False)
     #state = relationship("LocalTrainState")
     #executions = relationship("LocalTrainExecution")
+
 
 '''
 class LocalTrainConfig(Base):

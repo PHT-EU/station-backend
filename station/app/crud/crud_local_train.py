@@ -5,8 +5,8 @@ from fastapi import UploadFile
 from .base import CRUDBase, CreateSchemaType, ModelType
 import asyncio
 
-from station.app.models.local_trains import LocalTrain
-from station.app.schemas.local_trains import LocalTrainCreate, LocalTrainUpdate
+from station.app.models.local_trains import LocalTrain, LocalTrainExecution
+from station.app.schemas.local_trains import LocalTrainCreate, LocalTrainUpdate, LocalTrainRun
 from station.app.local_train_minio.LocalTrainMinIO import train_data
 
 
@@ -38,6 +38,21 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         db.refresh(train)
         return train
 
+    def create_run(self, db: Session, *, obj_in: LocalTrainRun) -> ModelType:
+        """
+        create a database entry for a local train execution
+
+        @param db: eference to the postgres database
+        @param obj_in: LocalTrainRun json as defind in the schemas
+        @return: local run object
+        """
+        run = LocalTrainExecution(train_id=obj_in.train_id,
+                                  airflow_dag_run=obj_in.run_id)
+        db.add(run)
+        db.commit()
+        db.refresh(run)
+        return run
+
     def remove_train(self, db: Session, train_id: str) -> ModelType:
         """
 
@@ -59,6 +74,24 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         db.delete(obj[0])
         db.commit()
         return obj
+
+    def remove_config_entry(self, db: Session, train_id: str , key: str):
+        """
+        set the value of the key in the train config to none
+
+        @param db: eference to the postgres database
+        @param train_id:  Id of the train that has to be changed
+        @param key: key that will be set to null
+        @return: json response about the removel
+        """
+        config = self.get_config(db, train_id)
+        try:
+            config[key] = None
+            self._update_config(db,train_id, config)
+            return f"{key} was removed"
+        except KeyError as e:
+            return f"{key} is not a key that can be reset"
+
 
     def update_config_add_repostory(self, db: Session, train_id: str, repository: str):
         """
@@ -226,7 +259,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         return train_id
 
     def get_last_run(self, db: Session, train_id: str):
-        #TODO get last run id
+        # TODO get last run id
         pass
 
 

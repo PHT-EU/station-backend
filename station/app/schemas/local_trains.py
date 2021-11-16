@@ -12,6 +12,9 @@ class LocalTrainBase(BaseModel):
     name: str
     TrainID: int
 
+class LocalTrainRun(BaseModel):
+    train_id: str
+    run_id: str
 
 class LocalTrain(DBSchema):
     created_at: datetime

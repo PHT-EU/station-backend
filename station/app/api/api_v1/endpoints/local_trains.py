@@ -99,9 +99,20 @@ def add_tag_image(train_id: str, tag: str, db: Session = Depends(dependencies.ge
     return new_config
 
 
-#TODO Remove it shoudent be used in the UI, upload handelt over the geneneral upload system and entrypoint defind by config
-'''
-@deprecated
+@router.put("/localTrains/RemoveConfigElement/{train_id}/{key}")
+def remove_config_element(train_id: str, key: str, db: Session = Depends(dependencies.get_db)):
+    """
+    set the value of the key in the train config to none
+
+    @param train_id: Id of the train the config that has a element to removed
+    @param key: name of a config entry that has to be set to none
+    @param db: reference to the postgres database
+    @return: response if the element was removed
+    """
+    response = local_train.remove_config_entry(db, train_id, key)
+    return response
+
+
 @router.put("/localTrains/addEntrypoint/{train_id}/{entrypoint}")
 def upload_endpoint_file(train_id: str, entrypoint: str, db: Session = Depends(dependencies.get_db)):
     """
@@ -113,7 +124,7 @@ def upload_endpoint_file(train_id: str, entrypoint: str, db: Session = Depends(d
     """
     new_config = local_train.update_config_add_entrypoint(db, train_id, entrypoint)
     return new_config
-'''
+
 
 @router.put("/localTrains/addQuery/{train_id}/{query}")
 def upload_endpoint_file(train_id: str, query: str, db: Session = Depends(dependencies.get_db)):
@@ -141,7 +152,7 @@ def delete_local_train(train_id: str, db: Session = Depends(dependencies.get_db)
 
 
 @router.delete("/localTrains/deleteFile/{train_id}/{file_name}")
-async def delete_file(train_id: str,file_name: str):
+async def delete_file(train_id: str, file_name: str):
     """
 
     @param train_id:
@@ -173,7 +184,7 @@ def get_results(train_id: str):
     data = train_data.get_results(train_id)
     file_like_objekt = io.BytesIO(data)
     with tarfile.open(name="results.tar", fileobj=file_like_objekt, mode='a') as tar:
-       print(tar)
+        print(tar)
 
     return FileResponse('results.tar', media_type='bytes/tar')
 
@@ -266,6 +277,7 @@ async def get_file(train_id: str, file_name: str):
     file = train_data.read_file(f"{train_id}/{file_name}")
     return Response(file)
 
+
 @router.get("/localTrains/getAirflowRun/{run_id}")
 def get_airflow_run_information(run_id: str):
     """
@@ -275,6 +287,7 @@ def get_airflow_run_information(run_id: str):
     """
     run_info = airflow_client.get_run_information("run_local", run_id)
     return run_info
+
 
 @router.get("/localTrains/getLastAirflowRun/{train_id}")
 def get_last_airflow_run_information(train_id: str, db: Session = Depends(dependencies.get_db)):
@@ -287,6 +300,7 @@ def get_last_airflow_run_information(train_id: str, db: Session = Depends(depend
     run_id = local_train.get_last_run()
     run_info = airflow_client.get_run_information("run_local", run_id)
     return run_info
+
 
 @router.get("/localTrains/getLogs/{train_id}")
 def get_logs(train_id: str):
