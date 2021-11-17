@@ -10,7 +10,7 @@ from station.app.schemas.local_trains import LocalTrainBase
 from station.app.local_train_minio.LocalTrainMinIO import train_data
 from fastapi.responses import Response
 from fastapi.responses import FileResponse
-from station.app.schemas.local_trains import LocalTrain, LocalTrainCreate, LocalTrainAddMasterImage, LocalTrainGetFile
+from station.app.schemas.local_trains import LocalTrain, LocalTrainCreate, LocalTrainAddMasterImage, LocalTrainGetFile, LocalTrainRun
 
 from station.app.crud.crud_local_train import local_train
 
@@ -28,8 +28,11 @@ def run_docker_train(train_id: str, db: Session = Depends(dependencies.get_db)):
     @param db: reference to the postgres database
     @return: airflow run ID
     """
+
     config = local_train.get_train_config(db, train_id)
     run_id = airflow_client.trigger_dag("run_local", config)
+    run_information = LocalTrainRun(train_id=train_id, run_id=run_id)
+    local_train.create_run(db, obj_in=run_information)
     return run_id
 
 

@@ -44,7 +44,29 @@ class LocalTrainMinIO:
         return self.minio_client.get_file_names(self.bucket_name)
 
     def get_all_uploaded_files_train(self, train_id: str):
-        return self.minio_client.get_file_names(self.bucket_name, f"{train_id}/")
+        """
+        Returns all files stord in for the selected given train
+        @param train_id: uid for of the train
+        @return: json with file information
+        """
+        files = self._get_all_files_recursively(f"{train_id}/")
+        print(files)
+        return files
 
+    def _get_all_files_recursively(self, subfolder):
+        """
+        returns all files in a folder if ther are subfolders it returns the files in the subfolder
+        @param subfolder:
+        @return:
+        """
+        files = self.minio_client.get_file_names(self.bucket_name, subfolder)
+        out_files = []
+        for file in files:
+            if file._object_name[-1] == "/":
+                out_files.append(self._get_all_files_recursively(file._object_name))
+            else:
+                out_files.append(file)
+
+        return out_files
 
 train_data = LocalTrainMinIO()

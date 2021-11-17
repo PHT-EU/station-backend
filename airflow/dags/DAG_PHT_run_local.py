@@ -269,7 +269,7 @@ def run_local():
         with open(f'{train_state_dict["build_dir"]}log.txt', 'rb') as logs:
             asyncio.run(
                 minio_client.store_files(bucket=train_state_dict["bucket_name"],
-                                         name=f"{train_state_dict['train_id']}/log.", file=logs))
+                                         name=f"{train_state_dict['train_id']}/{train_state_dict['run_id']}/log.", file=logs))
 
         return train_state_dict
 
