@@ -33,7 +33,7 @@ class AirflowConfig(BaseModel):
 
 class DockerTrainConfigBase(DBSchema):
     name: str
-    airflow_config_json: Optional[AirflowConfig] = None
+    airflow_config: Optional[AirflowConfig] = None
     cpu_requirements: Optional[Dict[str, Any]] = None
     gpu_requirements: Optional[Dict[str, Any]] = None
     auto_execute: Optional[bool] = None
@@ -48,6 +48,7 @@ class DockerTrainMinimal(DBSchema):
 
 
 class DockerTrainConfig(DockerTrainConfigBase):
+    id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
     trains: Optional[List[DockerTrainMinimal]] = None

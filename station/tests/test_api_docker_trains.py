@@ -24,10 +24,18 @@ def train_id():
 def docker_train_config():
     config = {
         "name": "test_config",
-        "airflow_config_json": {
-            "env": {
-                "FHIR_ADDRESS": "test_address"
-            }
+        "airflow_config": {
+            "env": [{
+                "key": "FHIR_ADDRESS",
+                "value": "test_address"
+                }
+            ],
+            "volumes": [{
+                "host_path": "path/on/host",
+                "container_path": "path/in/container",
+                "mode": "ro"
+            }]
+
         },
 
         "auto_execute": True
@@ -46,7 +54,7 @@ def test_docker_train_create(train_id):
 
     json_response = response.json()
     assert json_response["train_id"] == train_id
-
+    print(json_response)
     assert json_response["state"]["num_executions"] == 0
     assert not json_response["state"]["status"]
 
@@ -110,6 +118,7 @@ def test_get_docker_train_config_by_id():
     response = client.get(f"/api/trains/docker/config/1")
     assert response.status_code == 200, response.text
 
+
 def test_get_docker_train_config_by_id_fails():
     response = client.get("/api/trains/docker/config/2")
     assert response.status_code == 404, response.text
@@ -124,6 +133,7 @@ def test_update_docker_train_config(docker_train_config):
     response = client.get(f"/api/trains/docker/config/1")
 
     assert response.json()["name"] == "updated name"
+
 
 def test_update_docker_train_config_fails(docker_train_config):
     docker_train_config["name"] = "updated name"
