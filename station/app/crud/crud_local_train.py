@@ -66,8 +66,12 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         asyncio.set_event_loop(loop)
         for file in files:
             loop.run_until_complete(train_data.delete_train_file(file.object_name))
-        # remove sql database entry
-
+        # remove sql database entrys for LocalTrainExecution
+        obj = db.query(LocalTrainExecution).filter(LocalTrainExecution.train_id == train_id).all()
+        for run in obj:
+            db.delete(run)
+        db.commit()
+        # remove sql database entry for LocalTrain
         obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()
         if not obj:
             return f"train_id {train_id} dose not exit"

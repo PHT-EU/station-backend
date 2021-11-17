@@ -1,7 +1,7 @@
 from station.clients.docker.client import dockerClient
 from fastapi import UploadFile
 from station.clients.minio.client import MinioClient
-from  minio.error import MinioException
+from minio.error import MinioException
 import aiofiles
 from os import listdir
 
@@ -50,7 +50,7 @@ class LocalTrainMinIO:
         @return: json with file information
         """
         files = self._get_all_files_recursively(f"{train_id}/")
-        print(files)
+
         return files
 
     def _get_all_files_recursively(self, subfolder):
@@ -63,7 +63,7 @@ class LocalTrainMinIO:
         out_files = []
         for file in files:
             if file._object_name[-1] == "/":
-                out_files.append(self._get_all_files_recursively(file._object_name))
+                out_files.extend(self._get_all_files_recursively(file._object_name))
             else:
                 out_files.append(file)
 
