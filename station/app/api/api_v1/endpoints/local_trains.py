@@ -120,9 +120,9 @@ def remove_config_element(train_id: str, key: str, db: Session = Depends(depende
 def upload_endpoint_file(train_id: str, entrypoint: str, db: Session = Depends(dependencies.get_db)):
     """
 
-    @param train_id:
+    @param train_id: uid of a local train
     @param entrypoint:
-    @param db:
+    @param db: reference to the postgres database
     @return:
     """
     new_config = local_train.update_config_add_entrypoint(db, train_id, entrypoint)
@@ -133,9 +133,9 @@ def upload_endpoint_file(train_id: str, entrypoint: str, db: Session = Depends(d
 def upload_endpoint_file(train_id: str, query: str, db: Session = Depends(dependencies.get_db)):
     """
 
-    @param train_id:
+    @param train_id: uid of a local train
     @param query:
-    @param db:
+    @param db: reference to the postgres database
     @return:
     """
     new_config = local_train.update_config_add_query(db, train_id, query)
@@ -146,8 +146,8 @@ def upload_endpoint_file(train_id: str, query: str, db: Session = Depends(depend
 def delete_local_train(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
 
-    @param train_id:
-    @param db:
+    @param train_id: uid of a local train
+    @param db: reference to the postgres database
     @return:
     """
     obj = local_train.remove_train(db, train_id)
@@ -158,7 +158,7 @@ def delete_local_train(train_id: str, db: Session = Depends(dependencies.get_db)
 async def delete_file(train_id: str, file_name: str):
     """
 
-    @param train_id:
+    @param train_id: uid of a local train
     @param file_name:
     @return:
     """
@@ -170,7 +170,7 @@ async def delete_file(train_id: str, file_name: str):
 def get_all_uploaded_file_names(train_id: str):
     """
 
-    @param train_id:
+    @param train_id: uid of a local train
     @return:
     """
     # make search for train
@@ -181,7 +181,7 @@ def get_all_uploaded_file_names(train_id: str):
 def get_results(train_id: str):
     """
 
-    @param train_id:
+    @param train_id: uid of a local train
     @return:
     """
     data = train_data.get_results(train_id)
@@ -196,8 +196,8 @@ def get_results(train_id: str):
 def get_train_status(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
 
-    @param train_id:
-    @param db:
+    @param train_id: uid of a local train
+    @param db: reference to the postgres database
     @return:
     """
     obj = local_train.get_train_status(db, train_id)
@@ -217,7 +217,7 @@ def get_master_images():
 def get_all_local_trains(db: Session = Depends(dependencies.get_db)):
     """
 
-    @param db:
+    @param db: reference to the postgres database
     @return:
     """
     return local_train.get_trains(db)
@@ -237,8 +237,8 @@ async def get_endpoint_file():
 def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
 
-    @param train_id:
-    @param db:
+    @param train_id: uid of a local train
+    @param db: reference to the postgres database
     @return:
     """
     config = local_train.get_train_config(db, train_id)
@@ -249,8 +249,8 @@ def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
 def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
 
-    @param train_id:
-    @param db:
+    @param train_id: uid of a local train
+    @param db: reference to the postgres database
     @return:
     """
     config = local_train.get_train_name(db, train_id)
@@ -262,7 +262,7 @@ def get_config(train_name: str, db: Session = Depends(dependencies.get_db)):
     """
 
     @param train_name:
-    @param db:
+    @param db: reference to the postgres database
     @return:
     """
     config = local_train.get_train_id(db, train_name)
@@ -273,7 +273,7 @@ def get_config(train_name: str, db: Session = Depends(dependencies.get_db)):
 async def get_file(train_id: str, file_name: str):
     """
 
-    @param train_id:
+    @param train_id: uid of a local train
     @param file_name:
     @return:
     """
@@ -296,8 +296,8 @@ def get_airflow_run_information(run_id: str):
 def get_last_airflow_run_information(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
 
-    @param train_id:
-    @param db:
+    @param train_id: uid of a local train
+    @param db: reference to the postgres database
     @return:
     """
     run_id = local_train.get_last_run()
@@ -306,15 +306,27 @@ def get_last_airflow_run_information(train_id: str, db: Session = Depends(depend
 
 
 @router.get("/localTrains/getLogs/{train_id}")
-def get_logs(train_id: str):
+def get_logs(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
-    Returns the run logs for the last run of the train
+    Returns the run logs for the runs of the train
 
-    @param train_id:
+    @param db: reference to the postgres database
+    @param train_id: uid of a local train
     @return:
     """
-
-    logs = train_data.read_file(f"{train_id}/log.")
-    if logs is None:
+    logs = local_train.get_train_logs(db, train_id)
+    if len(logs) == 0:
         return "No logs available"
     return logs
+
+@router.get("/localTrains/getLastLogs/{train_id}")
+def get_last_log(train_id: str, db: Session = Depends(dependencies.get_db)):
+    """
+    Returns the last run logs for the train
+
+    @param db: reference to the postgres database
+    @param train_id: uid of a local train
+    @return:
+    """
+    log = local_train.get_last_train_logs(db, train_id)
+    return log

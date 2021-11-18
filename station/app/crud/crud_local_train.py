@@ -79,11 +79,11 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         db.commit()
         return obj
 
-    def remove_config_entry(self, db: Session, train_id: str , key: str):
+    def remove_config_entry(self, db: Session, train_id: str, key: str):
         """
         set the value of the key in the train config to none
 
-        @param db: eference to the postgres database
+        @param db: reference to the postgres database
         @param train_id:  Id of the train that has to be changed
         @param key: key that will be set to null
         @return: json response about the removel
@@ -91,11 +91,10 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         config = self.get_config(db, train_id)
         try:
             config[key] = None
-            self._update_config(db,train_id, config)
+            self._update_config(db, train_id, config)
             return f"{key} was removed"
         except KeyError as e:
             return f"{key} is not a key that can be reset"
-
 
     def update_config_add_repostory(self, db: Session, train_id: str, repository: str):
         """
@@ -262,9 +261,41 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         train_id = obj.train_id
         return train_id
 
+    def get_train_logs(self, db: Session, train_id: str):
+        """
+        Returns the run logs for the runs of the train
+
+        @param db: reference to the postgres database
+        @param train_id: Id of the train
+        @return: list of logs
+        """
+        runs = db.query(LocalTrainExecution).filter(LocalTrainExecution.train_id == train_id).all()
+        logs = []
+        for run in runs:
+            run_id = run.airflow_dag_run
+            log = {"run_id": run_id,
+                   "log": train_data.read_file(f"{train_id}/{run_id}/log.")}
+            logs.append(log)
+        return logs
+
+    def get_last_train_logs(self, db: Session, train_id: str):
+        """
+        Returns the run logs for the runs of the train
+
+        @param db: reference to the postgres database
+        @param train_id: Id of the train
+        @return: log of
+        """
+        runs = db.query(LocalTrainExecution).filter(LocalTrainExecution.train_id == train_id).all()
+        run_id = runs[-1].airflow_dag_run
+        log = {"run_id": run_id,
+               "log": train_data.read_file(f"{train_id}/{run_id}/log.")}
+        return log
+
     def get_last_run(self, db: Session, train_id: str):
         # TODO get last run id
-        pass
+        runs = db.query(LocalTrainExecution).filter(LocalTrainExecution.train_id == train_id).all()
+        print(runs)
 
 
 local_train = CRUDLocalTrain(LocalTrain)
