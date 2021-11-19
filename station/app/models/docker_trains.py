@@ -29,7 +29,7 @@ class DockerTrainConfig(Base):
     name = Column(String, unique=True)
     created_at = Column(DateTime, default=datetime.now())
     updated_at = Column(DateTime, nullable=True)
-    airflow_config_json = Column(JSON, nullable=True)
+    airflow_config = Column(JSON, nullable=True)
     trains = relationship("DockerTrain")
     cpu_requirements = Column(JSON, nullable=True)
     gpu_requirements = Column(JSON, nullable=True)

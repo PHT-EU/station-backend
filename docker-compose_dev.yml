@@ -4,10 +4,7 @@ version: '3.8'
 volumes:
   pg_pht_station:
     external: True
-
   blaze_data:
-    external: True
-
 services:
   pg_station:
     image: postgres:13
@@ -21,9 +18,7 @@ services:
       - "5432:5432"
 
   airflow:
-    build:
-      context: '.'
-      dockerfile: './airflow/Dockerfile'
+    build: './airflow'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       # Station Private Key needs to be set and registered
@@ -62,5 +57,10 @@ services:
     image: samply/blaze
     volumes:
       - blaze_data:/app/data
+    environment:
+      BASE_URL: "127.0.0.1:8082"
+      JAVA_TOOL_OPTIONS: "-Xmx2g"
+      OPENID_PROVIDER_URL: "https://keycloak-pht.tada5hi.net/auth/realms/blaze"
     ports:
-      - "8081:8080"
+      - "8082:8080"
+
