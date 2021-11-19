@@ -21,8 +21,7 @@ COPY requirements.txt /tmp/requirements.txt
 
 
 RUN pip install -r /tmp/requirements.txt
-RUN pip install git+https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/library/train-container-library.git
-# RUN pip install git+https://gitlab.com/PersonalHealthTrain/implementations/germanmii/difuture/incubating/pht-federated.git
+RUN pip install git+https://github.com/PHT-Medic/train-container-library.git
 
 COPY ./station /opt/station/station
 COPY ./station_worker /opt/station/station_worker

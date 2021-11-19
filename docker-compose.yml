@@ -34,7 +34,7 @@ services:
 
   airflow:
     build:
-      context: '.'
+      context: './airflow'
       dockerfile: './airflow/Dockerfile'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock

@@ -59,9 +59,16 @@ class DockerTrainConfigMinimal(DockerTrainConfigBase):
     updated_at: Optional[datetime] = None
 
 
+class DockerRunVolume(BaseModel):
+    pass
+
+
 class DockerTrainExecution(BaseModel):
     config_id: Optional[Union[int, str]] = "default"
     config_json: Optional[Dict[str, Any]] = None
+    repository: Optional[str] = None
+    tag: Optional[str] = None
+    volumes: Optional[List[DockerRunVolume]] = None
 
 
 class DockerTrain(DBSchema):
