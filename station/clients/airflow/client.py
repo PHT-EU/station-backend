@@ -65,10 +65,29 @@ class AirflowClient:
         @param run_id: Airflow ID of the run ( has the form of e.g. " "manual__2021-11-09T14:12:24.622670+00:00")
         @return: dict: information about the run
         """
+        url = self.airflow_url + f"dags/{dag_id}/dagRuns/{run_id}/taskInstances"
+        tasklist = requests.get(url=url, auth=self.auth)
+        tasklist.raise_for_status()
+        tasklist =tasklist.json()
         url = self.airflow_url + f"dags/{dag_id}/dagRuns/{run_id}"
-        r = requests.get(url=url, auth=self.auth)
-        r.raise_for_status()
-        return r.json()
+        informaion = requests.get(url=url, auth=self.auth)
+        informaion.raise_for_status()
+        informaion = informaion.json()
+        informaion["tasklist"]= tasklist
+        return informaion
+
+    def get_task_log(self, dag_id: str, run_id: str, task_id: str , task_try_number: int)-> dict:
+        """
+        get the log of a task for a spesific run
+        @param dag_id:
+        @param run_id:
+        @param task_id:
+        @return:
+        """
+        url = self.airflow_url + f"dags/{dag_id}/dagRuns/{run_id}/taskInstances/{task_id}/logs/{task_try_number}"
+        log = requests.get(url=url, auth=self.auth)
+        log.raise_for_status()
+        return log.content.decode("utf-8")
 
 airflow_client = AirflowClient()
 
