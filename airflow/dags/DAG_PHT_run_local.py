@@ -16,7 +16,7 @@ from airflow.operators.python import get_current_context
 from airflow.utils.dates import days_ago
 from docker.errors import APIError
 from train_lib.train.build_test_train import build_test_train
-from train_lib.fhir import PHTFhirClient
+from train_lib.clients import PHTFhirClient
 from train_lib.security import SecurityProtocol
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 # Operators; we need this to operate!
@@ -30,7 +30,7 @@ from sqlalchemy.orm import Session
 
 from train_lib.docker_util.docker_ops import extract_train_config, extract_query_json
 from train_lib.security.SecurityProtocol import SecurityProtocol
-from train_lib.fhir import PHTFhirClient
+from train_lib.clients import PHTFhirClient
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization

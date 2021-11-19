@@ -33,6 +33,7 @@ services:
       - "5432:5432"
 
   airflow:
+    container_name: station-airflow
     build:
       context: '.'
       dockerfile: './airflow/Dockerfile'
