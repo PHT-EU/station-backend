@@ -8,7 +8,7 @@ from station.app.db.base_class import Base
 class DataSet(Base):
     __tablename__ = "datasets"
     id = Column(Integer, primary_key=True, index=True)
-    created_at = Column(DateTime, default=func.now())
+    created_at = Column(DateTime, default=datetime.now())
     updated_at = Column(DateTime, nullable=True)
     proposal_id = Column(Integer, default=0)
     name = Column(String)
