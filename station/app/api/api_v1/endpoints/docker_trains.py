@@ -1,3 +1,4 @@
+import json
 from typing import List
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException
@@ -87,7 +88,6 @@ def get_all_docker_train_configs(db: Session = Depends(dependencies.get_db), ski
 def add_docker_train_configuration(config_in: DockerTrainConfigCreate, db: Session = Depends(dependencies.get_db)):
     if docker_train_config.get_by_name(db, name=config_in.name):
         raise HTTPException(status_code=400, detail="A config with the given name already exists.")
-
     config = docker_train_config.create(db, obj_in=config_in)
     return config
 
@@ -107,4 +107,5 @@ def get_docker_train_configuration(config_id: int, db: Session = Depends(depende
     config = docker_train_config.get(db, config_id)
     if not config:
         raise HTTPException(status_code=404, detail=f"Config with id '{config_id}' not found.")
+
     return config

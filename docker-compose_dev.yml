@@ -22,8 +22,8 @@ services:
 
   airflow:
     build:
-      context: '.'
-      dockerfile: './airflow/Dockerfile'
+      context: .
+      dockerfile: ./airflow/Dockerfile
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       # Station Private Key needs to be set and registered
@@ -37,11 +37,11 @@ services:
       - FHIR_ADDRESS=https://fhir.personalhealhtrain.de
       - FHIR_USER=fhiruser
       - FHIR_PW=
-      - HARBOR_USER=
+      - HARBOR_USER=graf
       - HARBOR_PW=
       - STATION_ID=1
       - STATION_PRIVATE_KEY_PATH=/opt/private_key.pem
-      - HARBOR_API_URL=https://harbor-pht.tada5hi.net/api/v2.0/
+      - HARBOR_API_URL=https://harbor.personalhealthtrain.de/api/v2.0
     ports:
       - "8080:8080"
 
@@ -62,5 +62,10 @@ services:
     image: samply/blaze
     volumes:
       - blaze_data:/app/data
+    environment:
+      BASE_URL: "127.0.0.1:8082"
+      JAVA_TOOL_OPTIONS: "-Xmx2g"
+      OPENID_PROVIDER_URL: "https://keycloak-pht.tada5hi.net/auth/realms/blaze"
     ports:
-      - "8081:8080"
+      - "8082:8080"
+
