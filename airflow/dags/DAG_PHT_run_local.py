@@ -126,14 +126,14 @@ def run_local():
 
         # load teh endpoint form minIO into to a local tar file
         endpoint = minio_client.get_file(train_state_dict["bucket_name"], f"{train_state_dict['train_id']}/{train_state_dict['entrypoint']}")
-        name = "entrypoint.py"
+        name = train_state_dict['entrypoint']
         tarfile_name = f"{train_state_dict['build_dir']}/{name}.tar"
         with tarfile.TarFile(tarfile_name, 'w') as tar:
-            data_file = tarfile.TarInfo(name='entrypoint.py')
+            data_file = tarfile.TarInfo(name=name)
             data_file.size = len(endpoint)
             tar.addfile(data_file, io.BytesIO(endpoint))
 
-        # add teh endpoint tar file to the train container in /opt/pht_train
+        # add the endpoint tar file to the train container in /opt/pht_train
         with open(tarfile_name, 'rb') as fd:
             respons = container.put_archive("/opt/pht_train", fd)
             container.wait()
