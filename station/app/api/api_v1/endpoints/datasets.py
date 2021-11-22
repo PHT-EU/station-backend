@@ -18,7 +18,7 @@ def get_data_set(data_set_id: Any, db: Session = Depends(dependencies.get_db)) -
     return db_dataset
 
 
-@router.get("/datasts/{data_set_id}/download")
+@router.get("/datasets/{data_set_id}/download")
 def download(data_set_id: Any, db: Session = Depends(dependencies.get_db)):
     db_dataset = datasets.get(db, data_set_id)
     if db_dataset.storage_type == "csv":
