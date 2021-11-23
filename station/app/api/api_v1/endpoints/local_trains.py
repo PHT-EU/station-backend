@@ -281,15 +281,18 @@ async def get_file(train_id: str, file_name: str):
     return Response(file)
 
 
-@router.get("/localTrains/getAirflowRun/{run_id}")
-def get_airflow_run_information(run_id: str):
+# TODO move to sepret general file for Airflow informaion
+@router.get("/localTrains/getAirflowRun/{run_id}/{dag_id}")
+def get_airflow_run_information(run_id: str, dag_id: str):
     """
-    Get information about one local train airflow DAG execution.
+    Get information about one airflow DAG execution.
+    @param dag_id: ID of the DAG e.G. "run_local" , "run_pht_train" etc.
     @param run_id: Airflow run ID
     @return:
     """
-    run_info = airflow_client.get_run_information("run_local", run_id)
+    run_info = airflow_client.get_run_information(dag_id, run_id)
     return run_info
+
 
 @router.get("/localTrains/getAirflowTaskLog/{run_id}/{task_id}/{task_try_number}")
 def get_airflow_task_log(run_id: str, task_id: str, task_try_number: int):
@@ -302,7 +305,6 @@ def get_airflow_task_log(run_id: str, task_id: str, task_try_number: int):
     """
     run_info = airflow_client.get_task_log("run_local", run_id, task_id, task_try_number)
     return run_info
-
 
 
 @router.get("/localTrains/getLastAirflowRun/{train_id}")
@@ -329,6 +331,7 @@ def get_logs(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
     logs = local_train.get_train_logs(db, train_id)
     return logs
+
 
 @router.get("/localTrains/getLastLogs/{train_id}")
 def get_last_log(train_id: str, db: Session = Depends(dependencies.get_db)):
