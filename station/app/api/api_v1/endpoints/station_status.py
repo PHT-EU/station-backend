@@ -75,21 +75,21 @@ def status_total_memory_util():
     """
     get the current memory util of the system
     """
-    memory_stats =psutil.virtual_memory()
-    responce = {
+    memory_stats = psutil.virtual_memory()
+    response = {
         "total": memory_stats.total,
-        "available":memory_stats.available,
+        "available": memory_stats.available,
         "percent": memory_stats.percent,
         "used": memory_stats.used,
         "free": memory_stats.free,
-        "active": memory_stats.active,
-        "inactive": memory_stats.inactive,
-        "buffers": memory_stats.buffers,
-        "cached": memory_stats.cached,
-        "shared": memory_stats.shared,
-        "slab": memory_stats.slab,
+        # "active": memory_stats.active,
+        # "inactive": memory_stats.inactive,
+        # "buffers": memory_stats.buffers,
+        # "cached": memory_stats.cached,
+        # "shared": memory_stats.shared,
+        # "slab": memory_stats.slab,
     }
-    return responce
+    return response
 
 
 @router.get("/status/total_cpu_util")
@@ -129,12 +129,14 @@ def status_docker_container_resource_use():
     """
     return dockerClient.get_stats_all()
 
+
 @router.get("/status/container/{container_id}")
 def status_docker_container_resource_use(container_id: Any):
     """
     get information for container id
     """
     return dockerClient.get_stats_container(container_id)
+
 
 @router.get("/status/container_info")
 def container_info():

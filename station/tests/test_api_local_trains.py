@@ -11,6 +11,6 @@ app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
 
 
-def test_get_master_images():
-    response = client.get("/api/local_trains/master_images")
-    assert response.status_code == 200, response.json
+# def test_get_master_images():
+#     response = client.get("/api/local_trains/master_images")
+#     assert response.status_code == 200, response.json

@@ -2,8 +2,9 @@ from requests.auth import HTTPBasicAuth
 import requests
 import os
 
-from train_lib.fhir.fhir_query_builder import build_query_string
-from train_lib.fhir.fhir_client import BearerAuth
+from train_lib.clients.fhir import build_query_string
+from train_lib.clients.fhir.fhir_client import BearerAuth
+
 
 class FhirClient:
     def __init__(self, server_url: str = None, username: str = None, password: str = None, token: str = None,
@@ -41,13 +42,13 @@ class FhirClient:
                     "name": None}
         try:
             # TODO remove verify false only for thesting becouse of verificaion problems with the ibm fhir server
-            r = requests.get(api_url, auth=auth , verify=False)
+            r = requests.get(api_url, auth=auth, verify=False)
             r.raise_for_status()
             r_json = r.json()
 
             # This is hear to make the response the same for all health check
             if r_json["status"] == "active":
-                response["status"]= "healthy"
+                response["status"] = "healthy"
                 response["date"] = r_json["date"]
         except requests.exceptions.ConnectionError as e:
             print(e)
@@ -62,7 +63,6 @@ class FhirClient:
         auth = self._generate_auth()
         r = requests.get(api_url, auth=auth, verify=False).json()
         return r["total"]
-
 
     def _generate_url(self, query: dict = None, query_string: str = None, return_format="json", limit=1000):
         """

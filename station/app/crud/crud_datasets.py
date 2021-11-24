@@ -1,8 +1,4 @@
 from sqlalchemy.orm import Session
-from train_lib.fhir.fhir_client import PHTFhirClient
-
-import asyncio
-
 import pandas as pd
 
 from .base import CRUDBase, CreateSchemaType, ModelType

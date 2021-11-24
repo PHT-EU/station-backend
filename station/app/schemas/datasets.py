@@ -8,7 +8,7 @@ class DataSetBase(BaseModel):
     data_type: str
     storage_type: str
     # TODO in models DataSet proposal_id is a integer -> desiding if what it has to be at the ende
-    proposal_id: int
+    proposal_id: Optional[int] = None
     # proposal_id: Optional[Any]
     # TODO improve clarity of access definition
     access_path: Optional[str]

@@ -6,7 +6,6 @@ volumes:
     external: True
 
   blaze_data:
-    external: True
 
 services:
   pg_station:
