@@ -294,19 +294,6 @@ def get_airflow_run_information(run_id: str, dag_id: str):
     return run_info
 
 
-@router.get("/localTrains/getAirflowTaskLog/{run_id}/{task_id}/{task_try_number}")
-def get_airflow_task_log(run_id: str, task_id: str, task_try_number: int):
-    """
-    Get log of a task in a local train DAG execution.
-    @param task_try_number:
-    @param task_id: id of teh task
-    @param run_id: Airflow run ID
-    @return:
-    """
-    run_info = airflow_client.get_task_log("run_local", run_id, task_id, task_try_number)
-    return run_info
-
-
 @router.get("/localTrains/getLastAirflowRun/{train_id}")
 def get_last_airflow_run_information(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
