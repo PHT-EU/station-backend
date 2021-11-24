@@ -5,6 +5,7 @@ from station.app.api import dependencies
 from fhir_kindling.fhir_server.server_responses import ServerSummary
 from station.app.schemas.fhir import FHIRServer, FHIRServerCreate, FHIRServerUpdate
 from station.app.crud.crud_fhir_servers import fhir_servers
+from station.app.fhir.server import fhir_server_from_db
 
 router = APIRouter()
 
@@ -42,5 +43,7 @@ def delete_fhir_server(server_id: int, db: Session = Depends(dependencies.get_db
 
 @router.get("/server/{server_id}/summary", response_model=ServerSummary)
 def fhir_server_summary(server_id: int, db: Session = Depends(dependencies.get_db)):
-    pass
+    server = fhir_server_from_db(db=db, fhir_server_id=server_id)
+    return server.summary()
+
 

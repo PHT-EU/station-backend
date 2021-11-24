@@ -10,7 +10,8 @@ class Settings:
     @staticmethod
     def get_fernet():
         # todo get key from config file
-        key = os.getenv('FERNET_KEY')
+        key = os.getenv('FERNET_KEY').encode()
+        print(key)
         if key is None:
             raise ValueError("No Fernet key provided")
         return Fernet(key)

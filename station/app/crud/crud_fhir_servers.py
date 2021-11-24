@@ -36,7 +36,7 @@ class CRUDFHIRServers(CRUDBase[FHIRServer, FHIRServerCreate, FHIRServerUpdate]):
         fernet = Settings.get_fernet()
 
         if obj_in.client_secret:
-            obj_in.client_secret = fernet.encrypt(obj_in.client_id.encode()).decode()
+            obj_in.client_secret = fernet.encrypt(obj_in.client_secret.encode()).decode()
         if obj_in.password:
             obj_in.password = fernet.encrypt(obj_in.password.encode()).decode()
         if obj_in.token:
