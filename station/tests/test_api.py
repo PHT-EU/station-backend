@@ -16,8 +16,7 @@ def test_data_set_create():
     response = client.post("/api/datasets", json={
         "name": "test data set",
         "data_type": "tabular",
-        "storage_type": "fhir",
-        "proposal_id": None
+        "storage_type": "fhir"
 
     })
 

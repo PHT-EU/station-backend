@@ -1,0 +1,53 @@
+import pytest
+from fastapi.testclient import TestClient
+from dotenv import load_dotenv, find_dotenv
+
+from station.app.main import app
+from station.app.api.dependencies import get_db
+from station.app.crud.crud_fhir_servers import fhir_servers
+from station.app.schemas.fhir import FHIRServerCreate
+from station.app.config import Settings
+
+from .test_db import override_get_db, TestingSessionLocal
+
+app.dependency_overrides[get_db] = override_get_db
+
+client = TestClient(app)
+
+
+def test_fhir_server_encrypted_storage():
+    load_dotenv(find_dotenv())
+
+    db = TestingSessionLocal()
+
+    obj_in = {"name": "Test Server", "api_address": "http://test.com", "username": "user", "password": "password"}
+    obj_in = FHIRServerCreate(**obj_in)
+    fhir_server = fhir_servers.create(db, obj_in=obj_in)
+
+    assert fhir_server.name == "Test Server"
+    assert fhir_server.password != "password"
+
+    fernet = Settings.get_fernet()
+    assert fernet.decrypt(fhir_server.password.encode()) == b"password"
+
+    db.close()
+
+
+def test_fhir_server_create():
+    """
+    Test the creation of a FHIR server
+    """
+    response = client.post("/api/fhir/server", json={"name": "Test Server", "api_address": "http://test.com"})
+    assert response.status_code == 201
+    assert response.json()["name"] == "Test Server"
+    assert response.json()["api_address"] == "http://test.com"
+
+
+def test_fhir_server_get():
+    """
+    Test the retrieval of a FHIR server
+    """
+    response = client.get("/api/fhir/server/1")
+    assert response.status_code == 200
+    assert response.json()["name"] == "Test Server"
+    assert response.json()["api_address"] == "http://test.com"

@@ -15,7 +15,7 @@ def get_fhir_servers(limit: int = 0, skip: int = 0, db: Session = Depends(depend
     return db_fhir_servers
 
 
-@router.post("/server", response_model=FHIRServer)
+@router.post("/server", response_model=FHIRServer, status_code=201)
 def add_fhir_server(fhir_server_in: FHIRServerCreate, db: Session = Depends(dependencies.get_db)):
     db_fhir_server = fhir_servers.create(db=db, obj_in=fhir_server_in)
     return db_fhir_server

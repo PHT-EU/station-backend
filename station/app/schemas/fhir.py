@@ -11,9 +11,12 @@ class FHIRServerBase(BaseModel):
     api_address: str
     name: Optional[str] = None
     username: Optional[str] = None
+    password: Optional[str] = None
     type: Optional[str] = None
     client_id: Optional[str] = None
+    client_secret: Optional[str] = None
     oidc_provider_url: Optional[str] = None
+    token: Optional[str] = None
 
 
 class FHIRServerCreate(FHIRServerBase):
