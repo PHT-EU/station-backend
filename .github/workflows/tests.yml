@@ -33,11 +33,11 @@ jobs:
       - name: Test with pytest
         run: |
           pip install .
-          pytest station.tests
+          pytest station
       - name: Generate coverage report
         run: |
           pip install coverage
-          coverage run -m pytest station.tests
+          coverage run -m pytest station
           coverage xml
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
