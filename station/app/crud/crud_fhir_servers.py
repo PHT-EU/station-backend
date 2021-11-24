@@ -1,4 +1,4 @@
-from typing import Any, Optional, Union, Dict
+from typing import Any, Optional, Union, Dict, List
 
 from sqlalchemy.orm import Session
 
@@ -15,6 +15,10 @@ class CRUDFHIRServers(CRUDBase[FHIRServer, FHIRServerCreate, FHIRServerUpdate]):
         encrypted_in = self.encrypt_sensitive_values(obj_in)
         # Add encrypted values to the db
         return super().create(db, obj_in=encrypted_in)
+
+    def get_multi(self, db: Session, *, skip: int = 0, limit: int = 100) -> List[ModelType]:
+        fhir_servers = super().get_multi(db, skip=skip, limit=limit)
+        return fhir_servers
 
     def update(self, db: Session, *, db_obj: ModelType, obj_in: Union[UpdateSchemaType, Dict[str, Any]]) -> ModelType:
         obj_in = self.encrypt_sensitive_values(obj_in)

@@ -51,3 +51,37 @@ def test_fhir_server_get():
     assert response.status_code == 200
     assert response.json()["name"] == "Test Server"
     assert response.json()["api_address"] == "http://test.com"
+
+
+def test_list_fhir_servers():
+    """
+    Test the retrieval of a list of FHIR servers
+    """
+    response = client.post("/api/fhir/server", json={"name": "Test Server", "api_address": "http://test.com"})
+    assert response.status_code == 201
+    assert response.json()["name"] == "Test Server"
+    assert response.json()["api_address"] == "http://test.com"
+    response = client.get("/api/fhir/servers")
+    assert response.status_code == 200
+    assert response.json()[0]["name"] == "Test Server"
+    assert response.json()[0]["api_address"] == "http://test.com"
+
+
+def test_update_fhir_server():
+    """
+    Test the update of a FHIR server
+    """
+    response = client.put("/api/fhir/server/1",
+                          json={"name": "Test Server Updated", "api_address": "http://test.com", "username": "user",
+                                "password": "password"})
+    assert response.status_code == 200
+    assert response.json()["name"] == "Test Server Updated"
+    assert response.json()["api_address"] == "http://test.com"
+
+
+def test_delete_fhir_server():
+    """
+    Test the deletion of a FHIR server
+    """
+    response = client.delete("/api/fhir/server/1")
+    assert response.status_code == 202
