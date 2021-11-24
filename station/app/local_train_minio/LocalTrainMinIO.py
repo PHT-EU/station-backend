@@ -2,8 +2,6 @@ from station.clients.docker.client import dockerClient
 from fastapi import UploadFile
 from station.clients.minio.client import MinioClient
 from minio.error import MinioException
-import aiofiles
-from os import listdir
 
 
 class LocalTrainMinIO:
