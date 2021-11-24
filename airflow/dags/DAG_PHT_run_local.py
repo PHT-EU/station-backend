@@ -116,7 +116,7 @@ def run_local():
                             RUN mkdir /opt/pht_results
                             RUN mkdir /opt/pht_train
                             RUN chmod -R +x /opt/pht_train
-                            CMD ["python", "/opt/pht_train/entrypoint.py"]
+                            CMD ["python", "/opt/pht_train/{train_state_dict['entrypoint']}"]
                             '''
         docker_file = BytesIO(docker_file.encode("utf-8"))
 
