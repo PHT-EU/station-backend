@@ -240,7 +240,12 @@ def run_local():
         volumes = train_state_dict.get("volumes", {})
         container = docker_client.containers.run("local_train", environment=environment, volumes=volumes,
                                                  detach=True)
-        container.wait()
+        container_output = container.wait()
+        exit_code = container_output["StatusCode"]
+        if exit_code != 0:
+            raise ValueError(f"The train execution returned a non zero exit code: {exit_code}")
+
+
         with open(f'{train_state_dict["build_dir"]}results.tar', 'wb')  as f:
             bits, stat = container.get_archive('opt/pht_results')
             for chunk in bits:
