@@ -32,6 +32,13 @@ class LocalTrainAddMasterImage(BaseModel):
     train_id: str
     image: str
 
+class LocalTrainGetFile(BaseModel):
+    train_id: str
+    file_name: str
+
+class LocalTrainAddTag(BaseModel):
+    train_id: str
+    tag: str
 
 class LocalTrainGetFile(BaseModel):
     train_id: str
