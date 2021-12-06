@@ -60,6 +60,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         @param train_id:
         @return:
         """
+        # TODO remove query results when exist
         # remove minIo entry
         files = self.get_all_uploaded_files(train_id)
         loop = asyncio.new_event_loop()

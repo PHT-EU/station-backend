@@ -11,7 +11,8 @@ RUN apt-get update -yqq \
         build-essential \
         apt-utils \
         netcat \
-        locales
+        locales \
+    && rm -rf /var/lib/apt/lists
 
 #RUN AIRFLOW_VERSION=2.1.3 && PYTHON_VERSION="$(python --version | cut -d " " -f 2 | cut -d "." -f 1-2)" && \
 #    CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-${PYTHON_VERSION}.txt" && \

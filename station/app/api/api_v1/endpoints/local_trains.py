@@ -1,19 +1,15 @@
 import io
 import tarfile
-
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, File, UploadFile
+
 from station.app.api import dependencies
-from typing import List
 from station.clients.airflow.client import airflow_client
-from station.app.schemas.local_trains import LocalTrainBase
 from station.app.local_train_minio.LocalTrainMinIO import train_data
 from fastapi.responses import Response
 from fastapi.responses import FileResponse
-from station.app.schemas.local_trains import LocalTrain, LocalTrainCreate, LocalTrainAddMasterImage, LocalTrainGetFile, LocalTrainRun
-
+from station.app.schemas.local_trains import LocalTrain, LocalTrainCreate, LocalTrainAddMasterImage, LocalTrainRun
 from station.app.crud.crud_local_train import local_train
-
 from station.clients.harbor_client import harbor_client
 
 router = APIRouter()

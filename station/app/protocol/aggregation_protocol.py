@@ -175,7 +175,7 @@ class AggregationProtocolClient:
         Args:
             train_id: train id for which to get the cyphers
 
-        Returns:
+        Returns: a list of cyphers received from the conductor
 
         """
         db_train = federated_trains.get(self.db, train_id)

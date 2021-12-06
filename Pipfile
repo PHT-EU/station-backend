@@ -1,0 +1,31 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+fastapi = {extras = ["all"], version = "*"}
+psycopg2-binary = "*"
+cryptography = "*"
+pycryptodome = "*"
+requests = "*"
+jose = "*"
+docker = "*"
+numpy = "*"
+pandas = "*"
+python-dotenv = "*"
+apache-airflow = {extras = ["celery", "postgres"], version = "*"}
+minio = "*"
+pytorch-lightning = "*"
+torchvision = "*"
+python-keycloak = "*"
+fhir-kindling = "*"
+pht-train-container-library = "*"
+SQLAlchemy = "*"
+PyJWT = "*"
+
+[dev-packages]
+pytest = "*"
+
+[requires]
+python_version = "3.9"

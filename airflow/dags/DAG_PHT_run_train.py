@@ -1,7 +1,4 @@
-import asyncio
 import sys
-from datetime import timedelta
-import json
 import os
 import os.path
 
@@ -10,7 +7,6 @@ from airflow.decorators import dag, task
 from airflow.operators.python import get_current_context
 
 from docker.errors import APIError
-from docker.types import Mount
 
 from airflow.utils.dates import days_ago
 
@@ -24,22 +20,7 @@ default_args = {
     'depends_on_past': False,
     'email': ['airflow@example.com'],
     'email_on_failure': False,
-    'email_on_retry': False,
-    # 'retries': 1,
-    # 'retry_delay': timedelta(minutes=5),
-    # 'queue': 'bash_queue',
-    # 'pool': 'backfill',
-    # 'priority_weight': 10,
-    # 'end_date': datetime(2016, 1, 1),
-    # 'wait_for_downstream': False,
-    # 'dag': dag,
-    # 'sla': timedelta(hours=2),
-    # 'execution_timeout': timedelta(seconds=300),
-    # 'on_failure_callback': some_function,
-    # 'on_success_callback': some_other_function,
-    # 'on_retry_callback': another_function,
-    # 'sla_miss_callback': yet_another_function,
-    # 'trigger_rule': 'all_success'
+    'email_on_retry': False
 }
 
 
@@ -156,7 +137,6 @@ def run_pht_train():
             else:
                 fhir_client = PHTFhirClient.from_env()
 
-            fhir_client.disable_k_anon = True
             query_result = fhir_client.execute_query(query=train_state["query"])
 
             output_file_name = query["data"]["filename"]
@@ -218,8 +198,6 @@ def run_pht_train():
                                               detach=True, network_disabled=True, stderr=True, stdout=True)
         container_output = container.wait()
         exit_code = container_output["StatusCode"]
-        logs = container.logs()
-        print(f"Container logs: \n {logs}")
 
         if exit_code != 0:
             print(container_output)
@@ -247,6 +225,8 @@ def run_pht_train():
 
         to_container.commit(repository=train_state["repository"], tag=train_state["tag"])
         container.remove(v=True, force=True)
+        if exit_code != 0:
+            raise ValueError(f"The train execution returned a non zero exit code: {exit_code}")
 
         return train_state
 
@@ -299,7 +279,7 @@ def run_pht_train():
         print(type(to_container))
         # Rebase the train
         try:
-            img = to_container.commit(repository=train_state["repository"], tag="base")
+            img = to_container.commit(repository=train_state["repository"], tag=train_state["tag"])
             # remove executed containers -> only images needed from this point
             print('Removing containers')
             to_container.remove()
@@ -328,7 +308,7 @@ def run_pht_train():
     train_state = get_train_image_info()
     train_state = pull_docker_image(train_state)
     train_state = extract_config_and_query(train_state)
-    # train_state = validate_against_master_image(train_state)
+    train_state = validate_against_master_image(train_state)
     train_state = pre_run_protocol(train_state)
     train_state = execute_query(train_state)
     train_state = execute_container(train_state)
