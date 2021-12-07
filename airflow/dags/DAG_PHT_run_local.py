@@ -116,7 +116,7 @@ def run_local():
         image, logs = docker_client.images.build(fileobj=docker_file)
         container = docker_client.containers.create(image.id)
 
-        # load teh entrypoint form minIO into to a local tar file
+        # load the entrypoint form minIO into to a local tar file
         entrypoint = minio_client.get_file(train_state_dict["bucket_name"],
                                          f"{train_state_dict['train_id']}/{train_state_dict['entrypoint']}")
 
