@@ -1,13 +1,9 @@
-import sys
 import os
 import os.path
-
 import docker
 from airflow.decorators import dag, task
 from airflow.operators.python import get_current_context
-
 from docker.errors import APIError
-
 from airflow.utils.dates import days_ago
 
 from train_lib.docker_util.docker_ops import extract_train_config, extract_query_json
