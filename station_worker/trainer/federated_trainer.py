@@ -1,16 +1,15 @@
 from pathlib import Path
 from typing import Optional, Union, List, Iterable, Dict
 
-import torch
 from pytorch_lightning import LightningModule, LightningDataModule, Callback
 from pytorch_lightning.accelerators import Accelerator
 from pytorch_lightning.loggers import LightningLoggerBase
 from pytorch_lightning.profiler import BaseProfiler
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 import pytorch_lightning as pl
 from torchvision.transforms import Compose, ToTensor
 
-from worker.loader import BaseLoader
+from station_worker.loader import BaseLoader
 
 
 class FederatedTrainer(pl.Trainer):
@@ -104,6 +103,7 @@ class FederatedTrainer(pl.Trainer):
     def available_plugins():
         return super().available_plugins()
 
+
 if __name__ == '__main__':
     transform = Compose([ToTensor()])
 
@@ -114,7 +114,4 @@ if __name__ == '__main__':
 
     trainer = FederatedTrainer()
 
-
-
     trainer.fit()
-

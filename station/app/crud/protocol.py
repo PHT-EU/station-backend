@@ -1,7 +1,4 @@
 from sqlalchemy.orm import Session
-from datetime import datetime
-from typing import List
-import os
 
 from station.app.models.protocol import BroadCastKeys
 
@@ -13,4 +10,3 @@ def get_signing_key_from_key_broadcast(db: Session, train_id: int, station_id: i
         BroadCastKeys.train_id == train_id
     ).first()
     return broad_cast.signing_key
-

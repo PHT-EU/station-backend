@@ -1,7 +1,5 @@
 from sqlalchemy.orm import Session
 from datetime import datetime
-import json
-from typing import List
 import os
 
 from station.app.models.train import Train, TrainState

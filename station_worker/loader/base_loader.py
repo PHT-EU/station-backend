@@ -1,15 +1,12 @@
-import requests
 import os
-from sqlalchemy.orm import Session
-import torch
 from typing import Union
 import pytorch_lightning as pl
 
 from torch.utils.data import DataLoader, Dataset
 
 from station.clients.minio import MinioClient
-from worker.loader.dataset import MinioFolderDataSet, MinioFolderDS
-from torchvision.transforms import Compose, ToTensor, CenterCrop
+from station_worker.loader.dataset import MinioFolderDS
+from torchvision.transforms import Compose, ToTensor
 
 
 class BaseLoader:

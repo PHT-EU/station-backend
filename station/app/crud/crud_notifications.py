@@ -5,7 +5,6 @@ from .base import CRUDBase
 
 from station.app.models.notification import Notification
 from station.app.schemas.notifications import NotificationCreate, NotificationUpdate
-from dateutil import parser
 
 
 class CRUDNotifications(CRUDBase[Notification, NotificationCreate, NotificationUpdate]):

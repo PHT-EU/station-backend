@@ -1,6 +1,4 @@
 import pytest
-
-from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKeyWithSerialization as ECPubKey
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePrivateKeyWithSerialization as ECPrivateKey
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -26,12 +24,14 @@ def test_protocol_keys_initialization():
 
     keys_hex = ProtocolKeys(key_hex, key_hex)
 
+    assert keys_hex
+
     keys_instance = ProtocolKeys(key, key)
 
+    assert keys_instance
+
     with pytest.raises(ValueError):
-        keys = ProtocolKeys(1, 0.5)
-
-
+        ProtocolKeys(1, 0.5)
 
 
 def test_protocol_keys_serialization_and_loading():

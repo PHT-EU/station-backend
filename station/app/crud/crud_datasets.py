@@ -37,10 +37,10 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
         n_items = len(csv_df.index)
         db_obj.n_items = n_items
         if obj_in_data["target_field"] is not None and obj_in_data["target_field"] != "":
-            class_distribution = (csv_df[obj_in_data["target_field"]].value_counts()/n_items).to_json()
+            class_distribution = (csv_df[obj_in_data["target_field"]].value_counts() / n_items).to_json()
             db_obj.class_distribution = class_distribution
         return db_obj
-    
+
     def _extract_fhir_information(self, db_obj, obj_in_data):
         # TODO finish when fhir client has the functinalty
 

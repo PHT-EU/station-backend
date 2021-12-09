@@ -96,7 +96,7 @@ def run_pht_train():
             query = extract_query_json(train_state["img"])
             train_state["query"] = query
         except Exception as e:
-            print(f"Error extracting query:")
+            print("Error extracting query:")
             print(e)
             train_state["query"] = None
 

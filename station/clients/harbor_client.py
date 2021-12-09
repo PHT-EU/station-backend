@@ -1,7 +1,6 @@
 import requests
 import os
 from typing import Union, List
-from pprint import pprint
 
 from dotenv import load_dotenv, find_dotenv
 
@@ -27,14 +26,14 @@ class HarborClient:
 
         endpoint = f"/projects/station_{station_id}/repositories"
         r = requests.get(self.url + endpoint, auth=(self.username, self.password))
-        #TODO chache no replys
+        # TODO chache no replys
         return r.json()
 
     def get_master_images(self):
         """
         returns names of master images form harbor
         """
-        endpoint = f"/projects/master/repositories"
+        endpoint = "/projects/master/repositories"
         r = requests.get(self.url + endpoint, auth=(self.username, self.password))
         return [repositori["name"] for repositori in r.json()]
 
@@ -53,8 +52,6 @@ class HarborClient:
         except requests.exceptions.ConnectionError as e:
             print(e)
         return {"status": None}
-
-
 
 
 harbor_client = HarborClient()

@@ -5,8 +5,6 @@ import torch.optim as optim
 
 from torchvision import transforms
 
-from worker.trainer import ModelTrainer
-
 
 class Cifar10Model(LightningTrainModel):
     def __init__(self, *args, **kwargs):
@@ -43,4 +41,3 @@ class Cifar10Model(LightningTrainModel):
              transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
         return transform
-

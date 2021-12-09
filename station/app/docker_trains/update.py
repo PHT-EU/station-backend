@@ -1,10 +1,8 @@
 from sqlalchemy.orm import Session
-from typing import List, Union
-import os
+from typing import Union
 
 from station.clients.harbor_client import HarborClient
 from station.app.crud import docker_train
-from station.app.models.docker_trains import DockerTrain
 
 
 def sync_db_with_registry(db: Session, station_id: Union[str, int] = None):

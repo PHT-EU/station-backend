@@ -7,7 +7,6 @@ from minio import datatypes
 from PIL import Image
 from torchvision.transforms import Compose, ToTensor, CenterCrop
 import numpy as np
-from conductor_lib.src.torch import LightningTrainModel
 
 from station.clients.minio import MinioClient
 
@@ -115,6 +114,7 @@ class MinioFolderDS(Dataset):
         classes = self.minio_client.get_classes_by_folders(self.data_set_id)
         print(classes)
         return np.asarray(classes)
+
 
 if __name__ == '__main__':
     minio_client = MinioClient(minio_server="localhost:9000",

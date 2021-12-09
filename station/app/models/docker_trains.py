@@ -1,5 +1,5 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, LargeBinary, Float, BigInteger, JSON
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, JSON
+from sqlalchemy.orm import relationship
 from datetime import datetime
 
 from station.app.db.base_class import Base

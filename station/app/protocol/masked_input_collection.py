@@ -5,7 +5,6 @@ from typing import List
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePrivateKey, EllipticCurvePublicKey
 
 from station.app.crud.train import read_train_state
-from station.app.schemas import protocol
 from station.app.models.protocol import Cypher
 from station.app.crud.train import get_train_signing_key
 from station.app.protocol.primitives import key_agreement
@@ -25,8 +24,10 @@ def compute_masked_input_vector(db: Session, train_id: int, conductor_url: str =
     # get the cyphers from the server, store them and return the participants in round 2
     participants = get_cyphers(db, train_id, state.iteration, conductor_url)
     signing_private_key = _load_local_signing_private_key(db, train_id)
-    for particpant in participants:
-        signing_public_key = _load_signing_public_key(db, train_id, particpant, state.iteration)
+    print(signing_private_key)
+    for participant in participants:
+        signing_public_key = _load_signing_public_key(db, train_id, participant, state.iteration)
+        print(signing_public_key)
 
 
 def _load_local_signing_private_key(db: Session, train_id: int) -> EllipticCurvePrivateKey:

@@ -9,8 +9,6 @@ import os
 from fastapi import HTTPException
 
 from station.app.crud.train import create_train, update_train_round_0
-from station.app.models.train import Train
-from station.app.protocol.vault import get_certified_ec_key_pair
 from station.app.crud import federated_trains
 
 
@@ -30,7 +28,8 @@ def register_for_train(station_id: int, train_id: str, conductor_url: str = None
     if not conductor_url:
         conductor_url = os.getenv("CONDUCTOR_URL")
 
-    r = requests.post(conductor_url + f"/api/trains/{train_id}/register", params={"station_id": os.getenv("STATION_ID")})
+    r = requests.post(conductor_url + f"/api/trains/{train_id}/register",
+                      params={"station_id": os.getenv("STATION_ID")})
     r.raise_for_status()
     token = r.json()["token"]
     return token
@@ -57,8 +56,8 @@ def setup_protocol(db: Session, train_id: int, iteration: int) -> Tuple[ECPK, EC
         encryption_algorithm=serialization.NoEncryption()
     ).hex()
     # update db state
-    state = update_train_round_0(db, train_id=train_id, signing_key=signing_key,
-                                 sharing_key=sharing_key, iteration=iteration)
+    update_train_round_0(db, train_id=train_id, signing_key=signing_key,
+                         sharing_key=sharing_key, iteration=iteration)
 
     # return cert1.public_key(), cert2.public_key()
     return c_pk, s_pk

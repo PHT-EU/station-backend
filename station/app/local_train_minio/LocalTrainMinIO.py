@@ -10,7 +10,7 @@ class LocalTrainMinIO:
         self.docker_client = dockerClient
         # TODO do over env file
 
-        self.bucket_name="localtrain"
+        self.bucket_name = "localtrain"
         self.minio_client.add_bucket(self.bucket_name)
 
     async def store_endpoint(self, upload_file: UploadFile, train_id: str):
@@ -21,9 +21,9 @@ class LocalTrainMinIO:
         await self.minio_client.store_files(self.bucket_name, f"{train_id}/{upload_file.filename}", upload_file)
 
     async def delete_train_file(self, file_name):
-        self.minio_client.delete_file(self.bucket_name,file_name)
+        self.minio_client.delete_file(self.bucket_name, file_name)
 
-    def read_file(self,file_name):
+    def read_file(self, file_name):
         # TODO make it so the file name can be other or ther can be multiple fiels
         # return open(self.path_to_resources + "endpoint.py")
         try:
@@ -33,7 +33,7 @@ class LocalTrainMinIO:
             return None
         return file
 
-    def get_results(self,train_id):
+    def get_results(self, train_id):
         file = self.minio_client.get_file(self.bucket_name, f"{train_id}/results.tar")
         return file
 
@@ -66,5 +66,6 @@ class LocalTrainMinIO:
                 out_files.append(file)
 
         return out_files
+
 
 train_data = LocalTrainMinIO()

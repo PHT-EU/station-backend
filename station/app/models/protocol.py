@@ -1,5 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, UniqueConstraint
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime
 from datetime import datetime
 
 from station.app.db.base_class import Base
@@ -29,5 +28,3 @@ class Cypher(Base):
     iteration = Column(Integer)
     station_id = Column(Integer)
     cypher = Column(String)
-
-

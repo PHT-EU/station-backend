@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List, Optional, Union, Any, Dict
+from typing import Optional
 
 
 class DBSchema(BaseModel):
@@ -12,9 +12,11 @@ class LocalTrainBase(BaseModel):
     name: str
     TrainID: int
 
+
 class LocalTrainRun(BaseModel):
     train_id: str
     run_id: str
+
 
 class LocalTrain(DBSchema):
     created_at: datetime

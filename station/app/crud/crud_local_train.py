@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from sqlalchemy.orm import Session
 from fastapi import UploadFile
-from .base import CRUDBase, CreateSchemaType, ModelType
+from station.app.crud.base import CRUDBase, ModelType
 import asyncio
 
 from station.app.models.local_trains import LocalTrain, LocalTrainExecution
@@ -19,7 +19,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         @return: local train object
         """
         # if no name is given in the local train the uid  is set as train id and train name
-        if obj_in == None:
+        if obj_in is None:
             id = str(uuid.uuid4())
             train = LocalTrain(train_id=id,
                                train_name=id,
@@ -95,9 +95,10 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
             self._update_config(db, train_id, config)
             return f"{key} was removed"
         except KeyError as e:
+            print(e)
             return f"{key} is not a key that can be reset"
 
-    def update_config_add_repostory(self, db: Session, train_id: str, repository: str):
+    def update_config_add_repository(self, db: Session, train_id: str, repository: str):
         """
 
         @param db:

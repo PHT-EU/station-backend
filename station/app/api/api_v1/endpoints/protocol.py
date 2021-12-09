@@ -1,12 +1,9 @@
-import logging
 from typing import Any
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Body, Depends, HTTPException
-import os
+from fastapi import APIRouter, Depends, HTTPException
 
 from station.app.api import dependencies
 from station.app.crud import federated_trains
-from station.app.schemas.trains import Train, TrainState
 from station.app.schemas.protocol import BroadCastKeysSchema
 from station.app.crud.train import update_train_state_with_key_broadcast
 from station.app.protocol import share_keys, masked_input_collection, AggregationProtocolClient
@@ -38,11 +35,11 @@ def perform_protocol(train: Any, db: Session = Depends(dependencies.get_db)) -> 
 @router.get("/trains/{train_id}/keyBroadcasts", response_model=BroadCastKeysSchema)
 def get_key_broadcast_from_conductor(train_id: int, db: Session = Depends(dependencies.get_db)) -> Any:
     broadcast = share_keys.get_broad_casted_keys(train_id)
-    state = update_train_state_with_key_broadcast(db, train_id, broadcast)
+    update_train_state_with_key_broadcast(db, train_id, broadcast)
     return broadcast
 
 
 @router.post("/trains/{train_id}/maskedInputCollection")
 def get_cyphers_from_conductor(train_id: int, db: Session = Depends(dependencies.get_db)) -> Any:
     cyphers = masked_input_collection.compute_masked_input_vector(db, train_id)
-
+    return cyphers

@@ -1,4 +1,3 @@
-import requests
 import torchvision
 import os
 import pickle
@@ -16,7 +15,7 @@ def load_cifar_10(download=True):
 
     # Download the torchvision cifar 10 dataset
     if download:
-        cifar_data = torchvision.datasets.CIFAR10(cifar_path, download=True)
+        torchvision.datasets.CIFAR10(cifar_path, download=True)
 
     # Extract image data and labels from the batches
     extract_cifar_10_batches(batch_path, cifar_path)

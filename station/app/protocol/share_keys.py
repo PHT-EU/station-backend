@@ -7,7 +7,6 @@ from sqlalchemy.orm import Session
 from station.app.schemas.protocol import BroadCastKeysSchema, StationKeys
 from station.app.protocol.primitives.secret_sharing import share_secret_pycroptodome, share_secret_key
 from station.app.crud.train import (
-    update_train_state_with_key_broadcast,
     update_rng_seed,
     get_train_sharing_key,
     get_train_signing_key

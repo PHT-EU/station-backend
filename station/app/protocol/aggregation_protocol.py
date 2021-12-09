@@ -1,19 +1,17 @@
 import datetime
 from typing import Any, List
-
 import requests
 from sqlalchemy.orm import Session
 import os
 
-from .messages import AdvertiseKeysMessage
-from .messages.share_keys import ShareKeysMessage
-from .primitives.keys import ProtocolKeys
-from .primitives.secret_sharing import create_random_seed_and_shares
+from station.app.protocol.messages import AdvertiseKeysMessage
+from station.app.protocol.messages.share_keys import ShareKeysMessage
+from station.app.protocol.primitives.keys import ProtocolKeys
+from station.app.protocol.primitives.secret_sharing import create_random_seed_and_shares
 from station.app.crud import federated_trains
 from station.app.models.train import TrainState, Train
-from ..models.protocol import Cypher
-from ..schemas.protocol import BroadCastKeysSchema, StationKeys
-from .primitives.input_masking import compute_masked_input_for_conductor
+from station.app.models.protocol import Cypher
+from station.app.schemas.protocol import BroadCastKeysSchema, StationKeys
 
 
 class AggregationProtocolClient:
@@ -55,6 +53,7 @@ class AggregationProtocolClient:
         elif protocol_round == 2:
             state = self.submit_masked_input(train_id)
 
+        print(state)
         self.db.refresh(db_train)
         return db_train.state
 

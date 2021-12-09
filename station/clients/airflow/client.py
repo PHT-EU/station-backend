@@ -57,7 +57,7 @@ class AirflowClient:
         print(r.json())
         r.raise_for_status()
 
-    def health_check(self)-> dict:
+    def health_check(self) -> dict:
         """
 
         @return: dict: Airflow Status
@@ -66,7 +66,7 @@ class AirflowClient:
         r = requests.get(url=url)
         return r.json()
 
-    def get_run_information(self, dag_id: str, run_id: str)-> dict:
+    def get_run_information(self, dag_id: str, run_id: str) -> dict:
         """
         requests the information about a dag run state from airflow.
         @param dag_id: ID of the dag (e.g. "run_train" or "run_local"
@@ -74,17 +74,17 @@ class AirflowClient:
         @return: dict: information about the run
         """
         url = self.airflow_url + f"dags/{dag_id}/dagRuns/{run_id}/taskInstances"
-        tasklist = requests.get(url=url, auth=self.auth)
-        tasklist.raise_for_status()
-        tasklist =tasklist.json()
+        task_list = requests.get(url=url, auth=self.auth)
+        task_list.raise_for_status()
+        task_list = task_list.json()
         url = self.airflow_url + f"dags/{dag_id}/dagRuns/{run_id}"
-        informaion = requests.get(url=url, auth=self.auth)
-        informaion.raise_for_status()
-        informaion = informaion.json()
-        informaion["tasklist"]= tasklist
-        return informaion
+        information = requests.get(url=url, auth=self.auth)
+        information.raise_for_status()
+        information = information.json()
+        information["tasklist"] = task_list
+        return information
 
-    def get_task_log(self, dag_id: str, run_id: str, task_id: str , task_try_number: int)-> dict:
+    def get_task_log(self, dag_id: str, run_id: str, task_id: str, task_try_number: int) -> dict:
         """
         get the log of a task for a spesific run
         @param dag_id:
@@ -96,6 +96,7 @@ class AirflowClient:
         log = requests.get(url=url, auth=self.auth)
         log.raise_for_status()
         return log.content.decode("utf-8")
+
 
 airflow_client = AirflowClient()
 

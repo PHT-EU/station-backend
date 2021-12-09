@@ -1,6 +1,5 @@
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+
 
 from station.app.main import app
 from station.app.api.dependencies import get_db
@@ -36,7 +35,7 @@ def test_data_set_get():
 
 
 def test_get_all_data_sets():
-    response = client.get(f"/api/datasets")
+    response = client.get("/api/datasets")
     assert response.status_code == 200, response.text
     data = response.json()
 

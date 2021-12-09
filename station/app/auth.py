@@ -1,10 +1,8 @@
-# ./auth.py
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from keycloak import KeycloakOpenID  # pip require python-keycloak
 from .config import settings
-from fastapi import Security, HTTPException, status, Depends
+from fastapi import Security, HTTPException, status
 from pydantic import Json
-import os
 
 # This is just for fastapi docs
 oauth2_scheme = OAuth2AuthorizationCodeBearer(
@@ -48,10 +46,7 @@ async def get_auth(token: str = Security(oauth2_scheme)) -> Json:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-
 # async def get_current_user(
 #         identity: Json = Depends(get_auth)
 # ) -> User:
 #     return User.first_or_fail(identity['sub'])  # get your user form the DB using identity['sub']
-
-

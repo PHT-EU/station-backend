@@ -1,4 +1,3 @@
-import pytest
 from fastapi.testclient import TestClient
 from dotenv import load_dotenv, find_dotenv
 

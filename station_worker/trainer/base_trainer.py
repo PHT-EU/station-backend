@@ -1,14 +1,10 @@
 from station.clients.minio import MinioClient
-import importlib.util
-import importlib.machinery
-import tempfile
 from conductor_lib.src.torch import LightningTrainModel
 from typing import Union
 import os
 from torch.utils.data import DataLoader
-import requests
 
-from worker.loader import BaseLoader
+from station_worker.loader import BaseLoader
 
 
 class ModelTrainer:
@@ -63,11 +59,9 @@ class ModelTrainer:
             return data_loader
 
 
-
 if __name__ == '__main__':
     model_id = "af8c8b1e-3d89-4500-bc7d-7888e13381bd"
 
     trainer = ModelTrainer(model_id=model_id, station_url="http://localhost:8001")
     db_model = trainer.get_model_from_station(model_id=model_id)
     print(db_model)
-

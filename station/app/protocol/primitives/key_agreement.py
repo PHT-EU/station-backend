@@ -31,4 +31,3 @@ def load_private_key(private_key_hex: str) -> EllipticCurvePrivateKey:
         password=None
     )
     return private_key
-

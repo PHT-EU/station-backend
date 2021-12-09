@@ -1,8 +1,7 @@
 import subprocess
 import os
-from typing import List, Union, Tuple
+from typing import List, Tuple
 from Crypto.Protocol.SecretSharing import Shamir
-from Crypto.Util.Padding import pad
 import math
 
 """

@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, LargeBinary, Float, BigInteger
+from sqlalchemy import Column, ForeignKey, Integer, String, DateTime, LargeBinary
 from sqlalchemy.orm import relationship, deferred
 from datetime import datetime
 

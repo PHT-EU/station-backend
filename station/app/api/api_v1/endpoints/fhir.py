@@ -1,6 +1,6 @@
-from typing import Any, List
+from typing import List
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from station.app.api import dependencies
 from fhir_kindling.fhir_server.server_responses import ServerSummary
 from station.app.schemas.fhir import FHIRServer, FHIRServerCreate, FHIRServerUpdate
@@ -45,5 +45,3 @@ def delete_fhir_server(server_id: int, db: Session = Depends(dependencies.get_db
 def fhir_server_summary(server_id: int, db: Session = Depends(dependencies.get_db)):
     server = fhir_server_from_db(db=db, fhir_server_id=server_id)
     return server.summary()
-
-

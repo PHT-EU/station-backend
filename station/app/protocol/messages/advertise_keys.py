@@ -1,5 +1,4 @@
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
-from cryptography.hazmat.primitives.serialization import load_pem_public_key
 from typing import Union, Optional
 from .base import Message
 import json
@@ -64,12 +63,6 @@ class AdvertiseKeysMessage(Message):
             pass
 
 
-
-
-
-
-
-
 if __name__ == '__main__':
     load_dotenv(find_dotenv())
     sk1, cert1 = get_certified_ec_key_pair("pht_federated")
@@ -80,11 +73,3 @@ if __name__ == '__main__':
         train_id=1
     )
     print(msg.serialize())
-
-
-
-
-
-
-
-

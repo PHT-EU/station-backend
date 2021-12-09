@@ -1,4 +1,3 @@
-import json
 from typing import Any
 import requests
 from sqlalchemy.orm import Session

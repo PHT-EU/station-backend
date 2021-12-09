@@ -79,7 +79,7 @@ def add_master_image(add_master_image_msg: LocalTrainAddMasterImage, db: Session
     @param db: reference to the postgres database
     @return:
     """
-    new_config = local_train.update_config_add_repostory(db, add_master_image_msg.train_id, add_master_image_msg.image)
+    new_config = local_train.update_config_add_repository(db, add_master_image_msg.train_id, add_master_image_msg.image)
     return new_config
 
 

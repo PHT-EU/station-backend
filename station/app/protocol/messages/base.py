@@ -1,7 +1,7 @@
 from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
 from cryptography.hazmat.primitives.serialization import load_pem_public_key
 from cryptography.hazmat.primitives import serialization
-from typing import Union, List
+from typing import Union
 
 
 class Message:

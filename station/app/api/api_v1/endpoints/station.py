@@ -1,17 +1,15 @@
 from typing import Any
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Body, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException
 import os
 from typing import List, Optional
 
 from station.app.api import dependencies
-from station.app.schemas.dl_models import DLModelCreate, DLModel, DLModelUpdate
+from station.app.schemas.dl_models import DLModelCreate, DLModel
 from station.app.schemas.notifications import NotificationCreate, Notification
 from station.app.schemas.station import Trains
-from station.app.crud import torch_models, docker_train, federated_trains, dl_models, notifications
+from station.app.crud import docker_train, federated_trains, dl_models, notifications
 from station.app.docker_trains.update import sync_db_with_registry
-from station.clients.minio import MinioClient
-from station.clients.conductor import ConductorRESTClient
 
 router = APIRouter()
 
@@ -35,7 +33,6 @@ def get_available_trains(active: Optional[bool] = None,
     if refresh:
         # TODO query the conductor for trains
         sync_db_with_registry(db, station_id=os.getenv("STATION_ID"))
-        conductor_client = ConductorRESTClient()
 
     if active:
         db_docker_trains = docker_train.get_trains_by_active_status(db, active)

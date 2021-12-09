@@ -2,17 +2,14 @@ from typing import Any
 from sqlalchemy.orm import Session
 from dotenv import load_dotenv, find_dotenv
 import os
-import torch
 
 from station.app.crud import federated_trains
-from worker.testing.db import SessionLocal
+from station_worker.testing.db import SessionLocal
 from station.clients.conductor import ConductorRESTClient
 from station.clients.minio import MinioClient
-from worker.discovery import perform_discovery
-from worker.loader import MinioFolderDS, BaseLoader, ModelLoader
-from worker.trainer import FederatedTrainer
-
-from worker.testing.train_lightning_model import Cifar10Model
+from station_worker.discovery import perform_discovery
+from station_worker.loader import MinioFolderDS, BaseLoader, ModelLoader
+from station_worker.trainer import FederatedTrainer
 
 
 class PHTWorker:
@@ -30,7 +27,7 @@ class PHTWorker:
             "station_id": os.getenv("STATION_ID"),
             "results": discovery_result
         }
-        resp = self.conductor_client.post_discovery_results(train_id=train_id, discovery_results=discovery_post)
+        self.conductor_client.post_discovery_results(train_id=train_id, discovery_results=discovery_post)
 
     def make_data_loader(self, db: Session, train_id: Any):
         db_train = federated_trains.get_by_train_id(db=db, train_id=train_id)

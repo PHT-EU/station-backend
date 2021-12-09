@@ -7,7 +7,7 @@ from datetime import datetime
 from .client import airflow_client
 from station.app.crud.crud_docker_trains import docker_train
 from station.app.crud.crud_train_configs import docker_train_config
-from station.app.schemas.docker_trains import DockerTrainConfig, DockerTrain, DockerTrainExecution
+from station.app.schemas.docker_trains import DockerTrainExecution
 
 
 # TODO rework this !!!

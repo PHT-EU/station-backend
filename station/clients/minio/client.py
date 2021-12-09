@@ -6,10 +6,6 @@ import os
 from fastapi import File, UploadFile
 from typing import List, Union, Dict
 from dotenv import load_dotenv, find_dotenv
-from uuid import uuid4
-import pickle
-import dill
-import requests
 
 
 class MinioClient:
@@ -174,11 +170,12 @@ class MinioClient:
         Get health of minio
         """
         try:
-            buckets = self.client.list_buckets()
-            return {"status": "healthy"}
-        except:
-            return {"status": "none"}
+            self.client.list_buckets()
 
+            return {"status": "healthy"}
+        except Exception as e:
+            print(e)
+            return {"status": "none"}
 
 
 if __name__ == '__main__':

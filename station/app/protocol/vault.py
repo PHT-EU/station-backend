@@ -5,7 +5,6 @@ Utility functions for interacting with vault
 import requests
 import os
 from dotenv import load_dotenv, find_dotenv
-from pprint import pprint
 from cryptography import x509
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -18,8 +17,11 @@ def vault_headers(token: str = None) -> dict:
     return {"X-Vault-Token": token}
 
 
-def get_certified_ec_key_pair(role_name: str, url: str = None, token: str = None,
-                              engine: str = "pki") -> Tuple[ec.EllipticCurvePrivateKeyWithSerialization, x509.Certificate]:
+def get_certified_ec_key_pair(role_name: str,
+                              url: str = None,
+                              token: str = None,
+                              engine: str = "pki"
+                              ) -> Tuple[ec.EllipticCurvePrivateKeyWithSerialization, x509.Certificate]:
     if url:
         endpoint = url + f"/{role_name}"
     else:

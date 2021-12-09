@@ -1,9 +1,5 @@
-import uuid
-
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 from station.app.main import app
 from station.app.api.dependencies import get_db
@@ -109,13 +105,13 @@ def test_docker_train_config_create_fails(docker_train_config):
 
 
 def test_get_docker_train_configs():
-    response = client.get(f"/api/trains/docker/configs/all")
+    response = client.get("/api/trains/docker/configs/all")
     assert response.status_code == 200, response.text
     assert len(response.json()) >= 1
 
 
 def test_get_docker_train_config_by_id():
-    response = client.get(f"/api/trains/docker/config/1")
+    response = client.get("/api/trains/docker/config/1")
     assert response.status_code == 200, response.text
 
 
@@ -130,7 +126,7 @@ def test_update_docker_train_config(docker_train_config):
                           json=docker_train_config)
 
     assert response.status_code == 200, response.text
-    response = client.get(f"/api/trains/docker/config/1")
+    response = client.get("/api/trains/docker/config/1")
 
     assert response.json()["name"] == "updated name"
 
@@ -156,7 +152,7 @@ def test_assign_docker_train_config(train_id):
 
     # test non existing train error
 
-    response = client.post(f"/api/trains/docker/no_train/config/1")
+    response = client.post("/api/trains/docker/no_train/config/1")
     assert response.status_code == 404
 
 

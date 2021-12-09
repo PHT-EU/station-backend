@@ -1,9 +1,7 @@
 from typing import Any
-
 from sqlalchemy.orm import Session
 
-from .base import CRUDBase, CreateSchemaType, ModelType
-
+from station.app.crud.base import CRUDBase
 from station.app.models.dl_models import TorchModel, DLModel
 from station.app.schemas.dl_models import TorchModelCreate, TorchModelUpdate, DLModelCreate, DLModelUpdate
 

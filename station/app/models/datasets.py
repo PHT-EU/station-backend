@@ -1,5 +1,5 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, LargeBinary, Float, BigInteger
-from sqlalchemy.orm import relationship, deferred
+from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy.orm import relationship
 from datetime import datetime
 
 from station.app.db.base_class import Base
@@ -22,10 +22,3 @@ class DataSet(Base):
     target_field = Column(String, default=None)
     class_distribution = Column(String, default=None)
     trains = relationship("Train", back_populates="dataset")
-
-
-
-
-
-
-

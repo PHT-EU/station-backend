@@ -1,5 +1,4 @@
 from typing import Any
-
 import requests
 
 STATION_1_URL = "http://localhost:8001/api/trains/"
@@ -9,6 +8,7 @@ STATION_3_URL = "http://localhost:8003/api/trains/"
 STATION_URLS = [STATION_1_URL, STATION_2_URL, STATION_3_URL]
 
 TRAIN_ID = 1
+
 
 def add_train(train_id: Any):
     for i, url in enumerate(STATION_URLS):

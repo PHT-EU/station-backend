@@ -14,5 +14,3 @@ api_router.include_router(protocol.router, tags=["Protocol"])
 api_router.include_router(station_status.router, tags=["Station Status"])
 api_router.include_router(local_trains.router, tags=["Run Local Trains"])
 api_router.include_router(fhir.router, prefix="/fhir", tags=["FHIR"])
-
-

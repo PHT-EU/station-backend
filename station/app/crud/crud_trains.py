@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 import os
 
 from .base import CRUDBase
-from typing import List, Any, Tuple
+from typing import List, Tuple
 
 from station.app.models.train import Train, TrainState
 from station.app.schemas.trains import TrainCreate, TrainUpdate
@@ -19,7 +19,7 @@ class CRUDTrain(CRUDBase[Train, TrainCreate, TrainUpdate]):
 
     def sync_local_trains_with_conductor(self, db: Session, conductor_trains: List[dict]) -> \
             Tuple[List[Train], List[Train]]:
-
+        # todo improve this
         updated_trains = []
         new_trains = []
         for conductor_train in conductor_trains:
@@ -29,7 +29,7 @@ class CRUDTrain(CRUDBase[Train, TrainCreate, TrainUpdate]):
             else:
                 # create a new train
                 db_train = self._create_train_from_conductor(db, conductor_train)
-                print(f"Creating new train")
+                print("Creating new train")
                 new_trains.append(db_train)
 
         return updated_trains, new_trains

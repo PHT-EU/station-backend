@@ -1,11 +1,11 @@
 from typing import Any, List
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
 from station.app.api import dependencies
 from station.app.schemas.trains import Train
 from station.app.schemas.dl_models import DLModelCreate, DLModel
-from station.app.crud import federated_trains, torch_models, dl_models, datasets
+from station.app.crud import federated_trains, dl_models, datasets
 from station.clients.conductor import ConductorRESTClient
 from station.app.protocol.aggregation_protocol import AggregationProtocolClient
 
@@ -62,6 +62,7 @@ def synchronize_trains_with_conductor(db: Session = Depends(dependencies.get_db)
             train_id=train.id,
             model_in=train_model
         )
+        print(f"Created model {db_model.id} for train {train.id}")
 
     return updated_trains
 

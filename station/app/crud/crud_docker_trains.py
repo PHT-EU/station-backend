@@ -3,11 +3,10 @@ from typing import List
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 
-from .base import CRUDBase, CreateSchemaType, ModelType
+from .base import CRUDBase, ModelType
 
 from station.app.models.docker_trains import DockerTrain, DockerTrainConfig, DockerTrainState
-from station.app.schemas.docker_trains import DockerTrainCreate, DockerTrainUpdate, DockerTrainConfigCreate, \
-    DockerTrainConfigUpdate
+from station.app.schemas.docker_trains import DockerTrainCreate, DockerTrainUpdate
 from dateutil import parser
 
 

@@ -1,7 +1,5 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, LargeBinary, Float, BigInteger, JSON
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, JSON
 from datetime import datetime
-import uuid
 from station.app.db.base_class import Base
 
 
@@ -23,7 +21,6 @@ class LocalTrainExecution(Base):
     end = Column(DateTime, nullable=True)
 
 
-
 class LocalTrain(Base):
     __tablename__ = "local_trains"
     id = Column(Integer, primary_key=True, index=True)
@@ -31,12 +28,12 @@ class LocalTrain(Base):
     train_name = Column(String, unique=True)
     created_at = Column(DateTime, default=datetime.now())
     updated_at = Column(DateTime, nullable=True)
-    airflow_config_json = Column(JSON, default=None , nullable=True)
-    #config_id = Column(Integer, ForeignKey("local_train_configs.id"), nullable=True)
-    #config = relationship("LocalTrainConfig", back_populates="trains")
+    airflow_config_json = Column(JSON, default=None, nullable=True)
+    # config_id = Column(Integer, ForeignKey("local_train_configs.id"), nullable=True)
+    # config = relationship("LocalTrainConfig", back_populates="trains")
     is_active = Column(Boolean, default=False)
-    #state = relationship("LocalTrainState")
-    #executions = relationship("LocalTrainExecution")
+    # state = relationship("LocalTrainState")
+    # executions = relationship("LocalTrainExecution")
 
 
 '''
@@ -52,4 +49,3 @@ class LocalTrainConfig(Base):
     gpu_requirements = Column(JSON, nullable=True)
     auto_execute = Column(Boolean, default=False)
 '''
-

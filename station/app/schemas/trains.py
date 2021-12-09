@@ -1,8 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 
-from station.app.schemas import protocol
 from station.app.schemas import datasets
 
 
@@ -45,5 +44,3 @@ class Train(DBSchema):
 
 class FederatedTrainConfigCreate(DBSchema):
     name: str
-
-

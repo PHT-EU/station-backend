@@ -1,12 +1,9 @@
 import asyncio
-import io
 import tarfile
 import os
 import time
 from io import BytesIO
-from pathlib import Path
 import shutil
-import ast
 import docker
 from airflow.decorators import dag, task
 from airflow.operators.python import get_current_context
@@ -56,7 +53,7 @@ def run_local():
         img = repository + ":" + tag
 
         # TODO Schemas for train config - returns the dict
-        #train_state = LocalTrainState.from_context(context)
+        # train_state = LocalTrainState.from_context(context)
 
         train_state_dict = {
             "repository": repository,
@@ -118,7 +115,7 @@ def run_local():
 
         # load the entrypoint form minIO into to a local tar file
         entrypoint = minio_client.get_file(train_state_dict["bucket_name"],
-                                         f"{train_state_dict['train_id']}/{train_state_dict['entrypoint']}")
+                                           f"{train_state_dict['train_id']}/{train_state_dict['entrypoint']}")
 
         name = train_state_dict['entrypoint']
         archive_obj = BytesIO()
@@ -186,7 +183,8 @@ def run_local():
                 train_data_path = fhir_client.store_query_results(query_result, storage_dir=train_data_dir,
                                                                   filename=output_file_name)
                 print("train data path: ", train_data_path)
-                host_data_path = os.path.join(os.getenv("STATION_DATA_DIR"), train_state_dict["train_id"], output_file_name)
+                host_data_path = os.path.join(os.getenv("STATION_DATA_DIR"), train_state_dict["train_id"],
+                                              output_file_name)
 
                 # Add the file containing the fhir query results to the volumes configuration
                 query_data_volume = {
