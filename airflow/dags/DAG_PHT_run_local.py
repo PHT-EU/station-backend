@@ -15,8 +15,7 @@ from station.clients.minio import MinioClient
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization
 
-# todo outsource into station settings
-# /opt/train_data
+
 TRAIN_PATH = "/opt/pht_train"
 RESULT_PATH = "/opt/pht_results"
 
@@ -96,16 +95,15 @@ def run_local():
         """
         # create minIO client
         docker_client = docker.from_env()
-        # todo based on environment variable
-        minio_client = MinioClient(minio_server="minio:9000")
+        minio_client = MinioClient()
 
         # create the docker File like object that can be added to the master image
         docker_file = f'''
                             FROM {train_state_dict["img"]}
-                            RUN mkdir "/opt/pht_results"
-                            RUN mkdir /opt/pht_train
-                            RUN chmod -R +x /opt/pht_train
-                            CMD ["python", "/opt/pht_train/{train_state_dict['entrypoint']}"]
+                            RUN mkdir {RESULT_PATH}
+                            RUN mkdir {TRAIN_PATH}
+                            RUN chmod -R +x {TRAIN_PATH}
+                            CMD ["python", "{TRAIN_PATH}/{train_state_dict['entrypoint']}"]
                             '''
         docker_file = BytesIO(docker_file.encode("utf-8"))
 
@@ -119,19 +117,17 @@ def run_local():
 
         name = train_state_dict['entrypoint']
         archive_obj = BytesIO()
-        archive = tarfile.TarFile(fileobj=archive_obj, mode='w')
+        tar = tarfile.TarFile(fileobj=archive_obj, mode='w')
         endpoint_info = tarfile.TarInfo(name)
         endpoint_info.size = len(entrypoint)
         endpoint_info.mtime = time.time()
-        archive.addfile(endpoint_info, BytesIO(entrypoint))
-        archive_obj.close()
+        tar.addfile(endpoint_info, BytesIO(entrypoint))
+        tar.close()
         archive_obj.seek(0)
-
-        container.put_archive("/opt/pht_train", archive)
+        container.put_archive(TRAIN_PATH, archive_obj)
         container.wait()
         container.commit(repository="local_train", tag="latest")
         container.wait()
-
         return train_state_dict
 
     @task()
@@ -230,8 +226,9 @@ def run_local():
         container = docker_client.containers.run("local_train", environment=environment, volumes=volumes,
                                                  detach=True)
         container.wait()
+        os.mkdir(train_state_dict["build_dir"])
         with open(f'{train_state_dict["build_dir"]}results.tar', 'wb') as f:
-            bits, stat = container.get_archive('opt/pht_results')
+            bits, stat = container.get_archive(RESULT_PATH)
             for chunk in bits:
                 f.write(chunk)
 
@@ -250,7 +247,7 @@ def run_local():
         @return: dict train_state_dict: train parameters
         """
         # todo from env
-        minio_client = MinioClient(minio_server="minio:9000")
+        minio_client = MinioClient()
         # Store results
         with open(f'{train_state_dict["build_dir"]}results.tar', 'rb') as results_tar:
             asyncio.run(

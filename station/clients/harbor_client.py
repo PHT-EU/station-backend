@@ -42,7 +42,7 @@ class HarborClient:
         requests the central service
         @return: dict: status of central harbor instance
         """
-        url = self.url + "health"
+        url = self.url + "/health"
         try:
             r = requests.get(url=url, auth=(self.username, self.password))
             if r and r.status_code == 200:

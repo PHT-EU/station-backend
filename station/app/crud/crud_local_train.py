@@ -1,4 +1,5 @@
 import uuid
+import os
 from datetime import datetime
 from sqlalchemy.orm import Session
 from fastapi import UploadFile
@@ -108,7 +109,8 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         """
         config = self.get_config(db, train_id)
         # TODO get from env
-        harbor_url = "harbor-pht.tada5hi.net"
+        harbor_api = os.getenv("HARBOR_URL")
+        harbor_url = harbor_api.split("/")[2]
         config["repository"] = f"{harbor_url}/{repository}"
         self._update_config(db, train_id, config)
         return config
