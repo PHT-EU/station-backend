@@ -72,6 +72,7 @@ class DockerTrainExecution(BaseModel):
 
 
 class DockerTrain(DBSchema):
+    name: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
     proposal_id: int

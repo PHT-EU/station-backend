@@ -11,23 +11,13 @@ from station.clients.minio import MinioClient
 router = APIRouter()
 
 
-@router.get("/datasets/{data_set_id}")
+@router.get("/{data_set_id}")
 def get_data_set(data_set_id: Any, db: Session = Depends(dependencies.get_db)) -> DataSet:
     db_dataset = datasets.get(db, data_set_id)
     return db_dataset
 
 
-@router.get("/datasets/{data_set_id}/download")
-def download(data_set_id: Any, db: Session = Depends(dependencies.get_db)):
-    db_dataset = datasets.get(db, data_set_id)
-    if db_dataset.storage_type == "csv":
-        df = pd.read_csv(db_dataset.access_path)
-        return df.to_json()
-    else:
-        return "can only return tabular data at the moment"
-
-
-@router.post("/datasets")
+@router.post("")
 def create_new_data_set(create_msg: DataSetCreate, db: Session = Depends(dependencies.get_db)) -> DataSet:
     db_dataset = datasets.create(db, obj_in=create_msg)
     return db_dataset
@@ -52,8 +42,19 @@ def delete_data_set(dataset_id: Any, db: Session = Depends(dependencies.get_db))
     return db_data_set
 
 
+@router.get("/{data_set_id}/download")
+def download(data_set_id: Any, db: Session = Depends(dependencies.get_db)):
+    db_dataset = datasets.get(db, data_set_id)
+    # TODO download as file
+    if db_dataset.storage_type == "csv":
+        df = pd.read_csv(db_dataset.access_path)
+        return df.to_json()
+    else:
+        return "can only return tabular data at the moment"
+
 @router.get("/datasets/minio/")
 def get_data_sets_from_bucket():
+    # TODO outsource minio functionality into separate endpoint file
     client = MinioClient()
     folders = client.list_data_sets()
     items = client.get_data_set_items("cifar10/batch_1/")

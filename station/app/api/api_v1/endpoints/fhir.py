@@ -42,6 +42,6 @@ def delete_fhir_server(server_id: int, db: Session = Depends(dependencies.get_db
 
 
 @router.get("/server/{server_id}/summary", response_model=ServerSummary)
-def fhir_server_summary(server_id: int, db: Session = Depends(dependencies.get_db)):
+def fhir_server_summary(server_id: int, refresh: bool = True, db: Session = Depends(dependencies.get_db)):
     server = fhir_server_from_db(db=db, fhir_server_id=server_id)
     return server.summary()
