@@ -9,6 +9,8 @@ from station.app.local_train_minio.LocalTrainMinIO import train_data
 from fastapi.responses import Response
 from fastapi.responses import FileResponse
 from station.app.schemas.local_trains import LocalTrain, LocalTrainCreate, LocalTrainAddMasterImage, LocalTrainRun
+from station.app.schemas.local_trains import LocalTrain, LocalTrainCreate, LocalTrainAddMasterImage, LocalTrainAddTag, LocalTrainGetFile, LocalTrainRun
+
 from station.app.crud.crud_local_train import local_train
 from station.clients.harbor_client import harbor_client
 
@@ -83,8 +85,8 @@ def add_master_image(add_master_image_msg: LocalTrainAddMasterImage, db: Session
     return new_config
 
 
-@router.put("/localTrains/addTag/{train_id}/{tag}")
-def add_tag_image(train_id: str, tag: str, db: Session = Depends(dependencies.get_db)):
+@router.put("/localTrains/addTag")
+def add_tag_image(add_tag_msg: LocalTrainAddTag, db: Session = Depends(dependencies.get_db)):
     """
     #TODO change to pedantic same as add master image
     Modifies the train configuration with a MasterImage that is defined in add_master_image_msg in the train
@@ -94,7 +96,7 @@ def add_tag_image(train_id: str, tag: str, db: Session = Depends(dependencies.ge
     @param db:
     @return:
     """
-    new_config = local_train.update_config_add_tag(db, train_id, tag)
+    new_config = local_train.update_config_add_tag(db, add_tag_msg.train_id, add_tag_msg.tag)
     return new_config
 
 
@@ -113,8 +115,9 @@ def remove_config_element(train_id: str, key: str, db: Session = Depends(depende
 
 
 @router.put("/localTrains/addEntrypoint/{train_id}/{entrypoint}")
-def upload_endpoint_file(train_id: str, entrypoint: str, db: Session = Depends(dependencies.get_db)):
+def add_endpoint_config(train_id: str, entrypoint: str, db: Session = Depends(dependencies.get_db)):
     """
+    addes a file name to config of teh entrypoint
 
     @param train_id: uid of a local train
     @param entrypoint:
@@ -126,9 +129,9 @@ def upload_endpoint_file(train_id: str, entrypoint: str, db: Session = Depends(d
 
 
 @router.put("/localTrains/addQuery/{train_id}/{query}")
-def upload_endpoint_file(train_id: str, query: str, db: Session = Depends(dependencies.get_db)):
+def add_query_config(train_id: str, query: str, db: Session = Depends(dependencies.get_db)):
     """
-
+    addes a file name to config of the query
     @param train_id: uid of a local train
     @param query:
     @param db: reference to the postgres database
@@ -219,17 +222,9 @@ def get_all_local_trains(db: Session = Depends(dependencies.get_db)):
     return local_train.get_trains(db)
 
 
-@router.get("/localTrains/getEndpoint")
-async def get_endpoint_file():
-    """
-
-    @return:
-    """
-    file = train_data.read_file("endpoint.py")
-    return file
 
 
-@router.get("/localTrains/getConfig")
+@router.get("/localTrains/getConfig/{train_id}")
 def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
 
@@ -241,7 +236,7 @@ def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
     return config
 
 
-@router.get("/localTrains/getName")
+@router.get("/localTrains/getName/{train_id}")
 def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
 
@@ -253,8 +248,8 @@ def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
     return config
 
 
-@router.get("/localTrains/getID")
-def get_config(train_name: str, db: Session = Depends(dependencies.get_db)):
+@router.get("/localTrains/getID/{train_name}")
+def get_id(train_name: str, db: Session = Depends(dependencies.get_db)):
     """
 
     @param train_name:
@@ -287,32 +282,6 @@ def get_airflow_run_information(run_id: str, dag_id: str):
     @return:
     """
     run_info = airflow_client.get_run_information(dag_id, run_id)
-    return run_info
-
-
-@router.get("/localTrains/getAirflowTaskLog/{run_id}/{task_id}/{task_try_number}")
-def get_airflow_task_log(run_id: str, task_id: str, task_try_number: int):
-    """
-    Get log of a task in a local train DAG execution.
-    @param task_try_number:
-    @param task_id: id of teh task
-    @param run_id: Airflow run ID
-    @return:
-    """
-    run_info = airflow_client.get_task_log("run_local", run_id, task_id, task_try_number)
-    return run_info
-
-
-@router.get("/localTrains/getLastAirflowRun/{train_id}")
-def get_last_airflow_run_information(train_id: str, db: Session = Depends(dependencies.get_db)):
-    """
-
-    @param train_id: uid of a local train
-    @param db: reference to the postgres database
-    @return:
-    """
-    run_id = local_train.get_last_run()
-    run_info = airflow_client.get_run_information("run_local", run_id)
     return run_info
 
 
