@@ -10,6 +10,7 @@ from train_lib.docker_util.docker_ops import extract_train_config, extract_query
 from train_lib.security.SecurityProtocol import SecurityProtocol
 from train_lib.clients import PHTFhirClient
 from train_lib.docker_util.validate_master_image import validate_train_image
+from json import JSONDecoder
 
 default_args = {
     'owner': 'airflow',
@@ -37,7 +38,7 @@ def run_pht_train():
             tag = "latest"
         img = repository + ":" + tag
 
-        # check an process the volumes passed to the dag via the config
+        # check and process the volumes passed to the dag via the config
         if volumes:
             assert isinstance(volumes, dict)
             # if a volume in the dictionary follows the docker format pass it as is
@@ -95,11 +96,14 @@ def run_pht_train():
         try:
             query = extract_query_json(train_state["img"])
             train_state["query"] = query
-        except Exception as e:
+        except APIError as e:
             print("Error extracting query:")
             print(e)
             train_state["query"] = None
-
+        except JSONDecoder as e:
+            print("Error decoding query json:")
+            print(e)
+            train_state["query"] = None
         return train_state
 
     @task()
