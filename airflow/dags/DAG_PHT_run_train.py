@@ -97,13 +97,13 @@ def run_pht_train():
             query = extract_query_json(train_state["img"])
             train_state["query"] = query
         except APIError as e:
-            print("Error extracting query:")
-            print(e)
+            print("No query.json available for train, assuming no query was submitted...")
             train_state["query"] = None
         except JSONDecoder as e:
             print("Error decoding query json:")
             print(e)
-            train_state["query"] = None
+            raise e
+
         return train_state
 
     @task()
