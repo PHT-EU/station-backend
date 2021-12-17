@@ -21,6 +21,7 @@ def test_get_all_local_trains():
     response = client.get("/api/localTrains/getAllLocalTrains")
     assert response.status_code == 200, response.json
 
+
 @pytest.fixture
 def local_train():
     train_creation_response = client.post("api/localTrains/createWithUuid")
@@ -28,33 +29,35 @@ def local_train():
     train_creation_response_dict = json.loads(train_creation_response.text)
     return train_creation_response_dict
 
+
 def test_create_local_train_without_name(local_train):
-    get_name_respose = client.get(f"api/localTrains/getName/{local_train['train_id']}")
+    get_name_respose = client.get(f"api/localTrains/{local_train['train_id']}/getName")
     assert get_name_respose.text.replace('"', '') == local_train["train_id"]
 
 
 def test_change_tag_in_config(local_train):
     tag = "test"
-    add_tag_response = client.put("api/localTrains/addTag", json={
+    add_tag_response = client.put("api/localTrains/tag", json={
         "train_id": local_train["train_id"],
         "tag": tag})
     assert add_tag_response.status_code == 200, add_tag_response.json
-    get_config_response = client.get(f"api/localTrains/getConfig/{local_train['train_id']}")
+    get_config_response = client.get(f"api/localTrains/{local_train['train_id']}/getConfig")
     assert get_config_response.status_code == 200, get_config_response.json
     assert json.loads(get_config_response.text)["tag"] == tag
 
+
 def test_config_changes(local_train):
     tag = "test"
-    add_tag_response = client.put("api/localTrains/addTag", json={
+    add_tag_response = client.put("api/localTrains/tag", json={
         "train_id": local_train["train_id"],
         "tag": tag})
     assert add_tag_response.status_code == 200, add_tag_response.json
-    get_config_response = client.get(f"api/localTrains/getConfig/{local_train['train_id']}")
+    get_config_response = client.get(f"api/localTrains/{local_train['train_id']}/getConfig")
     assert get_config_response.status_code == 200, get_config_response.json
     assert json.loads(get_config_response.text)["tag"] == tag
-    remove_tag_config_response = client.put(f"api/localTrains/RemoveConfigElement/{local_train['train_id']}/tag")
+    remove_tag_config_response = client.put(f"api/localTrains/{local_train['train_id']}/tag/removeConfigElement")
     assert remove_tag_config_response.status_code == 200, remove_tag_config_response.json
-    get_config_response = client.get(f"api/localTrains/getConfig/{local_train['train_id']}")
+    get_config_response = client.get(f"api/localTrains/{local_train['train_id']}/getConfig")
     assert get_config_response.status_code == 200, get_config_response.json
     assert json.loads(get_config_response.text)["tag"] == None
 
@@ -63,16 +66,17 @@ def test_store_and_get_files(local_train):
     entrypoint_name = "entrypoint.py"
     with open(f"./tests/test_files/{entrypoint_name}", "r") as f:
         upload_entrypoint_file_response = client.post(
-            f"/api/localTrains/uploadTrainFile/{local_train['train_id']}",
+            f"/api/localTrains/{local_train['train_id']}/uploadTrainFile",
             files={"upload_file": ("entrypoint.py", f, "multipart/form-data")}
         )
         assert upload_entrypoint_file_response.status_code == 200, upload_entrypoint_file_response.json
 
-    get_result_response = client.get(f"api/localTrains/getFile", params={'train_id' : local_train['train_id'] ,'file_name':entrypoint_name})
+    get_result_response = client.get(f"api/localTrains/getFile",
+                                     params={'train_id': local_train['train_id'], 'file_name': entrypoint_name})
     assert get_result_response.status_code == 200, get_result_response.json
 
 
-def test_create_and_run_local_train( ):
+def test_create_and_run_local_train():
     # create local train
     train_creation_response = client.post("api/localTrains/create", json={"train_name": "testing_local_train"})
     assert train_creation_response.status_code == 200, train_creation_response.json
@@ -88,21 +92,21 @@ def test_create_and_run_local_train( ):
     entrypoint_name = "entrypoint.py"
     with open(f"./tests/test_files/{entrypoint_name}", "r") as f:
         upload_entrypoint_file_response = client.post(
-            f"/api/localTrains/uploadTrainFile/{train_creation_response_dict['train_id']}",
+            f"/api/localTrains/{train_creation_response_dict['train_id']}/uploadTrainFile",
             files={"upload_file": ("entrypoint.py", f, "multipart/form-data")}
         )
         assert upload_entrypoint_file_response.status_code == 200, upload_entrypoint_file_response.json
 
     # get uploded files and test if entrypoint was stored
     files_uploded_response = client.get(
-        f"/api/localTrains/getAllUploadedFileNames/{train_creation_response_dict['train_id']}")
+        f"/api/localTrains/{train_creation_response_dict['train_id']}/getAllUploadedFileNames")
     assert files_uploded_response.status_code == 200, files_uploded_response.json
     entrypoint_object_name = json.loads(files_uploded_response.text)["files"][0]["_object_name"]
     assert f"{train_creation_response_dict['train_id']}/{entrypoint_name}" == entrypoint_object_name
 
     # set entrypoint in config
     add_entrypoint_to_config_response = client.put(
-        f"/api/localTrains/addEntrypoint/{train_creation_response_dict['train_id']}/{entrypoint_name}")
+        f"/api/localTrains/{train_creation_response_dict['train_id']}/{entrypoint_name}/addEntrypoint")
     assert add_entrypoint_to_config_response.status_code == 200, add_entrypoint_to_config_response.json
 
     # start local train run
@@ -131,10 +135,9 @@ def test_create_and_run_local_train( ):
         time.sleep(10)
         # get uploded files and test if entrypoint was stored
     files_uploded_response = client.get(
-        f"/api/localTrains/getAllUploadedFileNames/{train_creation_response_dict['train_id']}")
+        f"/api/localTrains/{train_creation_response_dict['train_id']}/getAllUploadedFileNames")
     assert files_uploded_response.status_code == 200, files_uploded_response.json
-    #Download files
+    # Download files
 
     results_object_name = json.loads(files_uploded_response.text)["files"][1]["_object_name"]
     assert f"{train_creation_response_dict['train_id']}/results.tar" == results_object_name
-
