@@ -21,7 +21,7 @@ default_args = {
 }
 
 TRAIN_PATH = "/opt/pht_train"
-RESULT_PATH = "/opt/pht_result"
+RESULT_PATH = "/opt/pht_results"
 CONFIG_PATH = "/opt/train_config.json"
 
 
