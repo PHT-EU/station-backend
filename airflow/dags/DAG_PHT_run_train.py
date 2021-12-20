@@ -203,7 +203,7 @@ def run_pht_train():
         # wait for the execution to finish and output the container logs
         container_output = container.wait()
         exit_code = container_output["StatusCode"]
-        print(f"Container logs: \n\n {container.logs().encode('utf-8')}")
+        print(f"Container logs: \n\n {container.logs().decode('utf-8')}")
         if exit_code != 0:
             raise ValueError(f"The train execution returned a non zero exit code: {exit_code}")
 
