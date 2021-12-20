@@ -270,8 +270,6 @@ async def get_file(train_id: str, file_name: str):
     return Response(file)
 
 
-
-
 @router.get("/{train_id}/getLogs")
 def get_logs(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
