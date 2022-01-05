@@ -24,7 +24,7 @@ def docker_train_config():
             "env": [{
                 "key": "FHIR_ADDRESS",
                 "value": "test_address"
-                }
+            }
             ],
             "volumes": [{
                 "host_path": "path/on/host",
@@ -172,3 +172,59 @@ def test_get_config_for_train(train_id):
     response = client.get(f"/api/trains/docker/{new_train_id}/config")
 
     assert response.status_code == 404
+
+
+def test_create_train_with_config(docker_train_config):
+    # assign existing config
+    response = client.post(
+        "/api/trains/docker",
+        json={
+            "train_id": "with_existing_config",
+            "config": 1
+        }
+    )
+    assert response.status_code == 200, response.text
+
+    assert response.json()["config"]["name"] == "updated name"
+
+    # fails with unknown config id
+    response = client.post(
+        "/api/trains/docker",
+        json={
+            "train_id": "config does not exist",
+            "config": 3213
+        }
+    )
+    assert response.status_code == 404, response.text
+
+    new_config = {
+        "name": "new config",
+        "airflow_config": {
+            "env": [{
+                "key": "FHIR_ADDRESS",
+                "value": "test_address"
+            }
+            ],
+            "volumes": [{
+                "host_path": "path/on/host",
+                "container_path": "path/in/container",
+                "mode": "ro"
+            }]
+
+        },
+
+        "auto_execute": False
+    }
+
+    response = client.post(
+        "/api/trains/docker",
+        json={
+            "train_id": "with_new_config",
+            "name": "train with new config",
+            "config": new_config
+        }
+    )
+    assert response.status_code == 200
+    print(response.json())
+
+    response.json()["config"]["name"] = "new config"
