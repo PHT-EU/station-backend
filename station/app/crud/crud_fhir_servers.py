@@ -15,10 +15,6 @@ class CRUDFHIRServers(CRUDBase[FHIRServer, FHIRServerCreate, FHIRServerUpdate]):
         # Add encrypted values to the db
         return super().create(db, obj_in=encrypted_in)
 
-    def get_multi(self, db: Session, *, skip: int = 0, limit: int = 100) -> List[ModelType]:
-        fhir_servers = super().get_multi(db, skip=skip, limit=limit)
-        return fhir_servers
-
     def update(self, db: Session, *, db_obj: ModelType, obj_in: Union[UpdateSchemaType, Dict[str, Any]]) -> ModelType:
         obj_in = self.encrypt_sensitive_values(obj_in)
         return super().update(db, db_obj=db_obj, obj_in=obj_in)

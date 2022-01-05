@@ -21,11 +21,11 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         @return: local train object
         """
         # if no name is given in the local train the uid  is set as train id and train name
-        if obj_in is None:
-            id = str(uuid.uuid4())
-            train = LocalTrain(train_id=id,
-                               train_name=id,
-                               airflow_config_json=self._create_emty_config(id)
+        if obj_in.train_name is None:
+            train_id = str(uuid.uuid4())
+            train = LocalTrain(train_id=train_id,
+                               train_name=train_id,
+                               airflow_config_json=self._create_emty_config(train_id)
                                )
         else:
             train_id = str(uuid.uuid4())

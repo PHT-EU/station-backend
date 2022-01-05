@@ -1,3 +1,5 @@
+from builtins import str
+
 from sqlalchemy.orm import Session
 from typing import List
 from fastapi import HTTPException
@@ -8,7 +10,6 @@ from .base import CRUDBase, ModelType
 
 from station.app.models.docker_trains import DockerTrain, DockerTrainConfig, DockerTrainState
 from station.app.schemas.docker_trains import DockerTrainCreate, DockerTrainUpdate
-
 
 
 # TODO improve handling of proposals
@@ -66,6 +67,7 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             trains = db.query(DockerTrain).filter(DockerTrain.is_active == active).all()
         return trains
 
+    # todo maybe remove for new solution by tyra
     def add_if_not_exists(self, db: Session, train_id: str, created_at: str = None):
         db_train = self.get_by_train_id(db, train_id)
         if not db_train:
@@ -76,4 +78,4 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             db.commit()
 
 
-docker_train = CRUDDockerTrain(DockerTrain)
+docker_trains = CRUDDockerTrain(DockerTrain)
