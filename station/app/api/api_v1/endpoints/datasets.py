@@ -1,7 +1,7 @@
 from typing import Any, List
 import pandas as pd
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from station.app.api import dependencies
 
 from station.app.schemas.datasets import DataSet, DataSetCreate, DataSetUpdate

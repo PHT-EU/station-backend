@@ -21,7 +21,7 @@ def get_available_trains(limit: int = 0, db: Session = Depends(dependencies.get_
     return db_trains
 
 
-@router.post("/trains/docker", response_model=DockerTrain)
+@router.post("", response_model=DockerTrain)
 def register_train(create_msg: DockerTrainCreate, db: Session = Depends(dependencies.get_db)):
     if docker_train.get_by_train_id(db, train_id=create_msg.train_id):
         raise HTTPException(status_code=400, detail=f"Train with id '{create_msg.train_id}' already exists.")
@@ -44,13 +44,7 @@ def run_docker_train(train_id: str, run_config: DockerTrainExecution, db: Sessio
     return run_id
 
 
-@router.get("/trains/docker/{train_id}/run")
-def get_latest_train_execution_result(train_id: str, db: Session = Depends(dependencies.get_db)):
-    # TODO get execution details from db or airflow -> use airflow client
-    pass
-
-
-@router.get("/trains/docker/{train_id}/config", response_model=DockerTrainConfig)
+@router.get("/{train_id}/config", response_model=DockerTrainConfig)
 def get_config_for_train(train_id: str, db: Session = Depends(dependencies.get_db)):
     train = docker_train.get_by_train_id(db, train_id)
     if not train.config:
@@ -58,7 +52,7 @@ def get_config_for_train(train_id: str, db: Session = Depends(dependencies.get_d
     return train.config
 
 
-@router.post("/trains/docker/{train_id}/config/{config_id}", response_model=DockerTrain)
+@router.post("/{train_id}/config/{config_id}", response_model=DockerTrain)
 def assign_config_to_docker_train(train_id: str, config_id: int, db: Session = Depends(dependencies.get_db)):
     train = docker_train.get_by_train_id(db, train_id=train_id)
     if not train:
@@ -73,6 +67,7 @@ def assign_config_to_docker_train(train_id: str, config_id: int, db: Session = D
 
 @router.get("/trains/docker/{train_id}/state")
 def get_state_for_train(train_id: str, db: Session = Depends(dependencies.get_db)):
+    # todo
     pass
 
 
@@ -82,7 +77,7 @@ def get_all_docker_train_configs(db: Session = Depends(dependencies.get_db), ski
     return db_configs
 
 
-@router.post("/trains/docker/config", response_model=DockerTrainConfig)
+@router.post("/config", response_model=DockerTrainConfig)
 def add_docker_train_configuration(config_in: DockerTrainConfigCreate, db: Session = Depends(dependencies.get_db)):
     if docker_train_config.get_by_name(db, name=config_in.name):
         raise HTTPException(status_code=400, detail="A config with the given name already exists.")

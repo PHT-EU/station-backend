@@ -11,6 +11,8 @@ from station.app.fhir.server import fhir_server_from_db
 router = APIRouter()
 
 
+# todo error handling
+
 @router.get("/servers", response_model=List[FHIRServer])
 def get_fhir_servers(limit: int = 100, skip: int = 0, db: Session = Depends(dependencies.get_db)):
     db_fhir_servers = fhir_servers.get_multi(db=db, skip=skip, limit=limit)
@@ -23,13 +25,7 @@ def add_fhir_server(fhir_server_in: FHIRServerCreate, db: Session = Depends(depe
     return db_fhir_server
 
 
-@router.get("/server/{server_id}", response_model=FHIRServer)
-def get_fhir_server(server_id: int, db: Session = Depends(dependencies.get_db)):
-    db_fhir_server = fhir_servers.get(db=db, id=server_id)
-    return db_fhir_server
-
-
-@router.put("/server/{server_id}", response_model=FHIRServer)
+@router.put("/{server_id}", response_model=FHIRServer)
 def update_fhir_server(server_id: int, update_in: FHIRServerUpdate, db: Session = Depends(dependencies.get_db)):
     db_fhir_server = fhir_servers.get(db, id=server_id)
     db_fhir_server = fhir_servers.update(db=db, db_obj=db_fhir_server, obj_in=update_in)
@@ -38,9 +34,14 @@ def update_fhir_server(server_id: int, update_in: FHIRServerUpdate, db: Session 
 
 @router.delete("/server/{server_id}", status_code=202)
 def delete_fhir_server(server_id: int, db: Session = Depends(dependencies.get_db)):
-    fhir_servers.remove(db=db, id=server_id)
-    return "Success"
+    deleted_server = fhir_servers.remove(db=db, id=server_id)
+    return deleted_server
 
+
+@router.get("/{server_id}", response_model=FHIRServer)
+def get_fhir_server(server_id: int, db: Session = Depends(dependencies.get_db)):
+    db_fhir_server = fhir_servers.get(db=db, id=server_id)
+    return db_fhir_server
 
 @router.get("/server/{server_id}/summary", response_model=ServerSummary)
 def fhir_server_summary(server_id: int, refresh: bool = True, db: Session = Depends(dependencies.get_db)):
