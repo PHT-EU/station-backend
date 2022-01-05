@@ -12,4 +12,4 @@ api_router.include_router(datasets.router, prefix="/datasets", tags=["Datasets"]
 api_router.include_router(station_status.router, prefix="/station/status", tags=["Station"])
 api_router.include_router(local_trains.router, prefix="/localTrains", tags=["Run Local Trains"])
 api_router.include_router(airflow.router, prefix="/airflow", tags=["Airflow"])
-api_router.include_router(fhir.router, prefix="/fhir", tags=["FHIR"])
+api_router.include_router(fhir.router, prefix="/fhir/server", tags=["FHIR"])

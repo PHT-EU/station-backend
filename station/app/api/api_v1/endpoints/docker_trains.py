@@ -12,7 +12,7 @@ from station.app.crud.crud_train_configs import docker_train_config
 router = APIRouter()
 
 
-@router.get("/trains/docker", response_model=List[DockerTrain])
+@router.get("", response_model=List[DockerTrain])
 def get_available_trains(limit: int = 0, db: Session = Depends(dependencies.get_db)):
     if limit != 0:
         db_trains = docker_train.get_multi(db, limit=limit)
@@ -29,7 +29,7 @@ def register_train(create_msg: DockerTrainCreate, db: Session = Depends(dependen
     return db_train
 
 
-@router.get("/trains/docker/{train_id}", response_model=DockerTrain)
+@router.get("/{train_id}", response_model=DockerTrain)
 def get_train_by_train_id(train_id: str, db: Session = Depends(dependencies.get_db)):
     db_train = docker_train.get_by_train_id(db, train_id)
     if not db_train:
@@ -37,7 +37,7 @@ def get_train_by_train_id(train_id: str, db: Session = Depends(dependencies.get_
     return db_train
 
 
-@router.post("/trains/docker/{train_id}/run")
+@router.post("/{train_id}/run")
 def run_docker_train(train_id: str, run_config: DockerTrainExecution, db: Session = Depends(dependencies.get_db)):
     # todo check with tyra
     run_id = docker_trains.run_train(db, train_id, run_config)
@@ -65,13 +65,14 @@ def assign_config_to_docker_train(train_id: str, config_id: int, db: Session = D
     train = docker_train_config.assign_to_train(db, train_id, config.id)
     return train
 
-@router.get("/trains/docker/{train_id}/state")
+
+@router.get("/{train_id}/state")
 def get_state_for_train(train_id: str, db: Session = Depends(dependencies.get_db)):
     # todo
     pass
 
 
-@router.get("/trains/docker/configs/all", response_model=List[DockerTrainConfig])
+@router.get("/configs/all", response_model=List[DockerTrainConfig])
 def get_all_docker_train_configs(db: Session = Depends(dependencies.get_db), skip: int = 0, limit: int = 100):
     db_configs = docker_train_config.get_multi(db, skip=skip, limit=limit)
     return db_configs
@@ -85,7 +86,7 @@ def add_docker_train_configuration(config_in: DockerTrainConfigCreate, db: Sessi
     return config
 
 
-@router.put("/trains/docker/config/{config_id}", response_model=DockerTrainConfig)
+@router.put("/config/{config_id}", response_model=DockerTrainConfig)
 def update_docker_train_configuration(update_config: DockerTrainConfigUpdate, config_id: int,
                                       db: Session = Depends(dependencies.get_db)):
     old_config = docker_train_config.get(db, config_id)
@@ -95,7 +96,7 @@ def update_docker_train_configuration(update_config: DockerTrainConfigUpdate, co
     return config
 
 
-@router.get("/trains/docker/config/{config_id}", response_model=DockerTrainConfig)
+@router.get("/config/{config_id}", response_model=DockerTrainConfig)
 def get_docker_train_configuration(config_id: int, db: Session = Depends(dependencies.get_db)):
     config = docker_train_config.get(db, config_id)
     if not config:

@@ -4,7 +4,7 @@ from station.app.schemas.airflow import AirflowInformation, AirflowTaskLog
 router = APIRouter()
 
 
-@router.get("/getAirflowRun/{run_id}/{dag_id}" ,response_model=AirflowInformation)
+@router.get("/getAirflowRun/{run_id}/{dag_id}", response_model=AirflowInformation)
 def get_airflow_run_information(run_id: str, dag_id: str):
     """
     Get information about one airflow DAG execution.
