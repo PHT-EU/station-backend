@@ -1,11 +1,12 @@
 import uuid
 import os
+import asyncio
 from datetime import datetime
 from sqlalchemy.orm import Session
 from fastapi import UploadFile
-from station.app.crud.base import CRUDBase, ModelType
-import asyncio
 
+
+from station.app.crud.base import CRUDBase, ModelType
 from station.app.models.local_trains import LocalTrain, LocalTrainExecution
 from station.app.schemas.local_trains import LocalTrainCreate, LocalTrainUpdate, LocalTrainRun
 from station.app.local_train_minio.LocalTrainMinIO import train_data
@@ -108,7 +109,6 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         @return:
         """
         config = self.get_config(db, train_id)
-        # TODO get from env
         harbor_api = os.getenv("HARBOR_URL")
         harbor_url = harbor_api.split("/")[2]
         config["repository"] = f"{harbor_url}/{repository}"

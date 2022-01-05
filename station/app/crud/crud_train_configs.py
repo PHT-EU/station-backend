@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from typing import List, Union, Dict, Any
+from typing import Union, Dict, Any
 from datetime import datetime
 
 from .base import CRUDBase, ModelType, UpdateSchemaType
@@ -23,16 +23,6 @@ class CRUDDockerTrainConfig(CRUDBase[DockerTrainConfig, DockerTrainConfigCreate,
         db.commit()
         db.refresh(db_config)
         return db_config
-
-    def get_multi(self, db: Session, *, skip: int = 0, limit: int = 100) -> List[ModelType]:
-        db_configs = db.query(DockerTrainConfig).offset(skip).limit(limit).all()
-        return db_configs
-
-    def get_by_train_id(self, db: Session, train_id: str) -> DockerTrainConfig:
-        train = db.query(DockerTrain).filter(DockerTrain.train_id == train_id).first()
-
-        config = train.config
-        return config
 
     def assign_to_train(self, db: Session, train_id: str, config_id: int) -> DockerTrain:
         train = docker_train.get_by_train_id(db, train_id)

@@ -2,12 +2,13 @@ from sqlalchemy.orm import Session
 from typing import List
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
+from dateutil import parser
 
 from .base import CRUDBase, ModelType
 
 from station.app.models.docker_trains import DockerTrain, DockerTrainConfig, DockerTrainState
 from station.app.schemas.docker_trains import DockerTrainCreate, DockerTrainUpdate
-from dateutil import parser
+
 
 
 # TODO improve handling of proposals

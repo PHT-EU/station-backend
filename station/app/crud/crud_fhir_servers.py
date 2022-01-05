@@ -1,5 +1,4 @@
 from typing import Any, Union, Dict, List
-
 from sqlalchemy.orm import Session
 
 from .base import CRUDBase, CreateSchemaType, ModelType, UpdateSchemaType
