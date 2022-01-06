@@ -52,7 +52,7 @@ def test_docker_train_create(train_id):
     assert json_response["train_id"] == train_id
     print(json_response)
     assert json_response["state"]["num_executions"] == 0
-    assert not json_response["state"]["status"]
+    assert json_response["state"]["status"] == "inactive"
 
 
 def test_docker_train_create_fails(train_id):
@@ -228,3 +228,26 @@ def test_create_train_with_config(docker_train_config):
     print(response.json())
 
     response.json()["config"]["name"] = "new config"
+
+
+def test_get_train_state():
+
+    train_id = "test_train_state"
+    response = client.post(
+        "/api/trains/docker",
+        json={
+            "train_id": train_id,
+        }
+    )
+    assert response.status_code == 200, response.text
+
+    response = client.get(f"/api/trains/docker/{train_id}/state")
+    assert response.status_code == 200, response.text
+    assert response.json()["status"] == "inactive"
+
+
+def test_update_train_state(train_id):
+    response = client.put(f"/api/trains/docker/{train_id}/state", json={"status": "active", "num_executions": 1})
+    assert response.status_code == 200, response.text
+    assert response.json()["status"] == "active"
+    assert response.json()["num_executions"] == 1

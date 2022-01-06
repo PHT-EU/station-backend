@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from station.app.api import dependencies
 from station.clients.airflow import docker_trains
 from station.app.schemas.docker_trains import DockerTrain, DockerTrainCreate, DockerTrainConfig, \
-    DockerTrainConfigCreate, DockerTrainConfigUpdate, DockerTrainExecution
+    DockerTrainConfigCreate, DockerTrainConfigUpdate, DockerTrainExecution, DockerTrainState
 from station.app.crud.crud_docker_trains import docker_trains
 from station.app.crud.crud_train_configs import docker_train_config
 
@@ -66,10 +66,16 @@ def assign_config_to_docker_train(train_id: str, config_id: int, db: Session = D
     return train
 
 
-@router.get("/{train_id}/state")
+@router.get("/{train_id}/state", response_model=DockerTrainState)
 def get_state_for_train(train_id: str, db: Session = Depends(dependencies.get_db)):
-    # todo
-    pass
+    state = docker_trains.read_train_state(db, train_id)
+    return state
+
+
+@router.put("/{train_id}/state", response_model=DockerTrainState)
+def update_state_for_train(train_id: str, state: DockerTrainState, db: Session = Depends(dependencies.get_db)):
+    state = docker_trains.update_train_state(db, train_id, state)
+    return state
 
 
 @router.get("/configs/all", response_model=List[DockerTrainConfig])
