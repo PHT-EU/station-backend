@@ -60,7 +60,7 @@ def test_list_fhir_servers():
     assert response.status_code == 201
     assert response.json()["name"] == "Test Server"
     assert response.json()["api_address"] == "http://test.com"
-    response = client.get("/api/fhir/servers")
+    response = client.get("/api/fhir/server")
     assert response.status_code == 200
     assert response.json()[0]["name"] == "Test Server"
     assert response.json()[0]["api_address"] == "http://test.com"

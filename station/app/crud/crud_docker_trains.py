@@ -9,7 +9,7 @@ from dateutil import parser
 from .base import CRUDBase, ModelType
 
 from station.app.models.docker_trains import DockerTrain, DockerTrainConfig, DockerTrainState
-from station.app.schemas.docker_trains import DockerTrainCreate, DockerTrainUpdate
+from station.app.schemas.docker_trains import DockerTrainCreate, DockerTrainUpdate, DockerTrainConfigCreate
 
 
 # TODO improve handling of proposals
@@ -18,17 +18,13 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
 
     def create(self, db: Session, *, obj_in: DockerTrainCreate) -> ModelType:
 
-        if obj_in.config_name:
-            db_config: DockerTrainConfig = db.query(DockerTrainConfig).filter(
-                DockerTrainConfig.name == obj_in.config_name
-            ).first()
-
+        if isinstance(obj_in.config, int):
+            db_config = db.query(DockerTrainConfig).filter(DockerTrainConfig.id == obj_in.config).first()
+            if not db_config:
+                raise HTTPException(status_code=404, detail=f"Config {obj_in.config} not found")
             config_id = db_config.id
 
-        elif obj_in.config_id:
-            config_id = obj_in.config_id
-
-        elif obj_in.config:
+        elif isinstance(obj_in.config, DockerTrainConfigCreate):
             db_config: DockerTrainConfig = db.query(DockerTrainConfig).filter(
                 DockerTrainConfig.name == obj_in.config.name
             ).first()
