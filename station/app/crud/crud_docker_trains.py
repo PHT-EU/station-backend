@@ -10,6 +10,7 @@ from .base import CRUDBase, ModelType
 
 from station.app.models.docker_trains import DockerTrain, DockerTrainConfig, DockerTrainState
 from station.app.schemas.docker_trains import DockerTrainCreate, DockerTrainUpdate, DockerTrainConfigCreate
+from station.app.schemas.docker_trains import DockerTrainState as DockerTrainStateSchema
 
 
 # TODO improve handling of proposals
@@ -45,6 +46,8 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             config_id=config_id
         )
         db.add(db_train)
+        db.commit()
+        db.refresh(db_train)
         train_state = DockerTrainState(train_id=db_train.id)
         db.add(train_state)
         db.commit()
@@ -72,6 +75,26 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             train_state = DockerTrainState(train_id=db_train.id)
             db.add(train_state)
             db.commit()
+
+    def read_train_state(self, db: Session, train_id: str) -> DockerTrainState:
+        db_train = self.get_by_train_id(db, train_id)
+        if not db_train:
+            raise HTTPException(status_code=404, detail=f"Train {train_id} not found")
+        state = db_train.state
+        return state
+
+    def update_train_state(self, db: Session, train_id: str, state_in: DockerTrainStateSchema) -> DockerTrainState:
+        db_state = self.read_train_state(db, train_id)
+        if not db_state:
+            raise HTTPException(status_code=404, detail=f"Train State for train: {train_id} not found")
+        db_state.num_executions = state_in.num_executions
+        db_state.last_execution = state_in.last_execution
+        db_state.status = state_in.status
+
+        db.commit()
+        db.refresh(db_state)
+
+        return db_state
 
 
 docker_trains = CRUDDockerTrain(DockerTrain)
