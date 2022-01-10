@@ -66,7 +66,7 @@ services:
     environment:
       BASE_URL: "127.0.0.1:8082"
       JAVA_TOOL_OPTIONS: "-Xmx2g"
-      OPENID_PROVIDER_URL: "https://keycloak-pht.tada5hi.net/auth/realms/blaze"
+      OPENID_PROVIDER_URL: "https://dev-keycloak.grafm.de/auth/realms/blaze"
     ports:
       - "8082:8080"
 

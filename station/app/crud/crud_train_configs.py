@@ -1,12 +1,12 @@
 from sqlalchemy.orm import Session
-from typing import List, Union, Dict, Any
+from typing import Union, Dict, Any
 from datetime import datetime
 
 from .base import CRUDBase, ModelType, UpdateSchemaType
 
 from station.app.models.docker_trains import DockerTrain, DockerTrainConfig
 from station.app.schemas.docker_trains import DockerTrainConfigCreate, DockerTrainConfigUpdate
-from station.app.crud.crud_docker_trains import docker_train
+from station.app.crud import docker_trains
 
 
 class CRUDDockerTrainConfig(CRUDBase[DockerTrainConfig, DockerTrainConfigCreate, DockerTrainConfigUpdate]):
@@ -24,18 +24,8 @@ class CRUDDockerTrainConfig(CRUDBase[DockerTrainConfig, DockerTrainConfigCreate,
         db.refresh(db_config)
         return db_config
 
-    def get_multi(self, db: Session, *, skip: int = 0, limit: int = 100) -> List[ModelType]:
-        db_configs = db.query(DockerTrainConfig).offset(skip).limit(limit).all()
-        return db_configs
-
-    def get_by_train_id(self, db: Session, train_id: str) -> DockerTrainConfig:
-        train = db.query(DockerTrain).filter(DockerTrain.train_id == train_id).first()
-
-        config = train.config
-        return config
-
     def assign_to_train(self, db: Session, train_id: str, config_id: int) -> DockerTrain:
-        train = docker_train.get_by_train_id(db, train_id)
+        train = docker_trains.get_by_train_id(db, train_id)
         train.config_id = config_id
         train.updated_at = datetime.now()
         db.commit()

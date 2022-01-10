@@ -12,14 +12,11 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
 
     def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
         obj_in_data = jsonable_encoder(obj_in)
-        print(obj_in_data)
         db_obj = self.model(**obj_in_data)
         if obj_in_data["storage_type"] == "minio":
             self._extract_mino_information(db_obj, obj_in_data)
         elif obj_in_data["storage_type"] == "csv":
             self._extract_csv_information(db_obj, obj_in_data)
-        elif obj_in_data["storage_type"] == "fhir":
-            self._extract_fhir_information(db_obj, obj_in_data)
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
@@ -40,11 +37,6 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
             class_distribution = (csv_df[obj_in_data["target_field"]].value_counts() / n_items).to_json()
             db_obj.class_distribution = class_distribution
         return db_obj
-
-    def _extract_fhir_information(self, db_obj, obj_in_data):
-        # TODO finish when fhir client has the functinalty
-
-        pass
 
 
 datasets = CRUDDatasets(DataSet)
