@@ -30,7 +30,7 @@ def run(train_id: str, dag_id: str, db: Session = Depends(dependencies.get_db)):
     return {"run_id": run_id}
 
 
-@router.get("/getAirflowRun/{run_id}/{dag_id}", response_model=AirflowInformation)
+@router.get("/AirflowRun/{run_id}/{dag_id}", response_model=AirflowInformation)
 def get_airflow_run_information(run_id: str, dag_id: str):
     """
     Get information about one airflow DAG execution.
@@ -42,7 +42,7 @@ def get_airflow_run_information(run_id: str, dag_id: str):
     return run_info
 
 
-@router.get("/getAirflowTaskLog/{dag_id}/{run_id}/{task_id}/{task_try_number}", response_model=AirflowTaskLog)
+@router.get("/AirflowTaskLog/{dag_id}/{run_id}/{task_id}/{task_try_number}", response_model=AirflowTaskLog)
 def get_airflow_task_log(dag_id: str, run_id: str, task_id: str, task_try_number: int):
     """
     Get log of a task in a DAG execution.

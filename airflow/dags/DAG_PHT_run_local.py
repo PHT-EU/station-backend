@@ -96,7 +96,6 @@ def run_local():
         # create minIO client
         docker_client = docker.from_env()
         minio_client = MinioClient()
-
         # create the docker File like object that can be added to the master image
         docker_file = f'''
                             FROM {train_state_dict["img"]}
