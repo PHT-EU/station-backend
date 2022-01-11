@@ -79,10 +79,9 @@ class StationConfig(BaseModel):
     fernet_key: Optional[SecretStr] = os.getenv("FERNET_KEY")
     registry: RegistrySettings
     auth: Optional[AuthConfig] = None
-    developer_mode: bool = False
 
     @classmethod
-    def from_yaml(cls) -> "StationConfig":
+    def from_yaml(cls, path) -> "StationConfig":
         pass
 
 
@@ -94,7 +93,7 @@ class Settings:
     def __init__(self, config_path: str = None):
         # todo remove dotenv
         load_dotenv(find_dotenv())
-        print(f"{Emojis.INFO}Setting up station...")
+        print(f"{Emojis.INFO}Setting up station backend...")
         if config_path:
             self.config_path = config_path
         else:
@@ -104,6 +103,9 @@ class Settings:
         self._check_config_path()
         self._setup_runtime_environment()
         self._parse_environment_to_config()
+
+        StationConfig.validate(**self.config.dict())
+        print(self.config)
 
     @classmethod
     def from_env(cls) -> 'Settings':
@@ -116,7 +118,7 @@ class Settings:
             self.config = StationConfig(**json_config)
 
         elif file_type.lower() in ['yaml', "yml"]:
-            pass
+            self.config = StationConfig.from_yaml(self.config_path)
 
     def get_fernet(self) -> Fernet:
         if self.config.fernet_key is None:
@@ -137,7 +139,6 @@ class Settings:
             # construct a placeholder config to fill with environment and default values
             self.config = StationConfig.construct()
         # Parse the config file
-
         else:
             print(f"\t{Emojis.SUCCESS}   Config file found at {self.config_path}.")
             self._config_file = True
@@ -145,20 +146,26 @@ class Settings:
             self.config = config
 
     def _setup_runtime_environment(self):
-        environment = os.getenv(StationEnvironmentVariables.ENVIRONMENT.value)
-        if environment:
-            if environment == StationRuntimeEnvironment.DEVELOPMENT.value:
-                environment_var = StationEnvironmentVariables.ENVIRONMENT.value
-                print(
-                    f"{Emojis.WARNING}Development environment detected,"
-                    f" set environment variable {environment_var} to 'production' for production mode.")
-            elif environment == StationRuntimeEnvironment.PRODUCTION.value:
-                print(f"{Emojis.INFO}Running in production environment.")
-            else:
-                raise ValueError(f"{Emojis.ERROR}   Invalid value ({environment}) for environment"
+        environment_var = os.getenv(StationEnvironmentVariables.ENVIRONMENT.value)
+        # if config variable is in environment variables use it
+        if environment_var:
+            try:
+                runtime_environment = StationRuntimeEnvironment(environment_var)
+                if self.config.environment:
+                    print(f"{Emojis.INFO}   Overriding environment variable with environment specification.")
+            except KeyError as e:
+                raise ValueError(f"{Emojis.ERROR}   Invalid value ({environment_var}) for environment"
                                  f" in env var {StationEnvironmentVariables.ENVIRONMENT.value}.")
-
-            self.config.environment = StationRuntimeEnvironment(environment)
+        else:
+            runtime_environment = self.config.environment
+        if runtime_environment == StationRuntimeEnvironment.PRODUCTION:
+            print(f"{Emojis.INFO}Running in production environment.")
+        elif runtime_environment == StationRuntimeEnvironment.DEVELOPMENT:
+            print(
+                f"{Emojis.WARNING}Development environment detected,"
+                f" set environment variable '{StationEnvironmentVariables.ENVIRONMENT.value}' "
+                f"to 'production' for production mode.")
+        self.config.environment = StationRuntimeEnvironment(environment_var)
 
     def _parse_environment_to_config(self):
         pass
