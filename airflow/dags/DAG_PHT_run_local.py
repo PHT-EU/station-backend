@@ -1,3 +1,4 @@
+from pprint import pprint
 import asyncio
 import tarfile
 import os
@@ -206,6 +207,7 @@ def run_local():
             # save logs for errors that happened during query execution
             with open(f'{train_state_dict["build_dir"]}log.txt', 'a+') as f:
                 f.write(e)
+                print(f"logs_query_start({e})logs_end")
 
         return train_state_dict
 
@@ -225,15 +227,24 @@ def run_local():
         container = docker_client.containers.run("local_train", environment=environment, volumes=volumes,
                                                  detach=True)
         container.wait()
-        os.mkdir(train_state_dict["build_dir"])
-        with open(f'{train_state_dict["build_dir"]}results.tar', 'wb') as f:
-            bits, stat = container.get_archive(RESULT_PATH)
-            for chunk in bits:
-                f.write(chunk)
+        bits, stat = container.get_archive(RESULT_PATH)
+        results = BytesIO()
+        for chunk in bits:
+            results.write(chunk)
+        results.seek(0)
 
+        minio_client = MinioClient()
+        asyncio.run(
+            minio_client.store_files(bucket=train_state_dict["bucket_name"],
+                                     name=f"{train_state_dict['train_id']}/results.tar", file=results))
+
+        if not os.path.isdir(train_state_dict["build_dir"]):
+            os.mkdir(train_state_dict["build_dir"])
+        logs = container.logs().decode("utf-8")
+        print(f"logs_container_start({logs})logs_end")
         with open(f'{train_state_dict["build_dir"]}log.txt', 'a+') as f:
-            logs = container.logs().decode("utf-8")
             f.write(logs)
+
         container.remove(v=True, force=True)
         return train_state_dict
 
@@ -245,13 +256,9 @@ def run_local():
         @param dict train_state_dict: train parameters
         @return: dict train_state_dict: train parameters
         """
-        # todo from env
+
         minio_client = MinioClient()
-        # Store results
-        with open(f'{train_state_dict["build_dir"]}results.tar', 'rb') as results_tar:
-            asyncio.run(
-                minio_client.store_files(bucket=train_state_dict["bucket_name"],
-                                         name=f"{train_state_dict['train_id']}/results.tar", file=results_tar))
+
         # Store logs
         with open(f'{train_state_dict["build_dir"]}log.txt', 'rb') as logs:
             asyncio.run(
