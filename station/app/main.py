@@ -1,14 +1,19 @@
 from fastapi import FastAPI
-
-from station.app.api.api_v1.api import api_router
 from dotenv import load_dotenv, find_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
+from station.app.api.api_v1.api import api_router
+from station.app.logger import init_logging
+
 load_dotenv(find_dotenv())
+
+
 app = FastAPI(
     title="PHT Station"
 )
 
+# Setup logging
+# init_logging()
 # TODO remove full wildcard for production
 origins = [
     "http://localhost:8080",
