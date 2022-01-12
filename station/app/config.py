@@ -83,6 +83,7 @@ class StationConfig(BaseModel):
     fernet_key: Optional[SecretStr] = None
     registry: RegistrySettings
     auth: Optional[AuthConfig] = None
+    db: Optional[SecretStr] = os.getenv(StationEnvironmentVariables.STATION_DB_URL.value, "sqlite:///station.db")
 
     @classmethod
     def from_file(cls, path: str) -> "StationConfig":
@@ -326,8 +327,7 @@ class Settings:
         elif env_fernet_key:
             self.config.fernet_key = env_fernet_key
 
-    def _check_env_var_and_replace_config_attr(self, env_var: StationEnvironmentVariables, config_attr: str):
-        pass
-
 
 settings = Settings()
+# todo remove for releases
+settings.setup()

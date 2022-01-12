@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 from dotenv import load_dotenv, find_dotenv
 
@@ -14,7 +15,15 @@ app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
 
 
-def test_fhir_server_encrypted_storage():
+@pytest.fixture()
+def station_settings():
+    load_dotenv(find_dotenv())
+    settings = Settings()
+    settings.setup()
+    return settings
+
+
+def test_fhir_server_encrypted_storage(station_settings):
     load_dotenv(find_dotenv())
 
     db = TestingSessionLocal()
@@ -23,11 +32,10 @@ def test_fhir_server_encrypted_storage():
     obj_in = FHIRServerCreate(**obj_in)
     fhir_server = fhir_servers.create(db, obj_in=obj_in)
 
+    station_fernet = station_settings.get_fernet()
     assert fhir_server.name == "Test Server"
     assert fhir_server.password != "password"
-
-    fernet = Settings.get_fernet()
-    assert fernet.decrypt(fhir_server.password.encode()) == b"password"
+    assert station_fernet.decrypt(fhir_server.password.encode()) == b"password"
 
     db.close()
 

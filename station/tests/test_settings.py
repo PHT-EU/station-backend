@@ -102,3 +102,16 @@ def test_settings_init_env_vars():
         assert settings.config.environment == 'development'
         assert settings.config.auth is None
 
+    with patch.dict(os.environ,
+                    {
+                        'ENVIRONMENT': 'development',
+                        StationEnvironmentVariables.REGISTRY_URL.value: 'http://registry.example.com',
+                        StationEnvironmentVariables.REGISTRY_USER.value: 'test',
+                        StationEnvironmentVariables.REGISTRY_PW.value: 'test',
+                    }):
+        settings = Settings()
+        settings.setup()
+        assert settings.config.environment == 'development'
+        assert settings.config.registry.address == 'http://registry.example.com'
+        assert settings.config.registry.user == 'test'
+        assert settings.config.registry.password.get_secret_value() == 'test'
