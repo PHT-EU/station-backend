@@ -4,14 +4,25 @@ from unittest.mock import patch
 import os
 
 from station.app.config import Settings
+from station.app.config import StationEnvironmentVariables
 
 
 def test_settings_init_env_vars():
     # Test runtime environment variables
-    with patch.dict(os.environ, {'ENVIRONMENT': 'production'}):
+    with patch.dict(os.environ,
+                    {
+                        'ENVIRONMENT': 'production',
+                        StationEnvironmentVariables.AUTH_SERVER_HOST.value: 'http://auth.example.com',
+                        StationEnvironmentVariables.AUTH_SERVER_PORT.value: '3010',
+                        StationEnvironmentVariables.AUTH_ROBOT_ID.value: 'robot',
+                        StationEnvironmentVariables.AUTH_ROBOT_SECRET.value: 'robot_secret',
+                    }):
         settings = Settings()
         settings.setup()
         assert settings.config.environment == 'production'
+        assert settings.config.auth.host == 'http://auth.example.com'
+        assert settings.config.auth.port == 3010
+        assert settings.config.auth.robot_id == 'robot'
 
     with patch.dict(os.environ, {'ENVIRONMENT': 'development'}):
         settings = Settings()
@@ -66,4 +77,28 @@ def test_settings_init_env_vars():
                         }):
             settings = Settings()
             settings.setup()
+
+    with pytest.raises(ValueError):
+        with patch.dict(os.environ,
+                        {
+                            'ENVIRONMENT': 'production',
+                            StationEnvironmentVariables.AUTH_SERVER_HOST.value: '',
+                            StationEnvironmentVariables.AUTH_SERVER_PORT.value: '',
+                            StationEnvironmentVariables.AUTH_ROBOT_ID.value: '',
+                            StationEnvironmentVariables.AUTH_ROBOT_SECRET.value: '',
+                        }):
+            settings = Settings()
+            settings.setup()
+    with patch.dict(os.environ,
+                    {
+                        'ENVIRONMENT': 'development',
+                        StationEnvironmentVariables.AUTH_SERVER_HOST.value: '',
+                        StationEnvironmentVariables.AUTH_SERVER_PORT.value: '',
+                        StationEnvironmentVariables.AUTH_ROBOT_ID.value: '',
+                        StationEnvironmentVariables.AUTH_ROBOT_SECRET.value: '',
+                    }):
+        settings = Settings()
+        settings.setup()
+        assert settings.config.environment == 'development'
+        assert settings.config.auth is None
 

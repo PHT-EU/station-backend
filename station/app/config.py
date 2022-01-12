@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Union, Optional
+from typing import Union, Optional, Tuple
 from cryptography.fernet import Fernet
 from pydantic import BaseModel, AnyHttpUrl, SecretStr
 from enum import Enum
@@ -31,7 +31,8 @@ class StationEnvironmentVariables(Enum):
     CONFIG_PATH = "STATION_CONFIG_PATH"
 
     # auth environment variables
-    AUTH_SERVER_URL = "AUTH_SERVER_URL"
+    AUTH_SERVER_HOST = "AUTH_SERVER_URL"
+    AUTH_SERVER_PORT = "AUTH_SERVER_PORT"
     AUTH_ROBOT_ID = "AUTH_ROBOT_ID"
     AUTH_ROBOT_SECRET = "AUTH_ROBOT_SECRET"
 
@@ -62,8 +63,8 @@ class AirflowSettings(BaseModel):
 class AuthConfig(BaseModel):
     robot_id: str
     robot_secret: SecretStr
-    auth_server_host: Optional[AnyHttpUrl] = "station-auth"
-    auth_server_port: Optional[int] = 3010
+    host: Optional[AnyHttpUrl] = "station-auth"
+    port: Optional[int] = 3010
 
 
 class StationRuntimeEnvironment(str, Enum):
@@ -79,7 +80,7 @@ class StationConfig(BaseModel):
     host: Optional[Union[AnyHttpUrl, str]] = os.getenv(StationEnvironmentVariables.STATION_API_HOST.value, "127.0.0.1")
     port: Optional[int] = os.getenv(StationEnvironmentVariables.STATION_API_PORT.value, 8001)
     environment: Optional[StationRuntimeEnvironment] = StationRuntimeEnvironment.PRODUCTION
-    fernet_key: Optional[SecretStr] = os.getenv("FERNET_KEY")
+    fernet_key: Optional[SecretStr] = None
     registry: RegistrySettings
     auth: Optional[AuthConfig] = None
 
@@ -113,6 +114,7 @@ class Settings:
         self._setup_runtime_environment()
         self._parse_station_environment_variables()
 
+        logger.info(f"Station backend setup successful {Emojis.SUCCESS}")
         return self.config
 
     def get_fernet(self) -> Fernet:
@@ -185,6 +187,116 @@ class Settings:
 
         self._setup_station_api()
         self._setup_fernet()
+        self._setup_station_auth()
+        self._setup_registry_connection()
+
+    def _setup_station_auth(self):
+
+        logger.info(f"{Emojis.INFO}Setting up station authentication...")
+
+        # check if station auth is configured via environment variables
+        env_auth_server, env_auth_port, env_auth_robot, env_auth_robot_secret = self._get_auth_env_vars()
+
+        _auth_server = False
+        # ensure there is an auth server specified in production mode
+        if not (env_auth_server and env_auth_robot and env_auth_robot_secret) or self.config.auth:
+            if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
+                raise ValueError(f"{Emojis.ERROR}   No station auth specified in config or env vars,"
+                                 f" invalid configuration for production")
+
+        # no auth config present at initialization, create a new one
+        elif not self.config.auth and (env_auth_server and env_auth_robot and env_auth_robot_secret):
+            logger.debug(f"{Emojis.INFO}No auth config found, creating new one from env vars.")
+            env_auth_config = AuthConfig(
+                host=env_auth_server,
+                port=env_auth_port,
+                robot_id=env_auth_robot,
+                robot_secret=env_auth_robot_secret
+            )
+
+            self.config.auth = env_auth_config
+            _auth_server = True
+        # if config and env vars exist override the config values with the environment variables
+        elif self.config.auth and (env_auth_server or env_auth_robot or env_auth_robot_secret or env_auth_port):
+            logger.debug(f"Overriding auth server config with env var specifications.")
+            if env_auth_server:
+                self.config.auth.host = env_auth_server
+            if env_auth_port:
+                self.config.auth.port = env_auth_port
+            if env_auth_robot:
+                self.config.auth.robot_id = env_auth_robot
+            if env_auth_robot_secret:
+                self.config.auth.robot_secret = env_auth_robot_secret
+            # validate the overridden config
+            self.config.auth = AuthConfig(**self.config.auth.dict())
+            _auth_server = True
+
+        # log authentication server config and status
+        if _auth_server:
+            logger.info(f"Auth server: url - {self.config.auth.host}:{self.config.auth.port},"
+                        f" robot - {self.config.auth.robot_id}")
+        else:
+            logger.warning(f"{Emojis.WARNING}No auth server specified in config or env vars,"
+                           f" ignoring in development mode")
+
+    def _setup_registry_connection(self):
+        logger.info(f"Setting up registry connection...")
+        env_registry, env_registry_user, env_registry_password = self._get_registry_env_vars()
+
+        # catch attribute error if no registry config is present in config
+        try:
+            registry_config = self.config.registry
+        except AttributeError:
+            registry_config = None
+        _registry_config = False
+        # override registry config if env vars are present and validate afterwards
+        if registry_config and (env_registry and env_registry_user and env_registry_password):
+            logger.debug(f"Overriding registry config with env var specifications.")
+            if env_registry:
+                registry_config.address = env_registry
+            if env_registry_user:
+                registry_config.user = env_registry_user
+            if env_registry_password:
+                registry_config.password = env_registry_password
+            # validate the overridden config
+            registry_config = RegistrySettings(**registry_config.dict())
+        # no registry config found
+        elif not registry_config and not (env_registry and env_registry_user and env_registry_password):
+            _registry_config = False
+        elif not registry_config and (env_registry and env_registry_user and env_registry_password):
+            logger.debug(f"{Emojis.INFO}No registry config found, creating new one from env vars.")
+            registry_config = RegistrySettings(
+                address=env_registry,
+                user=env_registry_user,
+                password=env_registry_password
+            )
+            self.config.registry = registry_config
+        # log registry config and status
+        if registry_config:
+            logger.info(f"Registry: url - {self.config.registry.address}, user - {self.config.registry.user}")
+        else:
+            # raise error if no registry is configured in production mode
+            if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
+                raise ValueError(f"{Emojis.ERROR}   No registry config specified in config or env vars")
+            else:
+                logger.warning(f"No registry config specified in config or env vars, ignoring in development mode")
+
+    def _get_registry_env_vars(self) -> Tuple[str, str, str]:
+        env_registry = os.getenv(StationEnvironmentVariables.REGISTRY_URL.value)
+        env_registry_user = os.getenv(StationEnvironmentVariables.REGISTRY_USER.value)
+        env_registry_password = os.getenv(StationEnvironmentVariables.REGISTRY_PW.value)
+        return env_registry, env_registry_user, env_registry_password
+
+    @staticmethod
+    def _get_auth_env_vars() -> Tuple[str, str, str, str]:
+        env_auth_server = os.getenv(StationEnvironmentVariables.AUTH_SERVER_HOST.value)
+        env_auth_port = os.getenv(StationEnvironmentVariables.AUTH_SERVER_PORT.value)
+        if env_auth_port:
+            env_auth_port = int(env_auth_port)
+        env_auth_robot = os.getenv(StationEnvironmentVariables.AUTH_ROBOT_ID.value)
+        env_auth_robot_secret = os.getenv(StationEnvironmentVariables.AUTH_ROBOT_SECRET.value)
+
+        return env_auth_server, env_auth_port, env_auth_robot, env_auth_robot_secret
 
     def _setup_station_api(self):
         # Try to find api host and port in environment variables
@@ -213,6 +325,9 @@ class Settings:
 
         elif env_fernet_key:
             self.config.fernet_key = env_fernet_key
+
+    def _check_env_var_and_replace_config_attr(self, env_var: StationEnvironmentVariables, config_attr: str):
+        pass
 
 
 settings = Settings()
