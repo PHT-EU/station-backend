@@ -98,6 +98,9 @@ class StationRuntimeEnvironment(str, Enum):
 
 
 class StationConfig(BaseModel):
+    """
+    Object containing the configuration of the station.
+    """
     station_id: Union[int, str]
     host: Optional[Union[AnyHttpUrl, str]] = os.getenv(StationEnvironmentVariables.STATION_API_HOST.value, "127.0.0.1")
     port: Optional[int] = os.getenv(StationEnvironmentVariables.STATION_API_PORT.value, 8001)
@@ -121,8 +124,12 @@ class StationConfig(BaseModel):
             safe_dump(json.loads(self.json(indent=2)), f)
 
 
-# Evaluation for initialization of values file -> environment
+# Evaluation for initialization of values file < environment
 class Settings:
+    """
+    Class to handle the settings of the station API and connections to other services. Can be configured via a file or
+    environment variables.
+    """
     config: StationConfig
     config_path: Optional[str]
 
@@ -137,6 +144,15 @@ class Settings:
         # todo create/update config file
 
     def setup(self) -> StationConfig:
+        """
+        Initialize the settings. First tries to load the settings from the config file. Then tries to load the settings
+        from the environment variables. If a conflicting value is found the environment variable has precedence. If both
+        fail, the default settings are used.
+
+        Returns:
+            StationConfig The initialized settings.
+
+        """
         logger.info(f"{Emojis.INFO}Setting up station backend...")
         # check for config file at given or default path and load if exists
         self._check_config_path()
@@ -148,6 +164,12 @@ class Settings:
         return self.config
 
     def get_fernet(self) -> Fernet:
+        """
+        Get the Fernet key for encryption and decryption of secrets. Configured via environment variables or station
+        config.
+
+        Returns: A fernet object that can be used to encrypt and decrypt secrets.
+        """
         if self.config.fernet_key is None:
             raise ValueError("No Fernet key provided")
 
@@ -155,6 +177,12 @@ class Settings:
         return Fernet(key.encode())
 
     def _check_config_path(self):
+        """
+        Checks if a config is present at the given path. Raise an error if custom config file is given but not present.
+
+        Returns:
+
+        """
         logger.info(f"{Emojis.INFO}Looking for config file...")
         if not os.path.isfile(self.config_path):
             if self.config_path == "station_config.yaml":
@@ -172,6 +200,11 @@ class Settings:
             logger.info(f"{Emojis.SUCCESS.value} Config loaded.")
 
     def _setup_runtime_environment(self):
+        """
+        Setup and validate the runtime environment (development|production) of the station API
+        Returns:
+
+        """
         environment_var = os.getenv(StationEnvironmentVariables.ENVIRONMENT.value)
         # if config variable is in environment variables use it
         if environment_var:
@@ -230,6 +263,11 @@ class Settings:
         self._setup_minio_connection()
 
     def _setup_station_api(self):
+        """
+        Configure the station api url, port and database connection from environment variables or config file.
+        Returns:
+
+        """
         # Try to find api host and port in environment variables
         env_station_host = os.getenv(StationEnvironmentVariables.STATION_API_HOST.value)
         if env_station_host:
@@ -251,10 +289,20 @@ class Settings:
                 logger.warning(f"{Emojis.WARNING}   SQLite database only supported in development mode.")
 
     def _setup_fernet(self):
+        """
+        Configure the fernet key from environment variables or config file.
+        In the development mode if none is given generate a new one.
+        Raise an error if no key is given in production mode.
+        Returns:
+
+        """
         env_fernet_key = os.getenv(StationEnvironmentVariables.FERNET_KEY.value)
+
         if not env_fernet_key and not self.config.fernet_key:
+            # if fernet key is given in production raise an error
             if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
                 raise ValueError(f"{Emojis.ERROR}   No fernet key specified in config or env vars.")
+            # generate new key in development mode
             elif self.config.environment == StationRuntimeEnvironment.DEVELOPMENT:
                 logger.warning(f"\t{Emojis.WARNING}No fernet key specified in config or env vars")
                 logger.info(f"\t{Emojis.INFO}Generating new key for development environment...")
@@ -268,6 +316,12 @@ class Settings:
             self.config.fernet_key = env_fernet_key
 
     def _setup_station_auth(self):
+        """
+        Configure the connection to the station auth from environment variables or config file.
+        Optional in development mode, raises an error if not configured in production mode.
+        Returns:
+
+        """
         logger.info(f"{Emojis.INFO}Setting up station authentication...")
         # check if station auth is configured via environment variables
         env_auth_server, env_auth_port, env_auth_robot, env_auth_robot_secret = self._get_internal_service_env_vars(
@@ -291,7 +345,7 @@ class Settings:
                 host=env_auth_server,
                 port=env_auth_port,
                 robot_id=env_auth_robot,
-                robot_secret=env_auth_robot_secret
+                robot_secret=SecretStr(env_auth_robot_secret)
             )
 
             self.config.auth = env_auth_config
@@ -320,6 +374,12 @@ class Settings:
                            f" ignoring in development mode")
 
     def _setup_registry_connection(self):
+        """
+        Configure the connection to the central container registry from environment variables or config file.
+        Raises an error if not configured in production mode.
+        Returns:
+
+        """
         logger.info(f"Setting up registry connection...")
         env_registry, env_registry_user, env_registry_password = self._get_external_service_env_vars(
             url=StationEnvironmentVariables.REGISTRY_URL,
@@ -366,6 +426,12 @@ class Settings:
                 logger.warning(f"No registry config specified in config or env vars, ignoring in development mode")
 
     def _setup_minio_connection(self):
+        """
+        Configure the connection to the minio storage from environment variables or config file.
+        Raises an error if not configured in production mode.
+        Returns:
+
+        """
         logger.info(f"Setting up minio connection...")
         # get the environment variables for minio
         env_connection = self._get_internal_service_env_vars(
@@ -427,6 +493,16 @@ class Settings:
     def _get_external_service_env_vars(url: StationEnvironmentVariables,
                                        client_id: StationEnvironmentVariables,
                                        client_secret: StationEnvironmentVariables) -> Tuple[str, str, str]:
+        """
+        Get the tuple of connection variables for an external service from environment variables.
+        Args:
+            url:
+            client_id:
+            client_secret:
+
+        Returns:
+
+        """
         env_url = os.getenv(url.value)
         env_client_id = os.getenv(client_id.value)
         env_client_secret = os.getenv(client_secret.value)
@@ -437,8 +513,18 @@ class Settings:
             host: StationEnvironmentVariables,
             port: StationEnvironmentVariables,
             user: StationEnvironmentVariables,
-            secret: StationEnvironmentVariables
-    ) -> Tuple[str, int, str, str]:
+            secret: StationEnvironmentVariables) -> Tuple[str, int, str, str]:
+        """
+        Get the tuple of connection variables for an internal service from environment variables.
+        Args:
+            host:
+            port:
+            user:
+            secret:
+
+        Returns:
+
+        """
         env_server_host = os.getenv(host.value)
         env_server_port = os.getenv(port.value)
         if env_server_port:
