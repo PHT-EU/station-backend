@@ -4,7 +4,6 @@ from unittest.mock import patch
 import os
 from yaml import safe_load, safe_dump
 
-
 from pydantic import SecretStr
 
 from station.app.config import Settings, AuthConfig, RegistrySettings, MinioSettings, CentralUISettings, StationConfig
@@ -176,3 +175,13 @@ def test_config_file():
 
     config.to_file("station_config.yml")
 
+    file_config = StationConfig.from_file("station_config.yml")
+    assert file_config.station_id == "your_station_id"
+    assert file_config.registry.user == "test"
+
+
+def test_settings():
+    settings = Settings(config_path="station_config.yml")
+    settings.setup()
+    assert settings.config
+    os.remove("station_config.yml")

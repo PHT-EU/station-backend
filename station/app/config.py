@@ -39,7 +39,7 @@ class StationEnvironmentVariables(Enum):
     AIRFLOW_PW = "AIRFLOW_PW"
 
     # auth environment variables
-    AUTH_SERVER_HOST = "AUTH_SERVER_URL"
+    AUTH_SERVER_HOST = "AUTH_SERVER_HOST"
     AUTH_SERVER_PORT = "AUTH_SERVER_PORT"
     AUTH_ROBOT_ID = "AUTH_ROBOT_ID"
     AUTH_ROBOT_SECRET = "AUTH_ROBOT_SECRET"
@@ -112,13 +112,13 @@ class StationConfig(BaseModel):
 
     @classmethod
     def from_file(cls, path: str) -> "StationConfig":
-        pass
+        with open(path, "r") as f:
+            return cls(**safe_load(f))
 
     def to_file(self, path: str) -> None:
-
+        # todo get secret values recursively
         with open(path, "w") as f:
             safe_dump(json.loads(self.json(indent=2)), f)
-
 
 
 # Evaluation for initialization of values file -> environment
@@ -134,7 +134,6 @@ class Settings:
             self.config_path = os.getenv(StationEnvironmentVariables.CONFIG_PATH.value, "station_config.yaml")
 
         self._config_file = False
-        # self.setup()
         # todo create/update config file
 
     def setup(self) -> StationConfig:
@@ -160,8 +159,7 @@ class Settings:
         if not os.path.isfile(self.config_path):
             if self.config_path == "station_config.yaml":
                 logger.warning(
-                    f"\t{Emojis.WARNING}No config file found. "
-                    f"Creating default at {os.getcwd() + os.sep + self.config_path}")
+                    f"\t{Emojis.WARNING}No config file found. Attempting configuration via environment variables...")
             else:
                 raise FileNotFoundError(f"{Emojis.ERROR}   Custom config file not found at {self.config_path}.")
             # construct a placeholder config to fill with environment and default values
@@ -451,5 +449,3 @@ class Settings:
 
 
 settings = Settings()
-# todo remove for releases
-settings.setup()
