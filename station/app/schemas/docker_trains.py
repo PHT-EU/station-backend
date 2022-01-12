@@ -10,7 +10,7 @@ class DBSchema(BaseModel):
 
 class DockerTrainState(DBSchema):
     num_executions: Optional[int] = 0
-    status: Optional[str] = None
+    status: Optional[str] = "inactive"
     last_execution: Optional[datetime] = None
     run_id: Optional[str] = None
 
@@ -94,9 +94,7 @@ class DockerTrainConfigUpdate(DockerTrainConfigBase):
 class DockerTrainCreate(BaseModel):
     train_id: str
     proposal_id: Optional[int] = None
-    config: Optional[Union[DockerTrainConfigCreate]] = None
-    config_name: Optional[str] = None
-    config_id: Optional[int] = None
+    config: Optional[Union[DockerTrainConfigCreate, int]] = None
 
 
 class DockerTrainUpdate(DockerTrainCreate):
