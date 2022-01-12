@@ -2,9 +2,10 @@ import json
 import os
 from typing import Union, Optional, Tuple
 from cryptography.fernet import Fernet
-from pydantic import BaseModel, AnyHttpUrl, SecretStr
+from pydantic import BaseModel, AnyHttpUrl, SecretStr, AnyUrl
 from enum import Enum
 from loguru import logger
+from yaml import safe_dump, safe_load
 
 from dotenv import load_dotenv, find_dotenv
 
@@ -69,22 +70,22 @@ class AirflowSettings(BaseModel):
 
 
 class MinioSettings(BaseModel):
-    host: AnyHttpUrl
+    host: Union[AnyHttpUrl, AnyUrl, str]
     port: Optional[int] = 9000
     access_key: Optional[str] = "admin"
     secret_key: Optional[SecretStr] = "admin"
 
 
-class CentralUISetting(BaseModel):
+class CentralUISettings(BaseModel):
     api_url: AnyHttpUrl
     client_id: Optional[str] = "admin"
-    secret: Optional[SecretStr] = "admin"
+    client_secret: Optional[SecretStr] = "admin"
 
 
 class AuthConfig(BaseModel):
     robot_id: str
     robot_secret: SecretStr
-    host: Optional[AnyHttpUrl] = "station-auth"
+    host: Optional[Union[AnyHttpUrl, AnyUrl, str]] = "station-auth"
     port: Optional[int] = 3010
 
 
@@ -107,13 +108,17 @@ class StationConfig(BaseModel):
     auth: Optional[AuthConfig] = None
     airflow: Optional[AirflowSettings] = None
     minio: Optional[MinioSettings] = None
+    central_ui: Optional[CentralUISettings] = None
 
     @classmethod
     def from_file(cls, path: str) -> "StationConfig":
         pass
 
-    def to_file(self):
-        pass
+    def to_file(self, path: str) -> None:
+
+        with open(path, "w") as f:
+            safe_dump(json.loads(self.json(indent=2)), f)
+
 
 
 # Evaluation for initialization of values file -> environment
@@ -267,7 +272,7 @@ class Settings:
     def _setup_station_auth(self):
         logger.info(f"{Emojis.INFO}Setting up station authentication...")
         # check if station auth is configured via environment variables
-        env_auth_server, env_auth_port, env_auth_robot, env_auth_robot_secret = self._get_server_connection_env_vars(
+        env_auth_server, env_auth_port, env_auth_robot, env_auth_robot_secret = self._get_internal_service_env_vars(
             host=StationEnvironmentVariables.AUTH_SERVER_HOST,
             port=StationEnvironmentVariables.AUTH_SERVER_PORT,
             user=StationEnvironmentVariables.AUTH_ROBOT_ID,
@@ -318,7 +323,11 @@ class Settings:
 
     def _setup_registry_connection(self):
         logger.info(f"Setting up registry connection...")
-        env_registry, env_registry_user, env_registry_password = self._get_registry_env_vars()
+        env_registry, env_registry_user, env_registry_password = self._get_external_service_env_vars(
+            url=StationEnvironmentVariables.REGISTRY_URL,
+            client_id=StationEnvironmentVariables.REGISTRY_USER,
+            client_secret=StationEnvironmentVariables.REGISTRY_PW
+        )
 
         # catch attribute error if no registry config is present in config
         try:
@@ -361,7 +370,7 @@ class Settings:
     def _setup_minio_connection(self):
         logger.info(f"Setting up minio connection...")
         # get the environment variables for minio
-        env_connection = self._get_server_connection_env_vars(
+        env_connection = self._get_internal_service_env_vars(
             host=StationEnvironmentVariables.MINIO_HOST,
             port=StationEnvironmentVariables.MINIO_PORT,
             user=StationEnvironmentVariables.MINIO_ACCESS_KEY,
@@ -417,14 +426,16 @@ class Settings:
                 logger.warning(f"No minio config specified in config or env vars, ignoring in development mode")
 
     @staticmethod
-    def _get_registry_env_vars() -> Tuple[str, str, str]:
-        env_registry = os.getenv(StationEnvironmentVariables.REGISTRY_URL.value)
-        env_registry_user = os.getenv(StationEnvironmentVariables.REGISTRY_USER.value)
-        env_registry_password = os.getenv(StationEnvironmentVariables.REGISTRY_PW.value)
-        return env_registry, env_registry_user, env_registry_password
+    def _get_external_service_env_vars(url: StationEnvironmentVariables,
+                                       client_id: StationEnvironmentVariables,
+                                       client_secret: StationEnvironmentVariables) -> Tuple[str, str, str]:
+        env_url = os.getenv(url.value)
+        env_client_id = os.getenv(client_id.value)
+        env_client_secret = os.getenv(client_secret.value)
+        return env_url, env_client_id, env_client_secret
 
     @staticmethod
-    def _get_server_connection_env_vars(
+    def _get_internal_service_env_vars(
             host: StationEnvironmentVariables,
             port: StationEnvironmentVariables,
             user: StationEnvironmentVariables,

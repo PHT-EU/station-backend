@@ -2,8 +2,12 @@ import pytest
 from dotenv import load_dotenv, find_dotenv
 from unittest.mock import patch
 import os
+from yaml import safe_load, safe_dump
 
-from station.app.config import Settings
+
+from pydantic import SecretStr
+
+from station.app.config import Settings, AuthConfig, RegistrySettings, MinioSettings, CentralUISettings, StationConfig
 from station.app.config import StationEnvironmentVariables
 
 
@@ -133,3 +137,42 @@ def test_settings_init_env_vars():
         assert settings.config.minio.host == 'http://registry.example.com'
         assert settings.config.minio.secret_key.get_secret_value() == 'test'
         assert settings.config.minio.access_key == 'test'
+
+
+def test_config_file():
+    load_dotenv(find_dotenv())
+    settings = Settings()
+    config = settings.setup()
+    # write a working config
+    config.station_id = "your_station_id"
+    config.environment = "production"
+    config.fernet_key = "your_fernet_key"
+    config.host = "127.0.0.1"
+    config.port = 8001
+    config.auth = AuthConfig(
+        host="127.0.0.1",
+        port=3010,
+        robot_id="your_robot_id",
+        robot_secret="your_robot_secret",
+    )
+    config.registry = RegistrySettings(
+        address="http://registry.example.com",
+        user="test",
+        password="test",
+    )
+    config.minio = MinioSettings(
+        host="minio",
+        port=9000,
+        access_key="minio_access_key",
+        secret_key="minio_secret_key",
+    )
+    config.central_ui = CentralUISettings(
+        api_url="http://central-ui.example.com",
+        client_id="central_ui_client_id",
+        client_secret="central_ui_client_secret",
+
+    )
+    config = StationConfig(**settings.config.dict())
+
+    config.to_file("station_config.yml")
+
