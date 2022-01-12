@@ -8,6 +8,7 @@ from station.app.config import StationEnvironmentVariables
 
 
 def test_settings_init_env_vars():
+    load_dotenv(find_dotenv())
     # Test runtime environment variables
     with patch.dict(os.environ,
                     {
@@ -16,6 +17,9 @@ def test_settings_init_env_vars():
                         StationEnvironmentVariables.AUTH_SERVER_PORT.value: '3010',
                         StationEnvironmentVariables.AUTH_ROBOT_ID.value: 'robot',
                         StationEnvironmentVariables.AUTH_ROBOT_SECRET.value: 'robot_secret',
+                        StationEnvironmentVariables.MINIO_HOST.value: 'http://minio.example.com',
+                        StationEnvironmentVariables.MINIO_ACCESS_KEY.value: 'minio_user',
+                        StationEnvironmentVariables.MINIO_SECRET_KEY.value: 'minio_secret',
                     }):
         settings = Settings()
         settings.setup()
@@ -115,3 +119,17 @@ def test_settings_init_env_vars():
         assert settings.config.registry.address == 'http://registry.example.com'
         assert settings.config.registry.user == 'test'
         assert settings.config.registry.password.get_secret_value() == 'test'
+
+    with patch.dict(os.environ,
+                    {
+                        'ENVIRONMENT': 'development',
+                        StationEnvironmentVariables.MINIO_HOST.value: 'http://registry.example.com',
+                        StationEnvironmentVariables.MINIO_ACCESS_KEY.value: 'test',
+                        StationEnvironmentVariables.MINIO_SECRET_KEY.value: 'test',
+                    }):
+        settings = Settings()
+        settings.setup()
+        assert settings.config.environment == 'development'
+        assert settings.config.minio.host == 'http://registry.example.com'
+        assert settings.config.minio.secret_key.get_secret_value() == 'test'
+        assert settings.config.minio.access_key == 'test'

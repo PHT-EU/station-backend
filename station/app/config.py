@@ -23,12 +23,19 @@ class StationEnvironmentVariables(Enum):
     # station configuration variables
     STATION_ID = "STATION_ID"
     ENVIRONMENT = "ENVIRONMENT"
+    STATION_DB = "STATION_DB"
     STATION_API_HOST = "STATION_API_HOST"
     STATION_API_PORT = "STATION_API_PORT"
     FERNET_KEY = "FERNET_KEY"
     STATION_DB_URL = "STATION_DB"
     STATION_DATA_DIR = "STATION_DATA_DIR"
     CONFIG_PATH = "STATION_CONFIG_PATH"
+
+    # airflow environment variables
+    AIRFLOW_HOST = "AIRFLOW_HOST"
+    AIRFLOW_PORT = "AIRFLOW_PORT"
+    AIRFLOW_USER = "AIRFLOW_USER"
+    AIRFLOW_PW = "AIRFLOW_PW"
 
     # auth environment variables
     AUTH_SERVER_HOST = "AUTH_SERVER_URL"
@@ -42,9 +49,10 @@ class StationEnvironmentVariables(Enum):
     REGISTRY_PW = "HARBOR_PW"
 
     # minio environment variables
-    MINIO_URL = "MINIO_URL"
-    MINIO_USER = "MINIO_USER"
-    MINIO_PW = "MINIO_PW"
+    MINIO_HOST = "MINIO_HOST"
+    MINIO_PORT = "MINIO_PORT"
+    MINIO_ACCESS_KEY = "MINIO_ACCESS_KEY"
+    MINIO_SECRET_KEY = "MINIO_SECRET_KEY"
 
 
 class RegistrySettings(BaseModel):
@@ -58,6 +66,19 @@ class AirflowSettings(BaseModel):
     port: Optional[int] = 8080
     user: Optional[str] = "admin"
     password: Optional[SecretStr] = "admin"
+
+
+class MinioSettings(BaseModel):
+    host: AnyHttpUrl
+    port: Optional[int] = 9000
+    access_key: Optional[str] = "admin"
+    secret_key: Optional[SecretStr] = "admin"
+
+
+class CentralUISetting(BaseModel):
+    api_url: AnyHttpUrl
+    client_id: Optional[str] = "admin"
+    secret: Optional[SecretStr] = "admin"
 
 
 class AuthConfig(BaseModel):
@@ -79,14 +100,19 @@ class StationConfig(BaseModel):
     station_id: Union[int, str]
     host: Optional[Union[AnyHttpUrl, str]] = os.getenv(StationEnvironmentVariables.STATION_API_HOST.value, "127.0.0.1")
     port: Optional[int] = os.getenv(StationEnvironmentVariables.STATION_API_PORT.value, 8001)
+    db: Optional[SecretStr] = "sqlite:///./app.db"
     environment: Optional[StationRuntimeEnvironment] = StationRuntimeEnvironment.PRODUCTION
     fernet_key: Optional[SecretStr] = None
     registry: RegistrySettings
     auth: Optional[AuthConfig] = None
-    db: Optional[SecretStr] = os.getenv(StationEnvironmentVariables.STATION_DB_URL.value, "sqlite:///station.db")
+    airflow: Optional[AirflowSettings] = None
+    minio: Optional[MinioSettings] = None
 
     @classmethod
     def from_file(cls, path: str) -> "StationConfig":
+        pass
+
+    def to_file(self):
         pass
 
 
@@ -96,7 +122,6 @@ class Settings:
     config_path: Optional[str]
 
     def __init__(self, config_path: str = None):
-        # todo remove dotenv
         load_dotenv(find_dotenv())
         if config_path:
             self.config_path = config_path
@@ -113,7 +138,7 @@ class Settings:
         self._check_config_path()
         # validate the runtime environment
         self._setup_runtime_environment()
-        self._parse_station_environment_variables()
+        self._setup_station_environment()
 
         logger.info(f"Station backend setup successful {Emojis.SUCCESS}")
         return self.config
@@ -170,7 +195,15 @@ class Settings:
         # set the parsed runtime environment
         self.config.environment = runtime_environment
 
-    def _parse_station_environment_variables(self):
+    def _setup_station_environment(self):
+        """
+        After potential config files are found, parse the environment variables to override the config file values if
+        they exist.
+        Validate the configuration from both options.
+
+        Returns:
+
+        """
 
         # ensure that the station id is set
         env_station_id = os.getenv(StationEnvironmentVariables.STATION_ID.value)
@@ -186,17 +219,60 @@ class Settings:
             logger.debug(f"\t{Emojis.INFO}Overriding station id with env var specification.")
             self.config.station_id = env_station_id
 
+        # parse environment variables
         self._setup_station_api()
         self._setup_fernet()
         self._setup_station_auth()
         self._setup_registry_connection()
+        self._setup_minio_connection()
+
+    def _setup_station_api(self):
+        # Try to find api host and port in environment variables
+        env_station_host = os.getenv(StationEnvironmentVariables.STATION_API_HOST.value)
+        if env_station_host:
+            logger.debug(f"\t{Emojis.INFO}Overriding station api host with env var specification.")
+            self.config.host = env_station_host
+        env_station_port = os.getenv(StationEnvironmentVariables.STATION_API_PORT.value)
+        if env_station_port:
+            logger.debug(f"\t{Emojis.INFO}Overriding station api port with env var specification.")
+            self.config.port = int(env_station_port)
+        station_db = os.getenv(StationEnvironmentVariables.STATION_DB.value)
+        if station_db:
+            logger.debug(f"\t{Emojis.INFO}Overriding station db with env var specification.")
+            self.config.db = station_db
+
+        if "sqlite" in self.config.db.lower():
+            if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
+                raise ValueError(f"{Emojis.ERROR}   SQLite database not supported for production mode.")
+            else:
+                logger.warning(f"{Emojis.WARNING}   SQLite database only supported in development mode.")
+
+    def _setup_fernet(self):
+        env_fernet_key = os.getenv(StationEnvironmentVariables.FERNET_KEY.value)
+        if not env_fernet_key and not self.config.fernet_key:
+            if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
+                raise ValueError(f"{Emojis.ERROR}   No fernet key specified in config or env vars.")
+            elif self.config.environment == StationRuntimeEnvironment.DEVELOPMENT:
+                logger.warning(f"\t{Emojis.WARNING}No fernet key specified in config or env vars")
+                logger.info(f"\t{Emojis.INFO}Generating new key for development environment...")
+                self.config.fernet_key = Fernet.generate_key().decode()
+                logger.info(Emojis.SUCCESS.value + f"New key generated.")
+        elif env_fernet_key and self.config.fernet_key:
+            logger.debug(f"\t{Emojis.INFO}Overriding fernet key with env var specification.")
+            self.config.fernet_key = env_fernet_key
+
+        elif env_fernet_key:
+            self.config.fernet_key = env_fernet_key
 
     def _setup_station_auth(self):
-
         logger.info(f"{Emojis.INFO}Setting up station authentication...")
-
         # check if station auth is configured via environment variables
-        env_auth_server, env_auth_port, env_auth_robot, env_auth_robot_secret = self._get_auth_env_vars()
+        env_auth_server, env_auth_port, env_auth_robot, env_auth_robot_secret = self._get_server_connection_env_vars(
+            host=StationEnvironmentVariables.AUTH_SERVER_HOST,
+            port=StationEnvironmentVariables.AUTH_SERVER_PORT,
+            user=StationEnvironmentVariables.AUTH_ROBOT_ID,
+            secret=StationEnvironmentVariables.AUTH_ROBOT_SECRET
+        )
 
         _auth_server = False
         # ensure there is an auth server specified in production mode
@@ -282,50 +358,85 @@ class Settings:
             else:
                 logger.warning(f"No registry config specified in config or env vars, ignoring in development mode")
 
-    def _get_registry_env_vars(self) -> Tuple[str, str, str]:
+    def _setup_minio_connection(self):
+        logger.info(f"Setting up minio connection...")
+        # get the environment variables for minio
+        env_connection = self._get_server_connection_env_vars(
+            host=StationEnvironmentVariables.MINIO_HOST,
+            port=StationEnvironmentVariables.MINIO_PORT,
+            user=StationEnvironmentVariables.MINIO_ACCESS_KEY,
+            secret=StationEnvironmentVariables.MINIO_SECRET_KEY
+        )
+        env_minio_host, env_minio_port, env_minio_access_key, env_minio_secret_key = env_connection
+
+        # get minio from config file or construct dummy
+        _minio_config = False
+        minio_config = self.config.minio
+        if minio_config:
+            _minio_config = True
+            logger.debug("Minio config found, checking for env vars.")
+        else:
+            minio_config = MinioSettings.construct()
+
+        # override minio config if config and env vars are present and validate afterwards
+        if _minio_config and (env_minio_host or env_minio_port or env_minio_access_key or env_minio_secret_key):
+            logger.debug(f"Overriding minio config with env var specifications.")
+            if env_minio_host:
+                minio_config.host = env_minio_host
+            if env_minio_port:
+                minio_config.port = env_minio_port
+            if env_minio_access_key:
+                minio_config.access_key = env_minio_access_key
+            if env_minio_secret_key:
+                minio_config.secret_key = env_minio_secret_key
+            _minio_config = True
+        # no minio config found
+        elif not _minio_config and not (env_minio_host and env_minio_access_key and env_minio_secret_key):
+            _minio_config = False
+
+        # no config but environment variables are found
+        elif not _minio_config and (env_minio_host and env_minio_access_key and env_minio_secret_key):
+            logger.debug(f"{Emojis.INFO}No minio config found, creating new one from env vars.")
+            minio_config.host = env_minio_host
+            minio_config.access_key = env_minio_access_key
+            minio_config.secret_key = env_minio_secret_key
+            if env_minio_port:
+                minio_config.port = env_minio_port
+            _minio_config = True
+
+        # log minio config and status
+        if _minio_config:
+            # validate the overridden config
+            self.config.minio = MinioSettings(**minio_config.dict())
+            logger.info(f"Minio: host - {self.config.minio.host}, port - {self.config.minio.port}")
+        else:
+            # raise error if no minio is configured in production mode
+            if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
+                raise ValueError(f"{Emojis.ERROR}   No minio config specified in config or env vars")
+            else:
+                logger.warning(f"No minio config specified in config or env vars, ignoring in development mode")
+
+    @staticmethod
+    def _get_registry_env_vars() -> Tuple[str, str, str]:
         env_registry = os.getenv(StationEnvironmentVariables.REGISTRY_URL.value)
         env_registry_user = os.getenv(StationEnvironmentVariables.REGISTRY_USER.value)
         env_registry_password = os.getenv(StationEnvironmentVariables.REGISTRY_PW.value)
         return env_registry, env_registry_user, env_registry_password
 
     @staticmethod
-    def _get_auth_env_vars() -> Tuple[str, str, str, str]:
-        env_auth_server = os.getenv(StationEnvironmentVariables.AUTH_SERVER_HOST.value)
-        env_auth_port = os.getenv(StationEnvironmentVariables.AUTH_SERVER_PORT.value)
-        if env_auth_port:
-            env_auth_port = int(env_auth_port)
-        env_auth_robot = os.getenv(StationEnvironmentVariables.AUTH_ROBOT_ID.value)
-        env_auth_robot_secret = os.getenv(StationEnvironmentVariables.AUTH_ROBOT_SECRET.value)
-
-        return env_auth_server, env_auth_port, env_auth_robot, env_auth_robot_secret
-
-    def _setup_station_api(self):
-        # Try to find api host and port in environment variables
-        env_station_host = os.getenv(StationEnvironmentVariables.STATION_API_HOST.value)
-        if env_station_host:
-            logger.debug(f"\t{Emojis.INFO}Overriding station api host with env var specification.")
-            self.config.host = env_station_host
-        env_station_port = os.getenv(StationEnvironmentVariables.STATION_API_PORT.value)
-        if env_station_port:
-            logger.debug(f"\t{Emojis.INFO}Overriding station api port with env var specification.")
-            self.config.port = int(env_station_port)
-
-    def _setup_fernet(self):
-        env_fernet_key = os.getenv(StationEnvironmentVariables.FERNET_KEY.value)
-        if not env_fernet_key and not self.config.fernet_key:
-            if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
-                raise ValueError(f"{Emojis.ERROR}   No fernet key specified in config or env vars.")
-            elif self.config.environment == StationRuntimeEnvironment.DEVELOPMENT:
-                logger.warning(f"\t{Emojis.WARNING}No fernet key specified in config or env vars")
-                logger.info(f"\t{Emojis.INFO}Generating new key for development environment...")
-                self.config.fernet_key = Fernet.generate_key().decode()
-                logger.info(Emojis.SUCCESS.value + f"New key generated.")
-        elif env_fernet_key and self.config.fernet_key:
-            logger.debug(f"\t{Emojis.INFO}Overriding fernet key with env var specification.")
-            self.config.fernet_key = env_fernet_key
-
-        elif env_fernet_key:
-            self.config.fernet_key = env_fernet_key
+    def _get_server_connection_env_vars(
+            host: StationEnvironmentVariables,
+            port: StationEnvironmentVariables,
+            user: StationEnvironmentVariables,
+            secret: StationEnvironmentVariables
+    ) -> Tuple[str, int, str, str]:
+        env_server_host = os.getenv(host.value)
+        env_server_port = os.getenv(port.value)
+        if env_server_port:
+            env_server_port = int(env_server_port)
+        env_server_user = os.getenv(user.value)
+        env_server_secret = os.getenv(secret.value)
+        return env_server_host, env_server_port, env_server_user, env_server_secret
 
 
 settings = Settings()
