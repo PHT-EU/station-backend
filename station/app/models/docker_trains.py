@@ -46,5 +46,5 @@ class DockerTrain(Base):
     config_id = Column(Integer, ForeignKey("docker_train_configs.id"), nullable=True)
     config = relationship("DockerTrainConfig", back_populates="trains")
     is_active = Column(Boolean, default=False)
-    state = relationship("DockerTrainState")
+    state = relationship("DockerTrainState", uselist=False)
     executions = relationship("DockerTrainExecution")

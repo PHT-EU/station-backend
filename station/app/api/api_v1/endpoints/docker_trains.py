@@ -8,9 +8,20 @@ from station.app.schemas.docker_trains import DockerTrain, DockerTrainCreate, Do
     DockerTrainConfigCreate, DockerTrainConfigUpdate, DockerTrainExecution
 from station.app.crud.crud_docker_trains import docker_train
 from station.app.crud.crud_train_configs import docker_train_config
+from station.clients.harbor_client import harbor_client
 
 router = APIRouter()
 
+@router.get("/trains/sync")
+def synchronize_database(station_id: int = None, db: Session = Depends(dependencies.get_db)):
+    artifacts = harbor_client.get_artifacts_for_station(station_id=station_id)
+    for train in artifacts:
+        id = train["name"].split("/")[1]
+        created_at = train["creation_time"][:-1]
+        updated_at = train["update_time"][:-1]
+        if created_at == updated_at:
+            updated_at = None
+        new_train = docker_train.add_if_not_exists(db, train_id=id, created_at=created_at, updated_at=updated_at)
 
 @router.get("/trains/docker", response_model=List[DockerTrain])
 def get_available_trains(limit: int = 0, db: Session = Depends(dependencies.get_db)):

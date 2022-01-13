@@ -12,7 +12,6 @@ class DockerTrainState(DBSchema):
     num_executions: Optional[int] = 0
     status: Optional[str] = None
     last_execution: Optional[datetime] = None
-    run_id: Optional[str] = None
 
 
 class AirflowEnvironmentVariable(BaseModel):
@@ -31,9 +30,14 @@ class AirflowConfig(BaseModel):
     volumes: Optional[List[DockerVolume]] = None
 
 
+class DockerTrainAirflowConfig(AirflowConfig):
+    repository: Optional[str] = None
+    tag: Optional[str] = None
+
+
 class DockerTrainConfigBase(DBSchema):
     name: str
-    airflow_config: Optional[AirflowConfig] = None
+    airflow_config: Optional[DockerTrainAirflowConfig] = None
     cpu_requirements: Optional[Dict[str, Any]] = None
     gpu_requirements: Optional[Dict[str, Any]] = None
     auto_execute: Optional[bool] = None
@@ -59,28 +63,28 @@ class DockerTrainConfigMinimal(DockerTrainConfigBase):
     updated_at: Optional[datetime] = None
 
 
-class DockerRunVolume(BaseModel):
-    pass
-
-
-class DockerTrainExecution(BaseModel):
+class DockerTrainExecution(DBSchema):
     config_id: Optional[Union[int, str]] = "default"
-    config_json: Optional[Dict[str, Any]] = None
-    repository: Optional[str] = None
-    tag: Optional[str] = None
-    volumes: Optional[List[DockerRunVolume]] = None
+    config_json: Optional[DockerTrainAirflowConfig] = None
+
+
+class DockerTrainSavedExecution(DBSchema):
+    start: datetime
+    end: Optional[datetime] = None
+    airflow_dag_run : Optional[str] = None
 
 
 class DockerTrain(DBSchema):
     name: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
-    proposal_id: int
-    is_active: bool
+    proposal_id: int = 0
+    is_active: bool = False
     train_id: Optional[str] = None
     config_id: Optional[int] = None
     config: Optional[DockerTrainConfigMinimal] = None
     state: Optional[DockerTrainState] = None
+    executions: Optional[List[DockerTrainSavedExecution]] = None
 
 
 class DockerTrainConfigCreate(DockerTrainConfigBase):

@@ -47,6 +47,8 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             config_id=config_id
         )
         db.add(db_train)
+        db.commit()
+        db.refresh(db_train)
         train_state = DockerTrainState(train_id=db_train.id)
         db.add(train_state)
         db.commit()
@@ -65,14 +67,20 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             trains = db.query(DockerTrain).filter(DockerTrain.is_active == active).all()
         return trains
 
-    def add_if_not_exists(self, db: Session, train_id: str, created_at: str = None):
+    def add_if_not_exists(self, db: Session, train_id: str, created_at: str = None, updated_at: str = None):
         db_train = self.get_by_train_id(db, train_id)
         if not db_train:
-            db_train = DockerTrain(train_id=train_id, created_at=parser.parse(created_at))
+            if updated_at:
+                db_train = DockerTrain(train_id=train_id, created_at=parser.parse(created_at), updated_at=parser.parse(updated_at))
+            else:
+                db_train = DockerTrain(train_id=train_id, created_at=parser.parse(created_at))
             db.add(db_train)
+            db.commit()
+            db.refresh(db_train)
             train_state = DockerTrainState(train_id=db_train.id)
             db.add(train_state)
             db.commit()
+            return db_train
 
 
 docker_train = CRUDDockerTrain(DockerTrain)
