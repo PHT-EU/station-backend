@@ -1,6 +1,10 @@
 from typing import Generator
 from station.app.db.session import SessionLocal
+from station.app.config import settings
+
+
 import os
+from fastapi.security import HTTPBearer
 
 
 # reusable_oauth2 = OAuth2PasswordBearer(

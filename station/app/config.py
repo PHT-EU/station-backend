@@ -87,6 +87,14 @@ class AuthConfig(BaseModel):
     host: Optional[Union[AnyHttpUrl, AnyUrl, str]] = "station-auth"
     port: Optional[int] = 3010
 
+    @property
+    def token_url(self) -> Union[AnyUrl, str]:
+        return f"{self.host}{f':{self.port}' if self.port else ''}/token"
+
+    @property
+    def auth_url(self) -> Union[AnyUrl, str]:
+        return f"{self.host}{f':{self.port}' if self.port else ''}/robot"
+
 
 class StationRuntimeEnvironment(str, Enum):
     """
