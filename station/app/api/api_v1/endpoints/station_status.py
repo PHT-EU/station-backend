@@ -16,9 +16,9 @@ router = APIRouter()
 """
 The station status  endpoint returns the status of local and global components  (fhir  airflow harbo minio
 """
+#TODO Response models
 
-
-@router.get("/status/Airflow")
+@router.get("/Airflow")
 def status_airflow():
     """
     Get the health status of the connected Airflow instance
@@ -27,7 +27,7 @@ def status_airflow():
     return status
 
 
-@router.get("/status/Harbor")
+@router.get("/Harbor")
 def harbor_status():
     """
     Get the health status of the central harbor instance
@@ -36,7 +36,7 @@ def harbor_status():
     return status
 
 
-@router.get("/status/Minio")
+@router.get("/Minio")
 def status_minio():
     """
     Get the health status of the minio instance
@@ -46,7 +46,7 @@ def status_minio():
     return status
 
 
-@router.get("/status/fhir")
+@router.get("/fhir")
 def status_Fhir(db: Session = Depends(dependencies.get_db)):
     """
     Get the health status of all concectetd fhir servers
@@ -70,7 +70,7 @@ def status_Fhir(db: Session = Depends(dependencies.get_db)):
     return statuses
 
 
-@router.get("/status/total_memory_util")
+@router.get("/total_memory_util")
 def status_total_memory_util():
     """
     get the current memory util of the system
@@ -92,7 +92,7 @@ def status_total_memory_util():
     return response
 
 
-@router.get("/status/total_cpu_util")
+@router.get("/total_cpu_util")
 def status_total_cpu_util():
     """
     get the current cpu utilisation of the cpu
@@ -100,7 +100,7 @@ def status_total_cpu_util():
     return psutil.cpu_percent(interval=1, percpu=True)
 
 
-@router.get("/status/total_gpu_util")
+@router.get("/total_gpu_util")
 def status_total_gpu_util():
     """
     get the current gpu utilisation of connected GPUs
@@ -109,7 +109,7 @@ def status_total_gpu_util():
     # TODO get the GPU recorces
 
 
-@router.get("/status/total_disk_util")
+@router.get("/total_disk_util")
 def status_total_disk_util():
     """
         get the current gpu utilisation of connected GPUs
@@ -122,7 +122,7 @@ def status_total_disk_util():
     return disk_util_dict
 
 
-@router.get("/status/container_resource_util")
+@router.get("/container_resource_util")
 def status_docker_container_resource_use():
     """
     get information for all docker containers
@@ -130,7 +130,7 @@ def status_docker_container_resource_use():
     return dockerClient.get_stats_all()
 
 
-@router.get("/status/container/{container_id}")
+@router.get("/container/{container_id}")
 def status_docker_container_resource_use(container_id: Any):
     """
     get information for container id
@@ -138,6 +138,6 @@ def status_docker_container_resource_use(container_id: Any):
     return dockerClient.get_stats_container(container_id)
 
 
-@router.get("/status/container_info")
+@router.get("/container_info")
 def container_info():
     return dockerClient.get_information_all()

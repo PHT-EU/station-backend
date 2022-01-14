@@ -41,6 +41,7 @@ async def upload_train_file(train_id: str, upload_file: UploadFile = File(...)):
 
     @param train_id: Id of the train the file belongs
     @param upload_file: UploadFile that has to be stored
+
     @return:
     """
     await local_train.add_file_minio(upload_file, train_id)

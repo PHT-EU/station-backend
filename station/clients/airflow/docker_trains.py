@@ -6,7 +6,7 @@ from datetime import datetime
 import json
 
 from .client import airflow_client
-from station.app.crud.crud_docker_trains import docker_train
+from station.app.crud.crud_docker_trains import docker_trains
 from station.app.crud.crud_train_configs import docker_train_config
 from station.app.schemas.docker_trains import DockerTrainExecution
 from station.app.models.docker_trains import DockerTrainState as dtsmodel, DockerTrainExecution as dtemodel
@@ -48,7 +48,7 @@ def run_train(db: Session, train_id: Any, execution_params: DockerTrainExecution
     run_id = airflow_client.trigger_dag("run_pht_train", config=config)
 
     # Extract the train from the database
-    db_train = docker_train.get_by_train_id(db, train_id)
+    db_train = docker_trains.get_by_train_id(db, train_id)
     if not db_train:
         raise HTTPException(status_code=404, detail=f"Train with id '{train_id}' not found.")
 
