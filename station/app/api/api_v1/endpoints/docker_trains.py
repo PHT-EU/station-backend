@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from station.app.api import dependencies
 from station.clients.airflow import docker_trains
 from station.app.schemas.docker_trains import DockerTrain, DockerTrainCreate, DockerTrainConfig, \
-    DockerTrainConfigCreate, DockerTrainConfigUpdate, DockerTrainExecution, DockerTrainState
+    DockerTrainConfigCreate, DockerTrainConfigUpdate, DockerTrainExecution, DockerTrainState, DockerTrainSavedExecution
 from station.app.crud.crud_docker_trains import docker_trains
 from station.app.crud.crud_train_configs import docker_train_config
 from station.clients.harbor_client import harbor_client
@@ -120,3 +120,9 @@ def get_docker_train_configuration(config_id: int, db: Session = Depends(depende
         raise HTTPException(status_code=404, detail=f"Config with id '{config_id}' not found.")
 
     return config
+
+
+@router.get("/{train_id}/executions", response_model=List[DockerTrainSavedExecution])
+def get_docker_train_executions(train_id: str, db: Session = Depends(dependencies.get_db)):
+    executions = docker_trains.get_train_executions(db, train_id)
+    return executions

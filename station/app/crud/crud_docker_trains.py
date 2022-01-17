@@ -8,7 +8,7 @@ from dateutil import parser
 
 from .base import CRUDBase, ModelType
 
-from station.app.models.docker_trains import DockerTrain, DockerTrainConfig, DockerTrainState
+from station.app.models.docker_trains import DockerTrain, DockerTrainConfig, DockerTrainState, DockerTrainExecution
 from station.app.schemas.docker_trains import DockerTrainCreate, DockerTrainUpdate, DockerTrainConfigCreate
 from station.app.schemas.docker_trains import DockerTrainState as DockerTrainStateSchema
 
@@ -100,6 +100,13 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
         db.refresh(db_state)
 
         return db_state
+
+    def get_train_executions(self, db: Session, train_id: str) -> DockerTrainExecution:
+        db_train = self.get_by_train_id(db, train_id)
+        if not db_train:
+            raise HTTPException(status_code=404, detail=f"Train {train_id} not found")
+        executions = db_train.executions
+        return executions
 
 
 docker_trains = CRUDDockerTrain(DockerTrain)
