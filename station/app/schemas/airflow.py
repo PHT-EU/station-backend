@@ -45,5 +45,14 @@ class AirflowTaskLog(BaseModel):
     run_info: str
 
 
+class AirflowRunMsg(BaseModel):
+    train_id: str
+
+
 class AirflowRun(BaseModel):
     run_id: str
+    dag_id:  str
+    train_id: str
+    start_date: datetime
+    trigger_normal: bool
+    error_msg: Optional[str]
