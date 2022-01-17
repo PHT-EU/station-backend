@@ -25,9 +25,9 @@ def run_train(db: Session, train_id: Any, execution_params: DockerTrainExecution
     # Extract config by id if given
     if execution_params.config_id != "default":
         config_general = docker_train_config.get(db, execution_params.config_id)
-        if config_general.airflow_config is not None:
+        try:
             config = config_general.airflow_config
-        else:
+        except:
             raise HTTPException(status_code=400, detail="No airflow config given by this id.")
     # Extract config as defined in the execution
     elif execution_params.config_json:
@@ -76,4 +76,4 @@ def run_train(db: Session, train_id: Any, execution_params: DockerTrainExecution
     db.refresh(execution)
 
     db.commit()
-    return run_id
+    return {"run_id": run_id, "config": config}

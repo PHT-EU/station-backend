@@ -30,8 +30,9 @@ def docker_train_config():
                 "host_path": "path/on/host",
                 "container_path": "path/in/container",
                 "mode": "ro"
-            }]
-
+            }],
+            "repository": "example/repository",
+            "tag": "latest"
         },
 
         "auto_execute": True
@@ -251,3 +252,89 @@ def test_update_train_state(train_id):
     assert response.status_code == 200, response.text
     assert response.json()["status"] == "active"
     assert response.json()["num_executions"] == 1
+
+
+def test_synchronize_database():
+    response_nostation = client.get("/api/trains/docker/sync")
+    assert response_nostation.json()["station_id"] is None
+    assert response_nostation.status_code == 200, response_nostation.text
+
+    response = client.get("/api/trains/docker/sync/?station_id=1")
+    assert response.json()["station_id"] == 1
+    assert response.status_code == 200, response.text
+
+
+def test_synchronize_database_fails():
+    response = client.get("/api/trains/docker/sync/?station_id=123")
+    assert response.status_code == 404, response.text
+
+
+def test_run_docker_train(train_id, docker_train_config):
+    default_config = {
+        "repository": f"dev-harbor.grafm.de/station_1/{train_id}",
+        "tag": "latest"
+    }
+    old_state = client.get(f"/api/trains/docker/{train_id}/state")
+
+
+    response = client.post(f"/api/trains/docker/{train_id}/run", json={"config_id": 1})
+    assert response.json()["run_id"]
+    assert response.json()["config"] == docker_train_config["airflow_config"]
+    assert response.status_code == 200, response.text
+
+    state_response = client.get(f"/api/trains/docker/{train_id}/state")
+    assert old_state.json() != state_response.json()
+    assert old_state.json()["num_executions"] + 1 == state_response.json()["num_executions"]
+
+    execution_response = client.get(f"/api/trains/docker/{train_id}/executions")
+    assert execution_response.json()[-1]["airflow_dag_run"] == response.json()["run_id"]
+
+
+    response = client.post(f"/api/trains/docker/{train_id}/run", json={"config_json": docker_train_config["airflow_config"]})
+    assert response.json()["run_id"]
+    assert response.json()["config"] == docker_train_config["airflow_config"]
+    assert response.status_code == 200, response.text
+
+    state_response = client.get(f"/api/trains/docker/{train_id}/state")
+    assert old_state.json()["num_executions"] + 2 == state_response.json()["num_executions"]
+
+    execution_response = client.get(f"/api/trains/docker/{train_id}/executions")
+    assert execution_response.json()[-1]["airflow_dag_run"] == response.json()["run_id"]
+
+
+    response = client.post(f"/api/trains/docker/{train_id}/run",
+                           json={"config_id": "default"})
+    assert response.json()["run_id"]
+    assert response.json()["config"] == default_config
+    assert response.status_code == 200, response.text
+
+    state_response = client.get(f"/api/trains/docker/{train_id}/state")
+    assert old_state.json()["num_executions"] + 3 == state_response.json()["num_executions"]
+
+    execution_response = client.get(f"/api/trains/docker/{train_id}/executions")
+    assert execution_response.json()[-1]["airflow_dag_run"] == response.json()["run_id"]
+
+
+def test_run_docker_train_fails(train_id, docker_train_config):
+    old_state = client.get(f"/api/trains/docker/{train_id}/state")
+    old_executions = client.get(f"/api/trains/docker/{train_id}/executions")
+
+    # no config with id given
+    response = client.post(f"/api/trains/docker/{train_id}/run", json={"config_id": 4})
+    state_response = client.get(f"/api/trains/docker/{train_id}/state")
+    execution_response = client.get(f"/api/trains/docker/{train_id}/executions")
+    assert old_state.json() == state_response.json()
+    assert old_executions.json() == execution_response.json()
+    assert response.status_code == 400, response.text
+
+    # no tag and no repository given
+    response = client.post(f"/api/trains/docker/{train_id}/run", json={"config_id": 2})
+    state_response = client.get(f"/api/trains/docker/{train_id}/state")
+    execution_response = client.get(f"/api/trains/docker/{train_id}/executions")
+    assert old_state.json() == state_response.json()
+    assert old_executions.json() == execution_response.json()
+    assert response.status_code == 400, response.text
+
+    # train not defined
+    response = client.post(f"/api/trains/docker/no_train/run", json={"config_id": 1})
+    assert response.status_code == 404, response.text
