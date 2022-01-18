@@ -1,7 +1,7 @@
 from typing import Generator
 from station.app.db.session import SessionLocal
 from station.app.config import settings
-
+from station.app.auth import get_current_user
 
 import os
 from fastapi.security import HTTPBearer
@@ -27,3 +27,5 @@ def fernet_key() -> bytes:
         # TODO load key from station config file
         pass
     return fernet_key.encode()
+
+

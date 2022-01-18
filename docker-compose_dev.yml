@@ -32,6 +32,13 @@ services:
       ADMIN_USER: admin
       ADMIN_PASSWORD: start123
 
+  redis:
+    image: redislabs/rejson:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./.data/redis:/data
+
   airflow:
     container_name: station-airflow
     build:

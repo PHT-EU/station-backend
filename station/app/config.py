@@ -37,6 +37,12 @@ class StationEnvironmentVariables(Enum):
     AIRFLOW_USER = "AIRFLOW_USER"
     AIRFLOW_PW = "AIRFLOW_PW"
 
+    # Redis environment variables
+    REDIS_HOST = "REDIS_HOST"
+    REDIS_PORT = "REDIS_PORT"
+    REDIS_PW = "REDIS_PW"
+    REDIS_DB = "REDIS_DB"
+
     # auth environment variables
     AUTH_SERVER_HOST = "AUTH_SERVER_HOST"
     AUTH_SERVER_PORT = "AUTH_SERVER_PORT"
@@ -81,6 +87,13 @@ class CentralUISettings(BaseModel):
     client_secret: Optional[SecretStr] = "admin"
 
 
+class RedisSettings(BaseModel):
+    host: Optional[str] = "redis"
+    port: Optional[int] = 6379
+    password: Optional[SecretStr] = None
+    db: Optional[int] = 0
+
+
 class AuthConfig(BaseModel):
     robot_id: str
     robot_secret: SecretStr
@@ -93,7 +106,7 @@ class AuthConfig(BaseModel):
 
     @property
     def auth_url(self) -> Union[AnyUrl, str]:
-        return f"{self.host}{f':{self.port}' if self.port else ''}/robot"
+        return f"{self.host}{f':{self.port}' if self.port else ''}"
 
 
 class StationRuntimeEnvironment(str, Enum):
@@ -102,6 +115,7 @@ class StationRuntimeEnvironment(str, Enum):
     """
     DEVELOPMENT = "development"
     PRODUCTION = "production"
+    TESTING = "testing"
 
 
 class StationConfig(BaseModel):
@@ -119,6 +133,7 @@ class StationConfig(BaseModel):
     airflow: Optional[AirflowSettings] = None
     minio: Optional[MinioSettings] = None
     central_ui: Optional[CentralUISettings] = None
+    redis: Optional[RedisSettings] = RedisSettings()
 
     @classmethod
     def from_file(cls, path: str) -> "StationConfig":
@@ -166,6 +181,7 @@ class Settings:
         # validate the runtime environment
         self._setup_runtime_environment()
         self._setup_station_environment()
+        # todo redis settings
 
         logger.info(f"Station backend setup successful {Emojis.SUCCESS}")
         return self.config
@@ -321,6 +337,13 @@ class Settings:
 
         elif env_fernet_key:
             self.config.fernet_key = env_fernet_key
+
+    def _setup_redis(self):
+        redis_config = self.config.redis.copy()
+        redis_config.host = os.getenv(StationEnvironmentVariables.REDIS_HOST.value) or redis_config.host
+        redis_config.port = os.getenv(StationEnvironmentVariables.REDIS_PORT.value) or redis_config.port
+        redis_config.db = os.getenv(StationEnvironmentVariables.REDIS_DB.value) or redis_config.db
+        redis_config.password = os.getenv(StationEnvironmentVariables.REDIS_PW.value) or redis_config.password
 
     def _setup_station_auth(self):
         """

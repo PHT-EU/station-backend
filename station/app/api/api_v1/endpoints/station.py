@@ -5,19 +5,21 @@ import os
 from typing import List, Optional
 
 from station.app.api import dependencies
-from station.app.schemas.dl_models import DLModelCreate, DLModel
-from station.app.schemas.notifications import NotificationCreate, Notification
-from station.app.schemas.station import Trains
-from station.app.crud import docker_trains, notifications
-from station.app.docker_trains.update import sync_db_with_registry
+from station.app.models.users import User
 
 router = APIRouter()
 
 
 @router.get("/config")
-def get_station_config(db: Session = Depends(dependencies.get_db)):
+def get_station_config(db: Session = Depends(dependencies.get_db), token: str = Depends(dependencies.HTTPBearer())):
     # TODO store station configuration either inside yaml/config file or in db and read it here
-    pass
+    print(token)
+
+
+
+@router.get("/config/test")
+def test_station_config(user: User = Depends(dependencies.get_current_user)):
+    print(user)
 
 
 @router.put("/config")
