@@ -6,6 +6,7 @@ volumes:
     external: True
 
   blaze_data:
+  auth_data:
 
 services:
   pg_station:
@@ -18,6 +19,18 @@ services:
       - POSTGRES_PASSWORD=admin
     ports:
       - "5432:5432"
+
+  auth:
+    image: station-auth
+    container_name: station-auth
+    volumes:
+      - auth_data:/usr/src/app/writable
+    ports:
+      - '3010:3010'
+    environment:
+      PORT: 3010
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: start123
 
   airflow:
     container_name: station-airflow
