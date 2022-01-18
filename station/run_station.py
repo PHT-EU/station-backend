@@ -19,6 +19,7 @@ if __name__ == '__main__':
 
     # initialize settings
     station_config = settings.setup()
+    print(settings.config)
 
     uvicorn.run("app.main:app",
                 port=station_config.port,

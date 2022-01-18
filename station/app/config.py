@@ -88,7 +88,7 @@ class CentralUISettings(BaseModel):
 
 
 class RedisSettings(BaseModel):
-    host: Optional[str] = "redis"
+    host: Optional[str] = "localhost"
     port: Optional[int] = 6379
     password: Optional[SecretStr] = None
     db: Optional[int] = 0
@@ -102,11 +102,11 @@ class AuthConfig(BaseModel):
 
     @property
     def token_url(self) -> Union[AnyUrl, str]:
-        return f"{self.host}{f':{self.port}' if self.port else ''}/token"
+        return f"http://{self.host}{f':{self.port}' if self.port else ''}/token"
 
     @property
     def auth_url(self) -> Union[AnyUrl, str]:
-        return f"{self.host}{f':{self.port}' if self.port else ''}"
+        return f"http://{self.host}{f':{self.port}' if self.port else ''}"
 
 
 class StationRuntimeEnvironment(str, Enum):
@@ -565,3 +565,4 @@ class Settings:
 
 
 settings = Settings()
+settings.setup()
