@@ -12,12 +12,9 @@ class TaskInstances(BaseModel):
     max_tries: int
     operator: str
     pid: Optional[int]
-    pool: str
-    pool_slots: int
     priority_weight: int
     queue: str
     queued_when: Optional[datetime]
-    sla_miss: Optional[dict]
     start_date: Optional[datetime]
     state: Optional[str]
     task_id: str
@@ -54,5 +51,3 @@ class AirflowRun(BaseModel):
     dag_id:  str
     train_id: str
     start_date: datetime
-    trigger_normal: bool
-    error_msg: Optional[str]
