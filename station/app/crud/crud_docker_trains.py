@@ -5,6 +5,7 @@ from typing import List
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 from dateutil import parser
+from datetime import datetime
 
 from .base import CRUDBase, ModelType
 
@@ -66,7 +67,7 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             trains = db.query(DockerTrain).filter(DockerTrain.is_active == active).all()
         return trains
 
-    def add_if_not_exists(self, db: Session, train_id: str, created_at: str = None, updated_at: str = None):
+    def add_if_not_exists(self, db: Session, train_id: str, created_at: str = datetime.now(), updated_at: str = None):
         db_train = self.get_by_train_id(db, train_id)
         if not db_train:
             if updated_at:

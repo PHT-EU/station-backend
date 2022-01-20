@@ -78,7 +78,7 @@ class DockerTrain(DBSchema):
     name: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
-    proposal_id: int = 0
+    proposal_id: int = None
     is_active: bool = False
     train_id: Optional[str] = None
     config_id: Optional[int] = None

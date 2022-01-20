@@ -24,7 +24,7 @@ class HarborClient:
             station_id = int(os.getenv("STATION_ID"))
         assert station_id
 
-        endpoint = f"/projects/station_{station_id}/repositories"
+        endpoint = f"/projects/station_{station_id}/repositories/?page_size=20"
         r = requests.get(self.url + endpoint, auth=(self.username, self.password))
         # TODO chache no replys
         return r.json()
