@@ -49,21 +49,6 @@ def get_airflow_run_information(run_id: str, dag_id: str):
     """
 
     run_info = airflow_client.get_run_information(dag_id, run_id)
-    for instance in run_info["tasklist"]["task_instances"][:]:
-        try:
-            instance.pop("sla_miss")
-        except KeyError:
-            pass
-        try:
-            instance.pop("pool_slots")
-        except KeyError:
-            pass
-        try:
-            instance.pop("pool")
-        except KeyError:
-            pass
-
-    print(run_info["tasklist"]["task_instances"][:])
     return run_info
 
 

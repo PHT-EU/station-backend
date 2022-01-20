@@ -27,7 +27,7 @@ class LocalTrain(DBSchema):
 
 
 class LocalTrainCreate(BaseModel):
-    train_name: str
+    train_name: Optional[str] = None
 
 
 class LocalTrainAddMasterImage(BaseModel):

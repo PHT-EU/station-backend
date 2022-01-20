@@ -116,7 +116,7 @@ def test_create_and_run_local_train():
     run_id = start_train_response.text.replace('"', '')
 
     def run_is_finisted(run_id):
-        run_response = client.get(f"/api/airflow/getAirflowRun/{run_id}/run_local")
+        run_response = client.get(f"/api/airflow/logs/run_local/{run_id}")
         assert run_response.status_code == 200, run_response.json
         run_dict = json.loads(run_response.text)
         task_instances = run_dict["tasklist"]["task_instances"]
