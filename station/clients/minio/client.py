@@ -1,6 +1,8 @@
 from io import BytesIO
 from io import BufferedReader
 from io import TextIOWrapper
+
+import starlette
 from minio import Minio
 import os
 from fastapi import File, UploadFile
@@ -65,8 +67,13 @@ class MinioClient:
             model_data = file.encode('utf-8')
         elif isinstance(file, TextIOWrapper):
             model_data = file.read().encode('utf-8')
-        else:
+        elif isinstance(file, BytesIO):
+            res = self.client.put_object(bucket, object_name=name, data=file, length=len(file.getbuffer()))
+            return res
+        elif isinstance(file, starlette.datastructures.UploadFile):
             model_data = await file.read()
+        else:
+            raise TypeError(f'files with type {type(file)} are not supported')
 
         file = BytesIO(model_data)
         res = self.client.put_object(bucket, object_name=name, data=file, length=len(file.getbuffer()))
