@@ -1,20 +1,16 @@
-from typing import Any
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, HTTPException
-import os
-from typing import List, Optional
+from fastapi import APIRouter, Depends
 
 from station.app.api import dependencies
-from station.app.models.users import User
+from station.app.schemas.users import User
 
 router = APIRouter()
 
 
 @router.get("/config")
-def get_station_config(db: Session = Depends(dependencies.get_db), token: str = Depends(dependencies.HTTPBearer())):
+def get_station_config(db: Session = Depends(dependencies.get_db)):
     # TODO store station configuration either inside yaml/config file or in db and read it here
-    print(token)
-
+    pass
 
 
 @router.get("/config/test")

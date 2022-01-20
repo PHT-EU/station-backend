@@ -1,5 +1,4 @@
-from typing import Tuple
-from fastapi.security import OAuth2AuthorizationCodeBearer, HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import requests
 from loguru import logger
 from fastapi import Depends, HTTPException
@@ -7,7 +6,7 @@ from requests import HTTPError
 from enum import Enum
 
 from station.app.config import settings
-from station.app.models.users import User, UserResponse
+from station.app.schemas.users import User
 from station.app.cache import redis_cache
 
 

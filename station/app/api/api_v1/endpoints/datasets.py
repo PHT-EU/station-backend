@@ -26,7 +26,7 @@ def update_data_set(dataset_id: Any, update_msg: DataSetUpdate, db: Session = De
 
 
 @router.delete("/{dataset_id}")
-def delete_data_set(dataset_id: Any, db: Session = Depends(dependencies.get_db)) -> DataSet:#
+def delete_data_set(dataset_id: Any, db: Session = Depends(dependencies.get_db)) -> DataSet:
     db_dataset = datasets.get(db, dataset_id)
     if not db_dataset:
         raise HTTPException(status_code=404, detail="DataSet not found")
