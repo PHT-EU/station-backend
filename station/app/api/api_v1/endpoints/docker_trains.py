@@ -21,10 +21,10 @@ def synchronize_database(station_id: int = None, db: Session = Depends(dependenc
         if error:
             raise HTTPException(status_code=404, detail=f"Station {station_id} not found.")
     elif isinstance(artifacts, list):
+        train_list = []
         if len(artifacts) == 0:
             print(f"No train registered at station {station_id}.")
         else:
-            train_list = []
             for train in artifacts:
                 id = train["name"].split("/")[1]
                 created_at = train["creation_time"][:-1]
@@ -34,7 +34,7 @@ def synchronize_database(station_id: int = None, db: Session = Depends(dependenc
                 new_train = docker_trains.add_if_not_exists(db, train_id=id, created_at=created_at, updated_at=updated_at)
                 if new_train:
                     train_list.append(new_train)
-            return train_list
+        return train_list
     else:
         raise HTTPException(status_code=500, detail="Invalid response.")
 

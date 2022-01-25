@@ -51,7 +51,7 @@ def validate_run_config(db: Session, train_id: Any, execution_params: DockerTrai
             raise HTTPException(status_code=400, detail="No airflow config given by this id.")
     # Extract config as defined in the execution
     elif execution_params.config_json:
-        config = json.loads(execution_params.config_json.json())
+        config = execution_params.config_json.dict()
     # Using the default config
     else:
         print(f"Starting train {train_id} using default config")
@@ -117,13 +117,8 @@ def run_train(db: Session, train_id: Any, execution_params: DockerTrainExecution
     try:
         run_id = airflow_client.trigger_dag("run_pht_train", config=config)
         db_train = update_train(db, db_train, run_id)
+        last_execution = db_train.executions[-1]
+        return last_execution
     except:
         raise HTTPException(status_code=503, detail="No connection to the airflow client could be established.")
 
-    try:
-        last_execution = db_train.executions[-1]
-    except:
-        last_execution = None
-        print("No executions registered.")
-
-    return last_execution
