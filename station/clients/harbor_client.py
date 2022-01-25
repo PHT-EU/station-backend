@@ -20,14 +20,33 @@ class HarborClient:
         assert self.password
 
     def get_artifacts_for_station(self, station_id: Union[str, int] = None) -> List[dict]:
+        # TODO chache no replys
         if not station_id:
             station_id = int(os.getenv("STATION_ID"))
         assert station_id
 
-        endpoint = f"/projects/station_{station_id}/repositories"
+        endpoint = f"/projects/station_{station_id}/repositories/"
         r = requests.get(self.url + endpoint, auth=(self.username, self.password))
-        # TODO chache no replys
-        return r.json()
+        results = r.json()
+
+        link = True
+        while link:
+            if r.links:
+                if next(iter(r.links)) == "next":
+                    print("Getting repositories on next page.")
+                    url = r.links["next"]["url"]
+                    new_endpoint = url[9:]
+                    r = requests.get(self.url + new_endpoint, auth=(self.username, self.password))
+                    new_results = r.json()
+                    results.extend(new_results)
+                else:
+                    print("No further repositories found.")
+                    link = False
+            else:
+                # just one page or station not defined
+                link = False
+
+        return results
 
     def get_master_images(self):
         """
