@@ -9,7 +9,7 @@ from .client import airflow_client
 from station.app.crud.crud_docker_trains import docker_trains
 from station.app.crud.crud_train_configs import docker_train_config
 from station.app.schemas.docker_trains import DockerTrainExecution, DockerTrainSavedExecution, DockerTrainAirflowConfig, DockerTrainState
-from station.app.models.docker_trains import DockerTrainState as dtsmodel, DockerTrainExecution as dtemodel
+from station.app.models.docker_trains import DockerTrainState as dts_model, DockerTrainExecution as dte_model
 
 
 def update_state(db, db_train, run_time) -> DockerTrainState:
@@ -20,18 +20,18 @@ def update_state(db, db_train, run_time) -> DockerTrainState:
     :param run_time: time when run is triggered
     :return: train state object
     """
-    trainstate = db.query(dtsmodel).filter(dtsmodel.train_id == db_train.id).first()
-    if trainstate:
-        trainstate.last_execution = run_time
-        trainstate.num_executions += 1
-        trainstate.status = 'active'
+    train_state = db.query(dts_model).filter(dts_model.train_id == db_train.id).first()
+    if train_state:
+        train_state.last_execution = run_time
+        train_state.num_executions += 1
+        train_state.status = 'active'
     else:
         print("No train state assigned.")
-    db.add(trainstate)
+    db.add(train_state)
     db.commit()
-    db.refresh(trainstate)
+    db.refresh(train_state)
 
-    return trainstate
+    return train_state
 
 
 def validate_run_config(db: Session, train_id: Any, execution_params: DockerTrainExecution) -> DockerTrainAirflowConfig:
@@ -80,10 +80,10 @@ def update_train(db, db_train, run_id):
     db_train.updated_at = run_time
 
     # Update the train state
-    trainstate = update_state(db, db_train, run_time)
+    train_state = update_state(db, db_train, run_time)
 
     # Create an execution
-    execution = dtemodel(train_id=db_train.id, airflow_dag_run=run_id)
+    execution = dte_model(train_id=db_train.id, airflow_dag_run=run_id)
     db.add(execution)
     db.commit()
     db.refresh(execution)
