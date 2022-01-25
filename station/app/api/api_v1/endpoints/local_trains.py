@@ -9,7 +9,7 @@ from station.app.local_train_minio.LocalTrainMinIO import train_data
 from fastapi.responses import Response
 from fastapi.responses import FileResponse
 from station.app.schemas.local_trains import LocalTrain, LocalTrainCreate, LocalTrainAddMasterImage, LocalTrainAddTag, \
-    LocalTrainGetFile, LocalTrainRun
+    LocalTrainGetFile, LocalTrainRun, LocalTrainConfig
 
 from station.app.crud.crud_local_train import local_train
 from station.clients.harbor_client import harbor_client
@@ -48,7 +48,7 @@ async def upload_train_file(train_id: str, upload_file: UploadFile = File(...)):
     return {"filename": upload_file.filename}
 
 
-@router.post("/create", response_model=LocalTrain)
+@router.post("", response_model=LocalTrain)
 def create_local_train(create_msg: LocalTrainCreate, db: Session = Depends(dependencies.get_db)):
     """
     creae a database entry for a new train with preset names from the create_msg
@@ -61,7 +61,7 @@ def create_local_train(create_msg: LocalTrainCreate, db: Session = Depends(depen
     return train
 
 
-@router.post("/createWithUuid", response_model=LocalTrain)
+@router.post("/withUuid", response_model=LocalTrain)
 def create_local_train(db: Session = Depends(dependencies.get_db)):
     """
      creae a database entry for a new train, the name is set as the train_id
@@ -71,8 +71,11 @@ def create_local_train(db: Session = Depends(dependencies.get_db)):
     train = local_train.create(db, obj_in=None)
     return train
 
+@router.post("/config", response_model=LocalTrainConfig)
+def create_local_train_config(config: LocalTrainConfig, db: Session = Depends(dependencies.get_db)):
+    pass
 
-@router.put("/addMasterImage")
+@router.put("/masterImage")
 def add_master_image(add_master_image_msg: LocalTrainAddMasterImage, db: Session = Depends(dependencies.get_db)):
     """
     Modifies the train configuration with a MasterImage that is defined in add_master_image_msg in the train
@@ -115,7 +118,7 @@ def remove_config_element(train_id: str, key: str, db: Session = Depends(depende
     return response
 
 
-@router.put("/{train_id}/{entrypoint}/addEntrypoint")
+@router.put("/{train_id}/{entrypoint}/entrypoint")
 def add_entrypoint_config(train_id: str, entrypoint: str, db: Session = Depends(dependencies.get_db)):
     """
     addes a file name to config of the entrypoint
@@ -129,7 +132,7 @@ def add_entrypoint_config(train_id: str, entrypoint: str, db: Session = Depends(
     return new_config
 
 
-@router.put("/{train_id}/{query}/addQuery")
+@router.put("/{train_id}/{query}/query")
 def select_query_config(train_id: str, query: str, db: Session = Depends(dependencies.get_db)):
     """
     addes a file name to config of the query
@@ -142,7 +145,7 @@ def select_query_config(train_id: str, query: str, db: Session = Depends(depende
     return new_config
 
 
-@router.delete("/{train_id}/deleteTrain")
+@router.delete("/{train_id}/train")
 def delete_local_train(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
 
@@ -154,7 +157,7 @@ def delete_local_train(train_id: str, db: Session = Depends(dependencies.get_db)
     return f"{obj} was deleted"
 
 
-@router.delete("/{train_id}/{file_name}/deleteFile")
+@router.delete("/{train_id}/{file_name}/file")
 async def delete_file(train_id: str, file_name: str):
     """
 
@@ -166,7 +169,7 @@ async def delete_file(train_id: str, file_name: str):
     return "deletetd " + file_name
 
 
-@router.get("/{train_id}/getAllUploadedFileNames")
+@router.get("/{train_id}/allUploadedFileNames")
 def get_all_uploaded_file_names(train_id: str):
     """
 
@@ -177,22 +180,8 @@ def get_all_uploaded_file_names(train_id: str):
     return {"files": local_train.get_all_uploaded_files(train_id)}
 
 
-@router.get("/{train_id}/getResults")
-def get_results(train_id: str):
-    """
 
-    @param train_id: uid of a local train
-    @return:
-    """
-    data = train_data.get_results(train_id)
-    file_like_objekt = io.BytesIO(data)
-    with tarfile.open(name="results.tar", fileobj=file_like_objekt, mode='a') as tar:
-        print(tar)
-
-    return FileResponse('results.tar', media_type='bytes/tar')
-
-
-@router.get("/{train_id}/getTrainStatus")
+@router.get("/{train_id}/status")
 def get_train_status(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
 
@@ -213,7 +202,7 @@ def get_master_images():
     return harbor_client.get_master_images()
 
 
-@router.get("/getAllLocalTrains")
+@router.get("/trains")
 def get_all_local_trains(db: Session = Depends(dependencies.get_db)):
     """
 
@@ -223,7 +212,7 @@ def get_all_local_trains(db: Session = Depends(dependencies.get_db)):
     return local_train.get_trains(db)
 
 
-@router.get("/{train_id}/getConfig")
+@router.get("/{train_id}/config")
 def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
 
@@ -235,7 +224,7 @@ def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
     return config
 
 
-@router.get("/{train_id}/getName")
+@router.get("/{train_id}/name")
 def get_name(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
 
@@ -247,7 +236,7 @@ def get_name(train_id: str, db: Session = Depends(dependencies.get_db)):
     return train_name
 
 
-@router.get("/{train_name}/getID")
+@router.get("/{train_name}/id")
 def get_id(train_name: str, db: Session = Depends(dependencies.get_db)):
     """
 
@@ -259,7 +248,7 @@ def get_id(train_name: str, db: Session = Depends(dependencies.get_db)):
     return train_id
 
 
-@router.get("/getFile")
+@router.get("/file")
 async def get_file(train_id: str, file_name: str):
     """
 
@@ -271,7 +260,7 @@ async def get_file(train_id: str, file_name: str):
     return Response(file)
 
 
-@router.get("/{train_id}/getLogs")
+@router.get("/{train_id}/logs")
 def get_logs(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
     Returns the run logs for the runs of the train
@@ -284,7 +273,7 @@ def get_logs(train_id: str, db: Session = Depends(dependencies.get_db)):
     return logs
 
 
-@router.get("/{train_id}/getLastLogs")
+@router.get("/{train_id}/lastLogs")
 def get_last_log(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
     Returns the last run logs for the train
