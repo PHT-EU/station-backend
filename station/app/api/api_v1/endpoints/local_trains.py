@@ -64,7 +64,7 @@ def create_local_train(create_msg: LocalTrainCreate, db: Session = Depends(depen
 @router.post("/withUuid", response_model=LocalTrain)
 def create_local_train(db: Session = Depends(dependencies.get_db)):
     """
-     creae a database entry for a new train, the name is set as the train_id
+    create a database entry for a new train, the name is set as the train_id
     @param db: reference to the postgres database
     @return:
     """
@@ -72,8 +72,12 @@ def create_local_train(db: Session = Depends(dependencies.get_db)):
     return train
 
 @router.post("/config", response_model=LocalTrainConfig)
-def create_local_train_config(config: LocalTrainConfig, db: Session = Depends(dependencies.get_db)):
-    pass
+def create_local_train_config(config_msg: LocalTrainConfig, db: Session = Depends(dependencies.get_db)):
+    """
+
+    """
+    config = local_train.create_config(db, config_msg)
+    return config
 
 @router.put("/masterImage")
 def add_master_image(add_master_image_msg: LocalTrainAddMasterImage, db: Session = Depends(dependencies.get_db)):
