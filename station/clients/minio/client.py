@@ -8,6 +8,7 @@ import os
 from fastapi import File, UploadFile
 from typing import List, Union, Dict
 from dotenv import load_dotenv, find_dotenv
+from station.app.config import settings
 
 
 class MinioClient:
@@ -21,13 +22,19 @@ class MinioClient:
         :param secret_key: minio password
         """
         # Initialize class fields based on constructor values or environment variables
-        self.minio_server = minio_server if minio_server else os.getenv("MINIO_URL")
-        self.access_key = access_key if access_key else os.getenv("MINIO_USER")
-        self.secret_key = secret_key if secret_key else os.getenv("MINIO_PW")
 
-        assert self.minio_server
-        assert self.access_key
-        assert self.secret_key
+        minio_url = f"{settings.config.minio.host}:{settings.config.minio.port}"
+        minio_user = settings.config.minio.access_key
+        minio_pass = settings.config.minio.secret_key
+
+        self.minio_server = minio_url
+        self.access_key = minio_user
+        self.secret_key = minio_pass.get_secret_value()
+
+        if settings.config.environment == "production":
+            assert self.minio_server
+            assert self.access_key
+            assert self.secret_key
 
         # Initialize minio client
         self.client = Minio(

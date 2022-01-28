@@ -12,9 +12,9 @@ pandas
 python-dotenv
 apache-airflow[postgres, celery]
 minio
-pytorch-lightning
-pytest
-torchvision
+# pytorch-lightning
+# pytest
+# torchvision
 python-keycloak
 fhir-kindling
 pht-train-container-library

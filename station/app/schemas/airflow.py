@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional, Any
+from typing import Optional, Any, List
+
 
 class TaskInstances(BaseModel):
     dag_id: str
@@ -21,9 +22,11 @@ class TaskInstances(BaseModel):
     try_number: int
     unixname: str
 
+
 class Tasklist(BaseModel):
-    task_instances: list[TaskInstances]
+    task_instances: List[TaskInstances]
     total_entries: int
+
 
 class AirflowInformation(BaseModel):
     conf: dict
@@ -48,6 +51,6 @@ class AirflowRunMsg(BaseModel):
 
 class AirflowRun(BaseModel):
     run_id: str
-    dag_id:  str
+    dag_id: str
     train_id: str
     start_date: datetime
