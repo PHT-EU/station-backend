@@ -38,16 +38,16 @@ services:
       - FHIR_ADDRESS=https://fhir.personalhealhtrain.de
       - FHIR_USER=fhiruser
       - FHIR_PW=
-      - HARBOR_USER=system
-      - HARBOR_PW=Start123
+      - HARBOR_USER=
+      - HARBOR_PW=
       - STATION_ID=1
       - STATION_PRIVATE_KEY_PATH=/opt/private_key.pem
-      - HARBOR_API_URL=https://dev-harbor.grafm.de/api/v2.0
-      - MINIO_URL=minio:9000
-      - MINIO_USER=minio_admin
-      - MINIO_PW=minio_admin
-      - AIRFLOW_USER=admin
-      - AIRFLOW_PW=admin
+      - HARBOR_API_URL=https://harbor.personalhealthtrain.de/api/v2.0
+      - MINIO_URL=
+      - MINIO_USER=
+      - MINIO_PW=
+      - AIRFLOW_USER=
+      - AIRFLOW_PW=
     ports:
       - "8080:8080"
 
