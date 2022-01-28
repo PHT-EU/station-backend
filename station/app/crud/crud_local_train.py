@@ -4,10 +4,11 @@ import asyncio
 from datetime import datetime
 from sqlalchemy.orm import Session
 from fastapi import UploadFile, HTTPException
+from fastapi.encoders import jsonable_encoder
 
 from station.app.crud.base import CRUDBase, ModelType
 from station.app.models.local_trains import LocalTrain, LocalTrainExecution
-from station.app.schemas.local_trains import LocalTrainCreate, LocalTrainUpdate, LocalTrainRun
+from station.app.schemas.local_trains import LocalTrainCreate, LocalTrainUpdate, LocalTrainRun ,LocalTrainConfig
 from station.app.local_train_minio.LocalTrainMinIO import train_data
 
 
@@ -38,6 +39,22 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         db.commit()
         db.refresh(train)
         return train
+
+    def create_config(self,db: Session, *, obj_in: LocalTrainConfig) -> ModelType:
+        db_config: LocalTrainConfig = db.query(LocalTrainConfig).filter(
+            LocalTrainConfig.name == obj_in.config.name
+        ).first()
+        if db_config:
+            raise HTTPException(status_code=400, detail="A config with the given name already exists.")
+        else:
+            new_config = LocalTrainConfig(
+                                        name=obj_in.config.name,
+                                        airflow_config=self._create_config(obj_in) )
+            db.add(new_config)
+            db.commit()
+            db.refresh(new_config)
+            config_id = new_config.id
+        return new_config
 
     def create_run(self, db: Session, *, obj_in: LocalTrainRun) -> ModelType:
         """

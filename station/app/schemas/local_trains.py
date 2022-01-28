@@ -31,12 +31,13 @@ class LocalTrainCreate(BaseModel):
 
 
 class LocalTrainConfig(BaseModel):
+    name: str
     image: str
-    tag: str
+    tag: Optional[str]
     query: Optional[str]
     entrypoint: str
     volumes: Optional[str]
-    train_id: str
+    train_id: Optional[str]
 
 
 class LocalTrainAddMasterImage(BaseModel):

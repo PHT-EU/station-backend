@@ -71,6 +71,7 @@ def create_local_train(db: Session = Depends(dependencies.get_db)):
     train = local_train.create(db, obj_in=None)
     return train
 
+
 @router.post("/config", response_model=LocalTrainConfig)
 def create_local_train_config(config_msg: LocalTrainConfig, db: Session = Depends(dependencies.get_db)):
     """
@@ -78,6 +79,7 @@ def create_local_train_config(config_msg: LocalTrainConfig, db: Session = Depend
     """
     config = local_train.create_config(db, config_msg)
     return config
+
 
 @router.put("/masterImage")
 def add_master_image(add_master_image_msg: LocalTrainAddMasterImage, db: Session = Depends(dependencies.get_db)):
@@ -182,7 +184,6 @@ def get_all_uploaded_file_names(train_id: str):
     """
     # make search for train
     return {"files": local_train.get_all_uploaded_files(train_id)}
-
 
 
 @router.get("/{train_id}/status")
