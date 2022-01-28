@@ -256,18 +256,20 @@ def test_update_train_state(train_id):
 
 
 def test_synchronize_database():
-    response_nostation = client.get("/api/trains/docker/sync")
-    assert response_nostation.status_code == 200, response_nostation.text
+    if os.getenv("ENVIRONMENT") == "testing":
+        response_nostation = client.get("/api/trains/docker/sync")
+        assert response_nostation.status_code == 200, response_nostation.text
 
-    response = client.get("/api/trains/docker/sync/?station_id=1")
-    if os.getenv("STATION_ID") == 1:
-        assert len(response.json()) == 0
-    assert response.status_code == 200, response.text
+        response = client.get("/api/trains/docker/sync/?station_id=1")
+        if os.getenv("STATION_ID") == 1:
+            assert len(response.json()) == 0
+        assert response.status_code == 200, response.text
 
 
 def test_synchronize_database_fails():
-    response = client.get("/api/trains/docker/sync/?station_id=123")
-    assert response.status_code == 404, response.text
+    if os.getenv("ENVIRONMENT") == "testing":
+        response = client.get("/api/trains/docker/sync/?station_id=123")
+        assert response.status_code == 404, response.text
 
 
 def test_run_docker_train(train_id, docker_train_config):

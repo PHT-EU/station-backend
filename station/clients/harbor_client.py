@@ -12,6 +12,7 @@ class HarborClient:
 
         self.url = harbor_api_url if harbor_api_url else os.getenv("HARBOR_URL")
         assert self.url
+        self.url = self.url.rstrip("/") + "/api/v2.0"
 
         self.username = username if username else os.getenv("HARBOR_USER")
         assert self.username
@@ -54,6 +55,7 @@ class HarborClient:
         """
         endpoint = "/projects/master/repositories"
         r = requests.get(self.url + endpoint, auth=(self.username, self.password))
+        print(r.text)
         return [repositori["name"] for repositori in r.json()]
 
     def health_check(self):

@@ -54,21 +54,8 @@ services:
       # - ./station /opt/station
     depends_on:
       - pg_station
-    environment:
-      - AIRFLOW_HOME=/root/airflow
-      - FHIR_ADDRESS=https://fhir.personalhealhtrain.de
-      - FHIR_USER=fhiruser
-      - FHIR_PW=
-      - HARBOR_USER=
-      - HARBOR_PW=
-      - STATION_ID=1
-      - STATION_PRIVATE_KEY_PATH=/opt/private_key.pem
-      - HARBOR_API_URL=https://harbor.personalhealthtrain.de/api/v2.0
-      - MINIO_URL=
-      - MINIO_USER=
-      - MINIO_PW=
-      - AIRFLOW_USER=
-      - AIRFLOW_PW=
+    env_file:
+      - .env
     ports:
       - "8080:8080"
 
