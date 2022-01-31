@@ -9,7 +9,7 @@ from app.config import StationRuntimeEnvironment
 if __name__ == '__main__':
     load_dotenv(find_dotenv())
     # todo remove reset in production
-    # reset_db(dev=os.getenv("ENVIRONMENT") != "prod")
+    #reset_db(dev=os.getenv("ENVIRONMENT") != "prod")
     setup_db(dev=os.getenv("ENVIRONMENT") == "development")
 
     # Configure logging behaviour
