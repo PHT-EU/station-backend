@@ -2,13 +2,15 @@ import uuid
 import os
 import asyncio
 from datetime import datetime
+from typing import Union, Any
+
 from sqlalchemy.orm import Session
 from fastapi import UploadFile, HTTPException
 from fastapi.encoders import jsonable_encoder
 
 from station.app.crud.base import CRUDBase, ModelType
-from station.app.models.local_trains import LocalTrain, LocalTrainExecution
-from station.app.schemas.local_trains import LocalTrainCreate, LocalTrainUpdate, LocalTrainRun, LocalTrainConfig
+from station.app.models.local_trains import LocalTrain, LocalTrainExecution, LocalTrainConfig
+from station.app.schemas.local_trains import LocalTrainCreate, LocalTrainUpdate, LocalTrainRun, LocalTrainConfigSchema
 from station.app.local_train_minio.LocalTrainMinIO import train_data
 
 
@@ -25,14 +27,14 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
             train_id = str(uuid.uuid4())
             train = LocalTrain(train_id=train_id,
                                train_name=train_id,
-                               # airflow_config_json=self._create_emty_config(train_id)
+                               airflow_config_json=self._create_empty_config(train_id)
                                )
         else:
             train_id = str(uuid.uuid4())
             train = LocalTrain(
                 train_id=train_id,
                 train_name=obj_in.train_name,
-                # airflow_config_json=self._create_emty_config(train_id)
+                airflow_config_json=self._create_empty_config(train_id)
             )
         # add and commit the new entry
         db.add(train)
@@ -40,22 +42,30 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         db.refresh(train)
         return train
 
-    def create_config(self, db: Session, *, obj_in: LocalTrainConfig) -> ModelType:
+    def create_config(self, db: Session, *, obj_in: LocalTrainConfigSchema) -> ModelType:
         db_config: LocalTrainConfig = db.query(LocalTrainConfig).filter(
-            LocalTrainConfig.name == obj_in.config.name
+            LocalTrainConfig.name == obj_in.name
         ).first()
         if db_config:
             raise HTTPException(status_code=400, detail="A config with the given name already exists.")
         else:
             new_config = LocalTrainConfig(
-                name=obj_in.config.name,
+                name=obj_in.name,
                 airflow_config=self._create_config(obj_in))
             db.add(new_config)
             db.commit()
             db.refresh(new_config)
-            config_id = new_config.id
-        return new_config
-
+            if obj_in.train_id is not None:
+                config_id = new_config.id
+                try:
+                    db.query(LocalTrain).filter(LocalTrain.train_id == obj_in.train_id).update(
+                        {"config_id": config_id})
+                    db.query(LocalTrain).filter(LocalTrain.train_id == obj_in.train_id).update(
+                        {"updated_at": datetime.now()})
+                    db.commit()
+                except IndexError as _:
+                    raise HTTPException(status_code=404, detail=f"Train with id '{train_id}' was not found.")
+        return obj_in
 
     def create_run(self, db: Session, *, obj_in: LocalTrainRun) -> ModelType:
         """
@@ -72,7 +82,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         db.refresh(run)
         return run
 
-    def remove_train(self, db: Session, train_id: str) -> ModelType:
+    def remove_train(self, db: Session, train_id: str) -> Union[str, Any]:
         """
 
         @param db:
@@ -179,9 +189,16 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         @param config:
         @return:
         """
-        db.query(LocalTrain).filter(LocalTrain.train_id == train_id).update({"updated_at": datetime.now()})
-        db.query(LocalTrain).filter(LocalTrain.train_id == train_id).update({"airflow_config_json": config})
-        db.commit()
+        obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id)
+        if obj.config_id is not None:
+            obj = db.query(LocalTrainConfig).filter(LocalTrainConfig.id == obj.config_id).first()
+            obj.update({"airflow_config": config, "updated_at": datetime.now()})
+            db.commit()
+        else:
+            # old with integrated config
+            db.query(LocalTrain).filter(LocalTrain.train_id == train_id).update({"updated_at": datetime.now()})
+            db.query(LocalTrain).filter(LocalTrain.train_id == train_id).update({"airflow_config_json": config})
+            db.commit()
 
     def get_config(self, db, train_id: str):
         """
@@ -190,14 +207,20 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         @param train_id:
         @return:
         """
-        obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()[0]
+        obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).first()
+        if obj.config_id is not None:
+            obj = db.query(LocalTrainConfig).filter(LocalTrainConfig.id == obj.config_id).first()
+            config = obj.airflow_config
+            return config
+
+        # old with integrated config
         old_config = obj.airflow_config_json
         if old_config is None:
-            self._create_emty_config(train_id)
+            self._create_empty_config(train_id)
         else:
             return old_config
 
-    def _create_emty_config(self, train_id):
+    def _create_empty_config(self, train_id):
         """
 
         @param train_id:
@@ -257,9 +280,16 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         @return:
         """
         try:
-            obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()[0]
+            obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).first()
         except IndexError as _:
             raise HTTPException(status_code=404, detail=f"Train with id '{train_id}' was not found.")
+        if obj.config_id is not None:
+            obj = db.query(LocalTrainConfig).filter(LocalTrainConfig.id == obj.config_id).first()
+            config = obj.airflow_config
+            config["train_id"] = train_id
+            print("config from extrernal config")
+
+            return config
         config = obj.airflow_config_json
         return config
 
@@ -322,32 +352,22 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         print(runs)
 
     def _create_config(self, obj_in):
-        if not isinstance(obj_in, LocalTrainConfig):
-            raise HTTPException(status_code=400, detail=f"obj_in is not of type LocalTrainConfig but of type {type(obj_in)}")
+        if not isinstance(obj_in, LocalTrainConfigSchema):
+            raise HTTPException(status_code=400,
+                                detail=f"obj_in is not of type LocalTrainConfigSchema but of type {type(obj_in)}")
 
-        airflow_config = self._create_emty_config(None)
+        airflow_config = self._create_empty_config(None)
         airflow_config["repository"] = self._get_repository(obj_in.image)
-        airflow_config["tag"] = obj_in.tag if obj_in.tag is not None else airflow_config["tag"] = "latest"
+        if obj_in.tag is not None:
+            airflow_config["tag"] = obj_in.tag
+        else:
+            airflow_config["tag"] = "latest"
+
         airflow_config["query"] = obj_in.query
         airflow_config["entrypoint"] = obj_in.entrypoint
         airflow_config["volumes"] = obj_in.volumes
-
-        #return {
-        #    "repository": None,
-        #    "tag": "latest",
-        #    "env": None,
-        #    "query": None,
-        #    "entrypoint": None,
-        #    "volumes": None,
-        #    "train_id": train_id
-        #}
-        #name: str
-        #image: str
-        #tag: Optional[str]
-        #query: Optional[str]
-        #entrypoint: str
-        #volumes: Optional[str]
-        #train_id: Optional[str]
+        airflow_config["env"] = obj_in.env
+        return airflow_config
 
     def _get_repository(self, image: str):
         """
@@ -359,5 +379,6 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         harbor_api = os.getenv("HARBOR_URL")
         harbor_url = harbor_api.split("/")[2]
         return f"{harbor_url}/{image}"
+
 
 local_train = CRUDLocalTrain(LocalTrain)

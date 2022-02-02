@@ -30,14 +30,15 @@ class LocalTrainCreate(BaseModel):
     train_name: Optional[str] = None
 
 
-class LocalTrainConfig(BaseModel):
+class LocalTrainConfigSchema(BaseModel):
     name: str
     image: str
-    tag: Optional[str]
-    query: Optional[str]
+    tag: Optional[str] = None
+    query: Optional[str] = None
     entrypoint: str
-    volumes: Optional[str]
-    train_id: Optional[str]
+    volumes: Optional[str] = None
+    env: Optional[str] = None
+    train_id: Optional[str] = None
 
 
 class LocalTrainAddMasterImage(BaseModel):

@@ -35,6 +35,6 @@ class LocalTrain(Base):
     train_name = Column(String, unique=True)
     created_at = Column(DateTime, default=datetime.now())
     updated_at = Column(DateTime, nullable=True)
-    #airflow_config_json = Column(JSON, default=None, nullable=True)
+    airflow_config_json = Column(JSON, default=None, nullable=True)
     config_id = Column(Integer, ForeignKey("local_trains_config.id"), nullable=True)
     is_active = Column(Boolean, default=False)
