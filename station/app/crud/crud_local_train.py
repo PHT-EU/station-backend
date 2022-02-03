@@ -189,7 +189,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         @param config:
         @return:
         """
-        obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id)
+        obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).first()
         if obj.config_id is not None:
             obj = db.query(LocalTrainConfig).filter(LocalTrainConfig.id == obj.config_id).first()
             obj.update({"airflow_config": config, "updated_at": datetime.now()})
