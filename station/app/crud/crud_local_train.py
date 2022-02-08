@@ -64,7 +64,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
                         {"updated_at": datetime.now()})
                     db.commit()
                 except IndexError as _:
-                    raise HTTPException(status_code=404, detail=f"Train with id '{train_id}' was not found.")
+                    raise HTTPException(status_code=404, detail=f"Train with id '{obj_in.train_id}' was not found.")
         return obj_in
 
     def create_run(self, db: Session, *, obj_in: LocalTrainRun) -> ModelType:
