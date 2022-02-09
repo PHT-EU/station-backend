@@ -102,12 +102,24 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
             db.delete(run)
         db.commit()
         # remove sql database entry for LocalTrain
-        obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()
+        obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).first()
         if not obj:
-            return f"train_id {train_id} dose not exit"
-        db.delete(obj[0])
+            return HTTPException(status_code=404, detail=f"train_id {train_id} dose not exit")
+        db.delete(obj)
         db.commit()
         return obj
+
+    def remove_config(self, db: Session, config_name: str):
+
+        config = db.query(LocalTrainConfig).filter(LocalTrainConfig.config_name == config_name).first()
+        if not config:
+            return HTTPException(status_code=404, detail=f"Config {config_name} dose not exit")
+        trains = db.query(LocalTrain).filter(LocalTrain.config_id == config.id).all()
+        for train in trains:
+            train.update({"config_id": None, "updated_at": datetime.now()})
+        db.delete(config)
+        db.commit()
+        return config
 
     def remove_config_entry(self, db: Session, train_id: str, key: str):
         """
@@ -126,6 +138,17 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         except KeyError as e:
             print(e)
             return f"{key} is not a key that can be reset"
+
+    def put_config(self, db: Session, train_id: str, config_name: str):
+        train = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).first()
+        if not train:
+            raise HTTPException(status_code=404, detail=f"Train {train} not found")
+        config = db.query(LocalTrainConfig).filter(LocalTrain.config_name == config_name).first()
+        if not config:
+            raise HTTPException(status_code=404, detail=f"Config {config_name} not found")
+        train.update({"config_id": config.id, "updated_at": datetime.now()})
+        db.commit()
+        return config
 
     def update_config_add_repository(self, db: Session, train_id: str, repository: str):
         """
@@ -271,6 +294,13 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         """
         obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()
         return obj
+
+    def get_configs(self, db: Session):
+        configs = db.query(LocalTrainConfig).all()
+        return_configs = []
+        for config in configs:
+            return_configs.append(config.airflow_config)
+        return return_configs
 
     def get_train_config(self, db: Session, train_id: str):
         """

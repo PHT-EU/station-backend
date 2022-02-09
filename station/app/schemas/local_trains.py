@@ -41,6 +41,20 @@ class LocalTrainConfigSchema(BaseModel):
     train_id: Optional[str] = None
 
 
+class LocalTrainAirflowConfigSchema(BaseModel):
+    repository: str
+    tag: Optional[str] = None
+    env: Optional[str] = None
+    query: Optional[str] = None
+    entrypoint: str
+    volumes: Optional[str] = None
+    train_id: Optional[str] = None
+
+
+class LocalTrainAirflowConfigSchemas(BaseModel):
+    configs: list[LocalTrainAirflowConfigSchema]
+
+
 class LocalTrainAddMasterImage(BaseModel):
     train_id: str
     image: str

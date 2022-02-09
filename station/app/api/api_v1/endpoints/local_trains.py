@@ -9,7 +9,7 @@ from station.app.local_train_minio.LocalTrainMinIO import train_data
 from fastapi.responses import Response
 from fastapi.responses import FileResponse
 from station.app.schemas.local_trains import LocalTrain, LocalTrainCreate, LocalTrainAddMasterImage, LocalTrainAddTag, \
-    LocalTrainGetFile, LocalTrainRun, LocalTrainConfigSchema
+    LocalTrainGetFile, LocalTrainRun, LocalTrainConfigSchema, LocalTrainAirflowConfigSchema , LocalTrainAirflowConfigSchemas
 
 from station.app.crud.crud_local_train import local_train
 from station.clients.harbor_client import harbor_client
@@ -75,9 +75,17 @@ def create_local_train(db: Session = Depends(dependencies.get_db)):
 @router.post("/config", response_model=LocalTrainConfigSchema)
 def create_local_train_config(config_msg: LocalTrainConfigSchema, db: Session = Depends(dependencies.get_db)):
     """
-
+    create a database entry for config and if train id is defind in the config it gets added to a local train
+    @parm db: reference to the postgres database
+    @parm config_msg: schema for a new config
     """
     config = local_train.create_config(db, obj_in=config_msg)
+    return config
+
+
+@router.put("/{train_id}/{config_name}/config", response_model=LocalTrainConfigSchema)
+def put_local_train_config(train_id: str, config_name: str, db: Session = Depends(dependencies.get_db)):
+    config = local_train.put_config(db, train_id=train_id, config_name=config_name)
     return config
 
 
@@ -175,6 +183,12 @@ async def delete_file(train_id: str, file_name: str):
     return "deletetd " + file_name
 
 
+@router.delete("/{config_name}/config", response_model=LocalTrainConfigSchema)
+def delete_config(config_name: str, db: Session = Depends(dependencies.get_db)):
+    config = local_train.remove_config(db, config_name=config_name)
+    return config
+
+
 @router.get("/{train_id}/allUploadedFileNames")
 def get_all_uploaded_file_names(train_id: str):
     """
@@ -227,6 +241,13 @@ def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
     config = local_train.get_train_config(db, train_id)
     return config
+
+
+@router.get("/configs", response_model=LocalTrainAirflowConfigSchemas)
+def get_all_configs(db: Session = Depends(dependencies.get_db)):
+    configs = local_train.get_configs(db)
+    print(configs)
+    return configs
 
 
 @router.get("/{train_id}/name")
