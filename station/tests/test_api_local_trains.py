@@ -12,6 +12,7 @@ app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
 
 
+
 # test general geters
 def test_get_master_images():
     response = client.get("/api/localTrains/masterImages")
@@ -20,6 +21,10 @@ def test_get_master_images():
 
 def test_get_all_local_trains():
     response = client.get("/api/localTrains/trains")
+    assert response.status_code == 200, response.json
+
+def test_get_configs():
+    response = client.get("/api/localTrains/configs")
     assert response.status_code == 200, response.json
 
 

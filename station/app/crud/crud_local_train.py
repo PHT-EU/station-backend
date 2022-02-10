@@ -300,7 +300,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         return_configs = []
         for config in configs:
             return_configs.append(config.airflow_config)
-        return return_configs
+        return {"configs" :return_configs}
 
     def get_train_config(self, db: Session, train_id: str):
         """

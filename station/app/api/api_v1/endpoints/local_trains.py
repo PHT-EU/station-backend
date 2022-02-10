@@ -246,7 +246,6 @@ def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
 @router.get("/configs", response_model=LocalTrainAirflowConfigSchemas)
 def get_all_configs(db: Session = Depends(dependencies.get_db)):
     configs = local_train.get_configs(db)
-    print(configs)
     return configs
 
 
