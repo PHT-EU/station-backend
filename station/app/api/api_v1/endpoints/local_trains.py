@@ -9,7 +9,8 @@ from station.app.local_train_minio.LocalTrainMinIO import train_data
 from fastapi.responses import Response
 from fastapi.responses import FileResponse
 from station.app.schemas.local_trains import LocalTrain, LocalTrainCreate, LocalTrainAddMasterImage, LocalTrainAddTag, \
-    LocalTrainGetFile, LocalTrainRun, LocalTrainConfigSchema, LocalTrainAirflowConfigSchema , LocalTrainAirflowConfigSchemas
+    LocalTrainGetFile, LocalTrainRun, LocalTrainConfigSchema, LocalTrainAirflowConfigSchema, \
+    LocalTrainAirflowConfigSchemas
 
 from station.app.crud.crud_local_train import local_train
 from station.clients.harbor_client import harbor_client
@@ -231,7 +232,7 @@ def get_all_local_trains(db: Session = Depends(dependencies.get_db)):
     return local_train.get_trains(db)
 
 
-@router.get("/{train_id}/config")
+@router.get("/{train_id}/config", response_model=LocalTrainAirflowConfigSchema)
 def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
 
