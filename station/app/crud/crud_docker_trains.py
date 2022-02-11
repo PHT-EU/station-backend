@@ -5,10 +5,11 @@ from typing import List
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 from dateutil import parser
+from datetime import datetime
 
 from .base import CRUDBase, ModelType
 
-from station.app.models.docker_trains import DockerTrain, DockerTrainConfig, DockerTrainState
+from station.app.models.docker_trains import DockerTrain, DockerTrainConfig, DockerTrainState, DockerTrainExecution
 from station.app.schemas.docker_trains import DockerTrainCreate, DockerTrainUpdate, DockerTrainConfigCreate
 from station.app.schemas.docker_trains import DockerTrainState as DockerTrainStateSchema
 
@@ -66,15 +67,20 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             trains = db.query(DockerTrain).filter(DockerTrain.is_active == active).all()
         return trains
 
-    # todo maybe remove for new solution by tyra
-    def add_if_not_exists(self, db: Session, train_id: str, created_at: str = None):
+    def add_if_not_exists(self, db: Session, train_id: str, created_at: str = datetime.now(), updated_at: str = None):
         db_train = self.get_by_train_id(db, train_id)
         if not db_train:
-            db_train = DockerTrain(train_id=train_id, created_at=parser.parse(created_at))
+            if updated_at:
+                db_train = DockerTrain(train_id=train_id, created_at=parser.parse(created_at), updated_at=parser.parse(updated_at))
+            else:
+                db_train = DockerTrain(train_id=train_id, created_at=parser.parse(created_at))
             db.add(db_train)
+            db.commit()
+            db.refresh(db_train)
             train_state = DockerTrainState(train_id=db_train.id)
             db.add(train_state)
             db.commit()
+            return db_train
 
     def read_train_state(self, db: Session, train_id: str) -> DockerTrainState:
         db_train = self.get_by_train_id(db, train_id)
@@ -95,6 +101,13 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
         db.refresh(db_state)
 
         return db_state
+
+    def get_train_executions(self, db: Session, train_id: str) -> DockerTrainExecution:
+        db_train = self.get_by_train_id(db, train_id)
+        if not db_train:
+            raise HTTPException(status_code=404, detail=f"Train {train_id} not found")
+        executions = db_train.executions
+        return executions
 
 
 docker_trains = CRUDDockerTrain(DockerTrain)

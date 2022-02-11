@@ -6,6 +6,7 @@ volumes:
     external: True
 
   blaze_data:
+  auth_data:
 
 services:
   pg_station:
@@ -18,6 +19,26 @@ services:
       - POSTGRES_PASSWORD=admin
     ports:
       - "5432:5432"
+
+  auth:
+    image: station-auth
+    container_name: station-auth
+    volumes:
+      - auth_data:/usr/src/app/writable
+    ports:
+      - '3010:3010'
+    # todo typeorm url + config
+    environment:
+      PORT: 3010
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: start123
+
+  redis:
+    image: redislabs/rejson:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./.data/redis:/data
 
   airflow:
     container_name: station-airflow
@@ -33,21 +54,8 @@ services:
       # - ./station /opt/station
     depends_on:
       - pg_station
-    environment:
-      - AIRFLOW_HOME=/root/airflow
-      - FHIR_ADDRESS=https://fhir.personalhealhtrain.de
-      - FHIR_USER=fhiruser
-      - FHIR_PW=
-      - HARBOR_USER=
-      - HARBOR_PW=
-      - STATION_ID=1
-      - STATION_PRIVATE_KEY_PATH=/opt/private_key.pem
-      - HARBOR_API_URL=https://harbor.personalhealthtrain.de/api/v2.0
-      - MINIO_URL=
-      - MINIO_USER=
-      - MINIO_PW=
-      - AIRFLOW_USER=
-      - AIRFLOW_PW=
+    env_file:
+      - .env
     ports:
       - "8080:8080"
 

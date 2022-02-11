@@ -44,6 +44,50 @@ in the `station` directory
    ```
 7. Inspect the logs for any errors
 
+### Setup authentication server for testing
+
+After running
+
+```shell
+docker-compose -f docker-compose_dev.yml up -d
+```
+
+shell into the station-auth container:
+
+```shell
+docker exec -it station-auth sh
+```
+
+and run the following commands to initialize the authentication server
+
+```shell
+npm run setup
+```
+
+the output should be with different keys:
+
+```
+✔ Generated rsa key-pair.
+✔ Created database.
+✔ Synchronized database schema.
+✔ Seeded database.
+ℹ Robot ID: 51dc4d96-f122-47a8-92f4-f0643dae9be5
+ℹ Robot Secret: d1l33354crj1kyo58dbpflned2ocnw2yez69
+```
+
+copy and save the generated robot id and secret. Then run
+
+```shell
+npm run setup
+```
+
+to reset the database and seed it with the default users. Exit the container with `exit`
+and restart the authentication container.
+
+```shell
+docker-compose -f docker-compose_dev.yml restart station-auth
+```
+
 ## Third party services
 
 ### Airflow
@@ -74,7 +118,6 @@ perform the database migrations using alembic.
 
 1. Create a new revision: `alembic revision --autogenerate -m "name for your migration"`
 2. Update the database `alembic upgrade head`
-
 
 ## PHT worker
 

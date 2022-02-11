@@ -3,6 +3,7 @@ data
 *.env
 test_data
 
+.data/
 
 
 # Created by .ignore support plugin (hsz.mobi)
