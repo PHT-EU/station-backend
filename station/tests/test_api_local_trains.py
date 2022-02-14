@@ -1,4 +1,6 @@
 import pytest
+import os
+import ast
 from fastapi.testclient import TestClient
 import json
 from station.app.main import app
@@ -21,6 +23,7 @@ def test_get_all_local_trains():
     response = client.get("/api/localTrains/trains")
     assert response.status_code == 200, response.json
 
+
 def test_get_configs():
     response = client.get("/api/localTrains/configs")
     assert response.status_code == 200, response.json
@@ -35,13 +38,11 @@ def local_train():
 
 
 def test_create_local_train_without_name(local_train):
-
     get_name_respose = client.get(f"api/localTrains/{local_train['train_id']}/name")
     assert get_name_respose.text.replace('"', '') == local_train["train_id"]
 
 
 def test_change_tag_in_config(local_train):
-
     tag = "test"
     add_tag_response = client.put("api/localTrains/tag", json={
         "train_id": local_train["train_id"],
@@ -69,7 +70,8 @@ def test_config_changes(local_train):
 
 
 def test_store_and_get_files(local_train):
-    if os.getenv("ENVIRONMENT") == "testing":
+    # if os.getenv("ENVIRONMENT") == "testing":
+    if os.getenv("ENVIRONMENT") is None:
         entrypoint_name = "entrypoint.py"
         with open(f"./tests/test_files/{entrypoint_name}", "r") as f:
             upload_entrypoint_file_response = client.post(
@@ -84,7 +86,8 @@ def test_store_and_get_files(local_train):
 
 
 def test_create_and_run_local_train():
-    if os.getenv("ENVIRONMENT") == "testing":
+    # if os.getenv("ENVIRONMENT") == "testing":
+    if os.getenv("ENVIRONMENT") is None:
         # create local train
         train_creation_response = client.post("api/localTrains", json={"train_name": "testing_local_train"})
         assert train_creation_response.status_code == 200, train_creation_response.json
@@ -118,10 +121,12 @@ def test_create_and_run_local_train():
         assert add_entrypoint_to_config_response.status_code == 200, add_entrypoint_to_config_response.json
 
         # start local train run
-        start_train_response = client.post(f"/api/localTrains/{train_creation_response_dict['train_id']}/run")
+        # start_train_response = client.post(f"/api/localTrains/{train_creation_response_dict['train_id']}/run")
+        start_train_response = client.post(f"/api/airflow/run_local/run",
+                                           json={"train_id": train_creation_response_dict['train_id']})
         assert start_train_response.status_code == 200, start_train_response.json
+        run_id = ast.literal_eval(start_train_response.text)["run_id"]
 
-        run_id = start_train_response.text.replace('"', '')
 
         def run_is_finisted(run_id):
             run_response = client.get(f"/api/airflow/logs/run_local/{run_id}")
@@ -135,7 +140,7 @@ def test_create_and_run_local_train():
                 finished_with_failed_tasks = task["state"] == "failed" or finished_with_failed_tasks
             return finished_successfully, finished_with_failed_tasks
 
-        while (True):
+        while True:
             finished_successfully, finished_with_failed_tasks = run_is_finisted(run_id)
             assert finished_with_failed_tasks is False
             if finished_successfully:

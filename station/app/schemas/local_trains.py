@@ -42,11 +42,11 @@ class LocalTrainConfigSchema(BaseModel):
 
 
 class LocalTrainAirflowConfigSchema(BaseModel):
-    repository: str
+    repository: Optional[str] = None
     tag: Optional[str] = None
     env: Optional[str] = None
     query: Optional[str] = None
-    entrypoint: str
+    entrypoint: Optional[str] = None
     volumes: Optional[str] = None
     train_id: Optional[str] = None
 
@@ -77,3 +77,7 @@ class LocalTrainGetFile(BaseModel):
 
 class LocalTrainUpdate(LocalTrainCreate):
     pass
+
+class LocalTrainUploadTrainFileResponse(BaseModel):
+    train_id: str
+    filename: str

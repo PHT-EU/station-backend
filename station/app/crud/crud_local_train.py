@@ -134,10 +134,11 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         try:
             config[key] = None
             self._update_config(db, train_id, config)
-            return f"{key} was removed"
+            return config
         except KeyError as e:
             print(e)
-            return f"{key} is not a key that can be reset"
+            return HTTPException(status_code=404, detail=f"{key} is not a key that can be reset")
+
 
     def put_config(self, db: Session, train_id: str, config_name: str):
         train = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).first()

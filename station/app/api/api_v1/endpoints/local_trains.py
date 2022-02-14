@@ -10,7 +10,7 @@ from fastapi.responses import Response
 from fastapi.responses import FileResponse
 from station.app.schemas.local_trains import LocalTrain, LocalTrainCreate, LocalTrainAddMasterImage, LocalTrainAddTag, \
     LocalTrainGetFile, LocalTrainRun, LocalTrainConfigSchema, LocalTrainAirflowConfigSchema, \
-    LocalTrainAirflowConfigSchemas
+    LocalTrainAirflowConfigSchemas, LocalTrainUploadTrainFileResponse
 
 from station.app.crud.crud_local_train import local_train
 from station.clients.harbor_client import harbor_client
@@ -18,24 +18,7 @@ from station.clients.harbor_client import harbor_client
 router = APIRouter()
 
 
-@router.post("/{train_id}/run")
-def run_docker_train(train_id: str, db: Session = Depends(dependencies.get_db)):
-    """
-    sends a command to the the airflow client to trigger a run with the trains configurations
-
-    @param train_id: UID of the local train
-    @param db: reference to the postgres database
-    @return: airflow run ID
-    """
-
-    config = local_train.get_train_config(db, train_id)
-    run_id = airflow_client.trigger_dag("run_local", config)
-    run_information = LocalTrainRun(train_id=train_id, run_id=run_id)
-    local_train.create_run(db, obj_in=run_information)
-    return run_id
-
-
-@router.post("/{train_id}/uploadTrainFile")
+@router.post("/{train_id}/uploadTrainFile", response_model=LocalTrainUploadTrainFileResponse)
 async def upload_train_file(train_id: str, upload_file: UploadFile = File(...)):
     """
     upload a singel file to minIO into the subfolder of the Train
@@ -46,7 +29,8 @@ async def upload_train_file(train_id: str, upload_file: UploadFile = File(...)):
     @return:
     """
     await local_train.add_file_minio(upload_file, train_id)
-    return {"filename": upload_file.filename}
+    return {"train_id": train_id,
+            "filename": upload_file.filename}
 
 
 @router.post("", response_model=LocalTrain)
@@ -90,7 +74,7 @@ def put_local_train_config(train_id: str, config_name: str, db: Session = Depend
     return config
 
 
-@router.put("/masterImage")
+@router.put("/masterImage", response_model=LocalTrainAirflowConfigSchema)
 def add_master_image(add_master_image_msg: LocalTrainAddMasterImage, db: Session = Depends(dependencies.get_db)):
     """
     Modifies the train configuration with a MasterImage that is defined in add_master_image_msg in the train
@@ -104,7 +88,7 @@ def add_master_image(add_master_image_msg: LocalTrainAddMasterImage, db: Session
     return new_config
 
 
-@router.put("/tag")
+@router.put("/tag", response_model=LocalTrainAirflowConfigSchema)
 def add_tag_image(add_tag_msg: LocalTrainAddTag, db: Session = Depends(dependencies.get_db)):
     """
     #TODO change to pedantic same as add master image
@@ -119,7 +103,7 @@ def add_tag_image(add_tag_msg: LocalTrainAddTag, db: Session = Depends(dependenc
     return new_config
 
 
-@router.put("/{train_id}/{key}/removeConfigElement")
+@router.put("/{train_id}/{key}/removeConfigElement", response_model=LocalTrainAirflowConfigSchema)
 def remove_config_element(train_id: str, key: str, db: Session = Depends(dependencies.get_db)):
     """
     set the value of the key in the train config to none
@@ -130,6 +114,7 @@ def remove_config_element(train_id: str, key: str, db: Session = Depends(depende
     @return: response if the element was removed
     """
     response = local_train.remove_config_entry(db, train_id, key)
+    print(response)
     return response
 
 
