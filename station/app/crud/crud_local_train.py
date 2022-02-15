@@ -215,8 +215,10 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         """
         obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).first()
         if obj.config_id is not None:
-            obj = db.query(LocalTrainConfig).filter(LocalTrainConfig.id == obj.config_id).first()
-            obj.update({"airflow_config": config, "updated_at": datetime.now()})
+            #obj = db.query(LocalTrainConfig).filter(LocalTrainConfig.id == obj.config_id)
+            db.query(LocalTrainConfig).filter(LocalTrainConfig.id == obj.config_id).update({"updated_at": datetime.now()})
+            db.query(LocalTrainConfig).filter(LocalTrainConfig.id == obj.config_id).update({"airflow_config": config})
+            #obj.update({"airflow_config": config, "updated_at": datetime.now()})
             db.commit()
         else:
             # old with integrated config
@@ -275,8 +277,18 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         @param train_id:
         @return:
         """
-        return train_data.get_all_uploaded_files_train(train_id)
-
+        files = train_data.get_all_uploaded_files_train(train_id)
+        output_files = []
+        for file in files:
+            output_files.append(
+                {
+                    "bucket_name": file.bucket_name,
+                    "object_name": file.object_name,
+                    "size": file.size,
+                    "last_modified": file.last_modified
+                }
+            )
+        return  output_files
     def get_trains(self, db: Session):
         """
 

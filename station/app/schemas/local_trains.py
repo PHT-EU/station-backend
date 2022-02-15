@@ -70,13 +70,30 @@ class LocalTrainAddTag(BaseModel):
     tag: str
 
 
-class LocalTrainGetFile(BaseModel):
+class LocalTrainAddQuery(BaseModel):
     train_id: str
-    file_name: str
+    query: str
+
+
+class LocalTrainAddEntrypoint(BaseModel):
+    train_id: str
+    entrypoint: str
+
+
+class MinIOFile(BaseModel):
+    bucket_name: str
+    object_name: str
+    last_modified: datetime
+    size: str
+
+
+class AllFilesTrain(BaseModel):
+    files: list[MinIOFile]
 
 
 class LocalTrainUpdate(LocalTrainCreate):
     pass
+
 
 class LocalTrainUploadTrainFileResponse(BaseModel):
     train_id: str

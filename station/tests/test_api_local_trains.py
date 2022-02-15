@@ -53,6 +53,17 @@ def test_change_tag_in_config(local_train):
     assert json.loads(get_config_response.text)["tag"] == tag
 
 
+def test_change_query_in_config(local_train):
+    query = "test"
+    add_query_response = client.put("api/localTrains/query", json={
+        "train_id": local_train["train_id"],
+        "query": query})
+    assert add_query_response.status_code == 200, add_query_response.json
+    get_config_response = client.get(f"api/localTrains/{local_train['train_id']}/config")
+    assert get_config_response.status_code == 200, get_config_response.json
+    assert json.loads(get_config_response.text)["query"] == query
+
+
 def test_config_changes(local_train):
     tag = "test"
     add_tag_response = client.put("api/localTrains/tag", json={
@@ -80,9 +91,16 @@ def test_store_and_get_files(local_train):
             )
             assert upload_entrypoint_file_response.status_code == 200, upload_entrypoint_file_response.json
 
-        get_result_response = client.get(f"api/localTrains/file",
-                                         params={'train_id': local_train['train_id'], 'file_name': entrypoint_name})
-        assert get_result_response.status_code == 200, get_result_response.json
+        get_result_response_before_delete = client.get(f"api/localTrains/file",
+                                                       params={'train_id': local_train['train_id'],
+                                                               'file_name': entrypoint_name})
+        assert get_result_response_before_delete.status_code == 200, get_result_response_before_delete.json
+        delete_file_response = client.delete(f"api/localTrains/{local_train['train_id']}/{entrypoint_name}/file")
+        assert delete_file_response.status_code == 200
+        get_result_response_after_delete = client.get(f"api/localTrains/file",
+                                         params={'train_id': local_train['train_id'],
+                                                 'file_name': entrypoint_name})
+        assert get_result_response_after_delete.status_code == 200
 
 
 def test_create_and_run_local_train():
@@ -117,7 +135,9 @@ def test_create_and_run_local_train():
 
         # set entrypoint in config
         add_entrypoint_to_config_response = client.put(
-            f"/api/localTrains/{train_creation_response_dict['train_id']}/{entrypoint_name}/entrypoint")
+            f"/api/localTrains/entrypoint", json={
+                "train_id": train_creation_response_dict['train_id'],
+                "entrypoint": entrypoint_name})
         assert add_entrypoint_to_config_response.status_code == 200, add_entrypoint_to_config_response.json
 
         # start local train run
@@ -126,7 +146,6 @@ def test_create_and_run_local_train():
                                            json={"train_id": train_creation_response_dict['train_id']})
         assert start_train_response.status_code == 200, start_train_response.json
         run_id = ast.literal_eval(start_train_response.text)["run_id"]
-
 
         def run_is_finisted(run_id):
             run_response = client.get(f"/api/airflow/logs/run_local/{run_id}")
@@ -154,3 +173,5 @@ def test_create_and_run_local_train():
 
         results_object_name = json.loads(files_uploded_response.text)["files"][1]["_object_name"]
         assert f"{train_creation_response_dict['train_id']}/results.tar" == results_object_name
+        delete_train_response = client.delete(f"/api/localTrains/{train_creation_response_dict['train_id']}/train")
+        assert delete_train_response.status_code == 200
