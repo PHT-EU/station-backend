@@ -16,6 +16,7 @@ jobs:
       MINIO_USER: minio_admin
       MINIO_PW: minio_admin
       STATION_ID: 1
+      ENVIRONMENT: development
 
     steps:
       - uses: actions/checkout@v2
