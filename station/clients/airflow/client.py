@@ -93,11 +93,20 @@ class AirflowClient:
         @return:
         """
 
-        last_task_try_number = next(task["try_number"] for task in self.get_run_information(dag_id, run_id)["tasklist"]["task_instances"] if task["task_id"] == task_id)
-        url = self.airflow_url + f"dags/{dag_id}/dagRuns/{run_id}/taskInstances/{task_id}/logs/{last_task_try_number}"
-        log = requests.get(url=url, auth=self.auth)
-        log.raise_for_status()
-        return log.content.decode("utf-8")
+        task_number_list = []
+        task_known = False
+        for task in self.get_run_information(dag_id, run_id)["tasklist"]["task_instances"]:
+            if task["task_id"] == task_id:
+                task_known = True
+                task_number_list.append(task["try_number"])
+        if task_known:
+            last_task_try_number = max(task_number_list)
+            url = self.airflow_url + f"dags/{dag_id}/dagRuns/{run_id}/taskInstances/{task_id}/logs/{last_task_try_number}"
+            log = requests.get(url=url, auth=self.auth)
+            log.raise_for_status()
+            return log.content.decode("utf-8")
+        else:
+            return None
 
 
 airflow_client = AirflowClient()

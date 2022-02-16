@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from datetime import datetime
 from typing import List, Optional, Union, Any, Dict
 
@@ -44,10 +44,6 @@ class DockerTrainConfigBase(DBSchema):
 
 
 class DockerTrainMinimal(DBSchema):
-    created_at: datetime
-    updated_at: Optional[datetime] = None
-    proposal_id: int
-    is_active: bool
     train_id: Optional[str] = None
 
 
@@ -57,21 +53,27 @@ class DockerTrainConfig(DockerTrainConfigBase):
     updated_at: Optional[datetime] = None
     trains: Optional[List[DockerTrainMinimal]] = None
 
-
-class DockerTrainConfigMinimal(DockerTrainConfigBase):
-    created_at: datetime
-    updated_at: Optional[datetime] = None
+    # concatenates list of objects with train_ids to one list of train_ids
+    @validator('trains')
+    def train_list(cls, v):
+        if v:
+            train_list = []
+            for train in v:
+                train_list.append(train.train_id)
+            return train_list
+        else:
+            return None
 
 
 class DockerTrainExecution(DBSchema):
     config_id: Optional[Union[int, str]] = "default"
-    config_json: Optional[DockerTrainAirflowConfig] = None
 
 
 class DockerTrainSavedExecution(DBSchema):
     start: datetime
     end: Optional[datetime] = None
-    airflow_dag_run : Optional[str] = None
+    airflow_dag_run: Optional[str] = None
+    used_config: Optional[int] = None
 
 
 class DockerTrain(DBSchema):
@@ -82,7 +84,6 @@ class DockerTrain(DBSchema):
     is_active: bool = False
     train_id: Optional[str] = None
     config_id: Optional[int] = None
-    config: Optional[DockerTrainConfigMinimal] = None
     state: Optional[DockerTrainState] = None
     executions: Optional[List[DockerTrainSavedExecution]] = None
 

@@ -23,6 +23,7 @@ class DockerTrainExecution(Base):
     start = Column(DateTime, default=datetime.now())
     end = Column(DateTime, nullable=True)
     airflow_dag_run = Column(String, nullable=True)
+    used_config = Column(Integer, ForeignKey('docker_train_configs.id'), nullable=True)
 
 
 class DockerTrainConfig(Base):
