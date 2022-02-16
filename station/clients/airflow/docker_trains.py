@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from typing import Any
+from typing import Any, Dict
 import os
 from datetime import datetime
 
@@ -120,8 +120,8 @@ def run_train(db: Session, train_id: Any, execution_params: DockerTrainExecution
 
     # Execute the train using the airflow rest api
     try:
-        run_id = airflow_client.trigger_dag("run_pht_train", config=config)
-        db_train = update_train(db, db_train, run_id)
+        run_id = airflow_client.trigger_dag("run_pht_train", config=config_dict["config"])
+        db_train = update_train(db, db_train, run_id, config_dict["config_id"])
         last_execution = db_train.executions[-1]
         return last_execution
     except:
