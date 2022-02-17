@@ -2,6 +2,9 @@ import requests
 import os
 from dotenv import find_dotenv, load_dotenv
 from requests.auth import HTTPBasicAuth
+from loguru import logger
+
+from station.app.schemas.station_status import HealthStatus
 
 
 class AirflowClient:
@@ -57,14 +60,19 @@ class AirflowClient:
         print(r.json())
         r.raise_for_status()
 
-    def health_check(self) -> dict:
+    def health_check(self) -> HealthStatus:
         """
 
         @return: dict: Airflow Status
         """
         url = self.airflow_url + "health"
         r = requests.get(url=url)
-        return r.json()
+        try:
+            r.raise_for_status()
+            return HealthStatus.healthy
+        except Exception as e:
+            logger.error(f"Error checking airflow health: \n{e}")
+            return HealthStatus.error
 
     def get_run_information(self, dag_id: str, run_id: str) -> dict:
         """
@@ -93,7 +101,9 @@ class AirflowClient:
         @return:
         """
 
-        last_task_try_number = next(task["try_number"] for task in self.get_run_information(dag_id, run_id)["tasklist"]["task_instances"] if task["task_id"] == task_id)
+        last_task_try_number = next(
+            task["try_number"] for task in self.get_run_information(dag_id, run_id)["tasklist"]["task_instances"] if
+            task["task_id"] == task_id)
         url = self.airflow_url + f"dags/{dag_id}/dagRuns/{run_id}/taskInstances/{task_id}/logs/{last_task_try_number}"
         log = requests.get(url=url, auth=self.auth)
         log.raise_for_status()

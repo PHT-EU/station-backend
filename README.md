@@ -2,18 +2,22 @@
 [![Tests](https://github.com/PHT-EU/station-backend/actions/workflows/tests.yml/badge.svg)](https://github.com/PHT-EU/station-backend/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/PHT-Medic/station-backend/branch/master/graph/badge.svg?token=SWJRH1V44S)](https://codecov.io/gh/PHT-Medic/station-backend)
 
-# PHT Station API
+# PHT Station Backend
 
 This project contains the implementation of the station API, workers for training models, as well as the configuration
 for the station airflow instance and related workers. A FastAPI REST API for train and station management can be found
 in the `station` directory
 
+## Environment configuration
+
+
 ## Installation
 
 1. Create a named docker volume for the postgres database `docker volume create pg_pht_station`
-1. Edit the environment variables in the `environment` section of the docker-compose file to match your configuration
-1. Run the docker-compose file `docker-compose up -d`, which will start the station and associated services
-1. Check the logs for any errors while bringing up the project `docker-compose logs`
+2. Edit the environment variables in the `environment` section of the docker-compose file to match your configuration
+3. Run the docker-compose file `docker-compose up -d`, which will start the station and associated services
+4. Check the logs for any errors while bringing up the project `docker-compose logs`
+
 
 ## Development environment
 

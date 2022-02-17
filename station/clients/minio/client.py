@@ -7,8 +7,12 @@ from minio import Minio
 import os
 from fastapi import File, UploadFile
 from typing import List, Union, Dict
+from loguru import logger
+
 from dotenv import load_dotenv, find_dotenv
+
 from station.app.config import settings
+from station.app.schemas.station_status import HealthStatus
 
 
 class MinioClient:
@@ -23,13 +27,16 @@ class MinioClient:
         """
         # Initialize class fields based on constructor values or environment variables
 
-        minio_url = f"{settings.config.minio.host}:{settings.config.minio.port}"
+        if settings.config.minio.port:
+            minio_url = f"{settings.config.minio.host}:{settings.config.minio.port}"
+        else:
+            minio_url = settings.config.minio.host
         minio_user = settings.config.minio.access_key
         minio_pass = settings.config.minio.secret_key
 
-        self.minio_server = minio_url
-        self.access_key = minio_user
-        self.secret_key = minio_pass.get_secret_value()
+        self.minio_server = minio_server if minio_server else minio_url
+        self.access_key = access_key if access_key else minio_user
+        self.secret_key = secret_key if secret_key else minio_pass.get_secret_value()
 
         if settings.config.environment == "production":
             assert self.minio_server
@@ -179,17 +186,17 @@ class MinioClient:
 
         return class_distribution
 
-    def health_check(self):
+    def health_check(self) -> HealthStatus:
         """
         Get health of minio
         """
         try:
             self.client.list_buckets()
 
-            return {"status": "healthy"}
+            return HealthStatus.healthy
         except Exception as e:
-            print(e)
-            return {"status": "none"}
+            logger.error(f"Error while checking minio health: {e}")
+            return HealthStatus.error
 
 
 if __name__ == '__main__':
