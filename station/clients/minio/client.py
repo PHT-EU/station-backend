@@ -7,8 +7,12 @@ from minio import Minio
 import os
 from fastapi import File, UploadFile
 from typing import List, Union, Dict
+from loguru import logger
+
 from dotenv import load_dotenv, find_dotenv
+
 from station.app.config import settings
+from station.app.schemas.station_status import HealthStatus
 
 
 class MinioClient:
@@ -182,17 +186,17 @@ class MinioClient:
 
         return class_distribution
 
-    def health_check(self):
+    def health_check(self) -> HealthStatus:
         """
         Get health of minio
         """
         try:
             self.client.list_buckets()
 
-            return {"status": "healthy"}
+            return HealthStatus.healthy
         except Exception as e:
-            print(e)
-            return {"status": "none"}
+            logger.error(f"Error while checking minio health: {e}")
+            return HealthStatus.error
 
 
 if __name__ == '__main__':

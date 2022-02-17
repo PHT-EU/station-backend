@@ -25,4 +25,5 @@ if __name__ == '__main__':
                 port=station_config.port,
                 host=station_config.host,
                 reload=station_config.environment == StationRuntimeEnvironment.DEVELOPMENT,
-                log_config=log_config)
+                log_config=log_config
+                )

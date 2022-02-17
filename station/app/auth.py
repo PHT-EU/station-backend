@@ -78,7 +78,7 @@ def validate_user_token(token: str, robot_token: str, token_url: str = None) -> 
                     permissions=response.get("target").get("permissions"))
         return user
     else:
-        raise NotImplemented("Only user entities are supported.")
+        raise NotImplementedError("Only user entities are supported.")
 
 
 def get_current_user(token: HTTPAuthorizationCredentials = Depends(HTTPBearer()),

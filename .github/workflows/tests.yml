@@ -15,6 +15,7 @@ jobs:
       MINIO_URL: 127.0.0.1:9000
       MINIO_USER: minio_admin
       MINIO_PW: minio_admin
+      STATION_ID: 1
 
     steps:
       - uses: actions/checkout@v2
