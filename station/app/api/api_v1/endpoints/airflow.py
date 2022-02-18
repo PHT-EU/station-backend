@@ -23,7 +23,7 @@ def run(run_msg: AirflowRunMsg, dag_id: str, db: Session = Depends(dependencies.
 
     run_id = None
     if dag_id == "run_local":
-        config = local_train.get_train_config(db, run_msg.train_id)
+        config = local_train.get_train_run_config(db, run_msg.train_id)
         run_id = airflow_client.trigger_dag("run_local", config)
         run_information = LocalTrainRun(train_id=run_msg.train_id, run_id=run_id)
         local_train.create_run(db, obj_in=run_information)

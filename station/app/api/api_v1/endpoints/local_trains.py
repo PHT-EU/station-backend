@@ -4,10 +4,10 @@ from fastapi import APIRouter, Depends, File, UploadFile
 from station.app.api import dependencies
 from station.app.local_train_minio.LocalTrainMinIO import train_data
 from fastapi.responses import Response
-from station.app.schemas.local_trains import LocalTrain, LocalTrainCreate, LocalTrainAddMasterImage, LocalTrainAddTag, \
-    LocalTrainConfigSchema, LocalTrainAirflowConfigSchema, LocalTrainAirflowConfigSchemas, \
-    LocalTrainUploadTrainFileResponse, LocalTrainAddQuery, LocalTrainAddEntrypoint, AllFilesTrain, LocalTrainSchema, \
-    MasterImagesList, LocalTrainSchemaList, LocalTrainBase, LocalTrainLog
+from station.app.schemas.local_trains import LocalTrain, LocalTrainCreate, LocalTrainConfigCreate, \
+    LocalTrainAirflowConfig, \
+    LocalTrainAirflowConfigs, LocalTrainUploadTrainFileResponse, AllFilesTrain, LocalTrainInfo, \
+    MasterImagesList, LocalTrainSchemaList, LocalTrainBase, LocalTrainLog, LocalTrainConfigUpdate
 
 from station.app.crud.crud_local_train import local_train
 from station.clients.harbor_client import harbor_client
@@ -54,19 +54,18 @@ def create_local_train(db: Session = Depends(dependencies.get_db)):
     return train
 
 
-@router.post("/config", response_model=LocalTrainConfigSchema)
-def create_local_train_config(config_msg: LocalTrainConfigSchema, db: Session = Depends(dependencies.get_db)):
+@router.post("/config", response_model=LocalTrainConfigCreate)
+def create_local_train_config(config_msg: LocalTrainConfigCreate, db: Session = Depends(dependencies.get_db)):
     """
     create a database entry for config and if train id is defind in the config it gets added to a local train
     @parm db: reference to the postgres database
     @parm config_msg: schema for a new config
     """
     config = local_train.create_config(db, obj_in=config_msg)
-
     return config
 
 
-@router.put("/{train_id}/{config_name}/config", response_model=LocalTrainAirflowConfigSchema)
+@router.put("/{train_id}/{config_name}/config", response_model=LocalTrainAirflowConfig)
 def put_local_train_config(train_id: str, config_name: str, db: Session = Depends(dependencies.get_db)):
     """
     assings a config to a train
@@ -75,71 +74,25 @@ def put_local_train_config(train_id: str, config_name: str, db: Session = Depend
     return config
 
 
-@router.put("/masterImage", response_model=LocalTrainAirflowConfigSchema)
-def add_master_image(add_master_image_msg: LocalTrainAddMasterImage, db: Session = Depends(dependencies.get_db)):
+@router.put("/{config_name}/config", response_model=LocalTrainAirflowConfig)
+def update_local_train_config(config_name: str, config_msg: LocalTrainConfigUpdate,
+                              db: Session = Depends(dependencies.get_db)):
     """
-    Modifies the train configuration with a MasterImage that is defined in add_master_image_msg in the train
-    specified by the train id
-
-    @param add_master_image_msg:  message with  train_id: str, image: str
-    @param db: reference to the postgres database
-    @return:
+    updates the values of a config
     """
-    new_config = local_train.update_config_add_repository(db, add_master_image_msg.train_id, add_master_image_msg.image)
-    return new_config
+    config = local_train.update_config(db, config_name=config_name, config_update=config_msg)
+    return config
 
 
-@router.put("/tag", response_model=LocalTrainAirflowConfigSchema)
-def add_tag_image(add_tag_msg: LocalTrainAddTag, db: Session = Depends(dependencies.get_db)):
+@router.put("/{train_id}/config", response_model=LocalTrainAirflowConfig)
+def update_config_from_train(train_id: str, config_msg: LocalTrainConfigUpdate,
+                             db: Session = Depends(dependencies.get_db)):
     """
-    Modifies the train configuration with a MasterImage that is defined in add_master_image_msg in the train
-    specified by the train id
-    @param add_tag_msg
-    @param db:
-    @return:
+    updates the values of a config from a train
     """
-    new_config = local_train.update_config_add_tag(db, add_tag_msg.train_id, add_tag_msg.tag)
-    return new_config
+    config = local_train.update_config_from_train(db, train_id=train_id, config_update=config_msg)
+    return config
 
-
-@router.put("/{train_id}/{key}/removeConfigElement", response_model=LocalTrainAirflowConfigSchema)
-def remove_config_element(train_id: str, key: str, db: Session = Depends(dependencies.get_db)):
-    """
-    set the value of the key in the train config to none
-
-    @param train_id: Id of the train the config that has a element to removed
-    @param key: name of a config entry that has to be set to none
-    @param db: reference to the postgres database
-    @return: response if the element was removed
-    """
-    response = local_train.remove_config_entry(db, train_id, key)
-    return response
-
-
-@router.put("/entrypoint", response_model=LocalTrainAirflowConfigSchema)
-def add_entrypoint_config(add_tag_entrypoint: LocalTrainAddEntrypoint, db: Session = Depends(dependencies.get_db)):
-    """
-    addes a file name to config of the entrypoint
-
-    @param add_tag_entrypoint
-    @param db: reference to the postgres database
-    @return:
-    """
-    new_config = local_train.update_config_add_entrypoint(db, add_tag_entrypoint.train_id,
-                                                          add_tag_entrypoint.entrypoint)
-    return new_config
-
-
-@router.put("/query", response_model=LocalTrainAirflowConfigSchema)
-def select_query_config(add_query_msg: LocalTrainAddQuery, db: Session = Depends(dependencies.get_db)):
-    """
-    addes a file name to config of the query
-    @param add_query_msg
-    @param db: reference to the postgres database
-    @return:
-    """
-    new_config = local_train.update_config_add_query(db, add_query_msg.train_id, add_query_msg.query)
-    return new_config
 
 
 @router.delete("/{train_id}/train", response_model=LocalTrain)
@@ -167,7 +120,7 @@ async def delete_file(train_id: str, file_name: str):
             "filename": file_name}
 
 
-@router.delete("/{config_name}/config", response_model=LocalTrainAirflowConfigSchema)
+@router.delete("/{config_name}/config", response_model=LocalTrainAirflowConfig)
 def delete_config(config_name: str, db: Session = Depends(dependencies.get_db)):
     """
     removes a config by it's name
@@ -191,7 +144,7 @@ def get_all_uploaded_file_names(train_id: str):
     return {"files": files}
 
 
-@router.get("/{train_id}/info", response_model=LocalTrainSchema)
+@router.get("/{train_id}/info", response_model=LocalTrainInfo)
 def get_train_status(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
     get all meta informaiton about the train
@@ -222,7 +175,7 @@ def get_all_local_trains(db: Session = Depends(dependencies.get_db)):
     return {"trains": local_train.get_trains(db)}
 
 
-@router.get("/{train_id}/config", response_model=LocalTrainAirflowConfigSchema)
+@router.get("/{train_id}/config", response_model=LocalTrainAirflowConfig)
 def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
 
@@ -234,7 +187,7 @@ def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
     return config
 
 
-@router.get("/configs", response_model=LocalTrainAirflowConfigSchemas)
+@router.get("/configs", response_model=LocalTrainAirflowConfigs)
 def get_all_configs(db: Session = Depends(dependencies.get_db)):
     configs = local_train.get_configs(db)
     return configs

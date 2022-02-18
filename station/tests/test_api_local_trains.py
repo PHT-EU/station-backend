@@ -24,11 +24,6 @@ def test_get_all_local_trains():
     assert response.status_code == 200, response.json
 
 
-def test_get_configs():
-    response = client.get("/api/localTrains/configs")
-    assert response.status_code == 200, response.json
-
-
 @pytest.fixture
 def local_train():
     train_creation_response = client.post("api/localTrains/withUuid")
@@ -36,6 +31,29 @@ def local_train():
     train_creation_response_dict = json.loads(train_creation_response.text)
     return train_creation_response_dict
 
+
+@pytest.fixture
+def config():
+    create_config_response = client.post(
+        f"/api/localTrains/config",
+        json={
+            "name": "test_config",
+            "image": "test",
+            "tag": "latest",
+            "env": None,
+            "query": None,
+            "entrypoint": "entrypoint.py",
+            "volumes": None,
+        }
+    )
+    assert create_config_response.status_code == 200
+    config_dict = json.loads(create_config_response.text)
+    return config_dict
+
+
+def test_get_configs(config):
+    response = client.get("/api/localTrains/configs")
+    assert response.status_code == 200, response.json
 
 def test_create_local_train_without_name(local_train):
     get_name_response = client.get(f"api/localTrains/{local_train['train_id']}/name")
@@ -45,18 +63,19 @@ def test_create_local_train_without_name(local_train):
     get_id_response_dict = ast.literal_eval(get_id_response.text)
     assert get_id_response_dict["train_id"] == local_train["train_id"]
 
+
 def test_getting_local_train_informaion(local_train):
     get_info_response = client.get(f"api/localTrains/{local_train['train_id']}/info")
     assert get_info_response.status_code == 200
 
 
-
-
 def test_change_query_in_config(local_train):
     query = "test"
+
     add_query_response = client.put("api/localTrains/query", json={
         "train_id": local_train["train_id"],
         "query": query})
+
     assert add_query_response.status_code == 200, add_query_response.json
     get_config_response = client.get(f"api/localTrains/{local_train['train_id']}/config")
     assert get_config_response.status_code == 200, get_config_response.json
@@ -90,22 +109,25 @@ def test_store_and_get_files(local_train):
             )
             assert upload_entrypoint_file_response.status_code == 200, upload_entrypoint_file_response.json
 
-        get_result_response_before_delete = client.get(f"api/localTrains/{local_train['train_id']}/{entrypoint_name}/file")
+        get_result_response_before_delete = client.get(
+            f"api/localTrains/{local_train['train_id']}/{entrypoint_name}/file")
         assert get_result_response_before_delete.status_code == 200, get_result_response_before_delete.json
         delete_file_response = client.delete(f"api/localTrains/{local_train['train_id']}/{entrypoint_name}/file")
         assert delete_file_response.status_code == 200
-        get_result_response_after_delete = client.get(f"api/localTrains/{local_train['train_id']}/{entrypoint_name}/file")
+        get_result_response_after_delete = client.get(
+            f"api/localTrains/{local_train['train_id']}/{entrypoint_name}/file")
         assert get_result_response_after_delete.status_code == 200
+
 
 def test_external_config(local_train):
     create_config_response = client.post(
         f"/api/localTrains/config",
         json={
             "name": "test_config",
-            "image": "test" ,
+            "image": "test",
             "tag": "latest",
             "env": None,
-            "query":  None,
+            "query": None,
             "entrypoint": "entrypoint.py",
             "volumes": None,
         }
@@ -115,7 +137,7 @@ def test_external_config(local_train):
     assert add_config_response.status_code == 200
     get_info_response_before = client.get(f"api/localTrains/{local_train['train_id']}/info")
     assert get_info_response_before.status_code == 200
-    delete_config_response =  client.delete(f"api/localTrains/test_config/config")
+    delete_config_response = client.delete(f"api/localTrains/test_config/config")
     assert delete_config_response.status_code == 200
     get_info_response_after = client.get(f"api/localTrains/{local_train['train_id']}/info")
     assert get_info_response_after.status_code == 200
@@ -129,9 +151,10 @@ def test_external_config(local_train):
             "query": None,
             "entrypoint": "entrypoint.py",
             "volumes": None,
-            "train_id":local_train['train_id']
+            "train_id": local_train['train_id']
         }
     )
+
 
 def test_create_and_run_local_train():
     # if os.getenv("ENVIRONMENT") == "testing":
@@ -208,7 +231,6 @@ def test_create_and_run_local_train():
         last_logs_response = client.get(
             f"/api/localTrains/{train_creation_response_dict['train_id']}/lastLogs")
         assert last_logs_response.status_code == 200
-
 
         results_object_name = json.loads(files_uploded_response.text)["files"][1]["object_name"]
         assert f"{train_creation_response_dict['train_id']}/results.tar" == results_object_name

@@ -29,19 +29,25 @@ class LocalTrain(DBSchema):
 class LocalTrainCreate(BaseModel):
     train_name: Optional[str] = None
 
-
-class LocalTrainConfigSchema(BaseModel):
+class LocalTrainConfigBase(BaseModel):
     name: str
-    image: str
+    image: Optional[str] = None
     tag: Optional[str] = None
     query: Optional[str] = None
-    entrypoint: str
+    entrypoint: Optional[str] = None
     volumes: Optional[str] = None
     env: Optional[str] = None
     train_id: Optional[str] = None
 
 
-class LocalTrainAirflowConfigSchema(BaseModel):
+class LocalTrainConfigCreate(LocalTrainConfigBase):
+    pass
+
+
+class LocalTrainConfigUpdate(LocalTrainConfigBase):
+    pass
+
+class LocalTrainAirflowConfig(BaseModel):
     repository: Optional[str] = None
     tag: Optional[str] = None
     env: Optional[str] = None
@@ -51,28 +57,23 @@ class LocalTrainAirflowConfigSchema(BaseModel):
     train_id: Optional[str] = None
 
 
-class LocalTrainSchema(BaseModel):
+class LocalTrainInfo(BaseModel):
     id: str
     train_id: str
     train_name: str
     config_id:  Optional[str]
-    airflow_config_json: Optional[LocalTrainAirflowConfigSchema]
+    airflow_config_json: Optional[LocalTrainAirflowConfig]
     created_at: datetime
     updated_at: Optional[datetime]
     is_active: bool
 
 
 class LocalTrainSchemaList(BaseModel):
-    trains: list[LocalTrainSchema]
+    trains: list[LocalTrainInfo]
 
 
-class LocalTrainAirflowConfigSchemas(BaseModel):
-    configs: list[LocalTrainAirflowConfigSchema]
-
-
-class LocalTrainAddMasterImage(BaseModel):
-    train_id: str
-    image: str
+class LocalTrainAirflowConfigs(BaseModel):
+    configs: Optional[list[LocalTrainAirflowConfig]]
 
 
 class LocalTrainGetFile(BaseModel):
@@ -82,21 +83,6 @@ class LocalTrainGetFile(BaseModel):
 
 class LocalTrainFile(BaseModel):
     file: str
-
-
-class LocalTrainAddTag(BaseModel):
-    train_id: str
-    tag: str
-
-
-class LocalTrainAddQuery(BaseModel):
-    train_id: str
-    query: str
-
-
-class LocalTrainAddEntrypoint(BaseModel):
-    train_id: str
-    entrypoint: str
 
 
 class MinIOFile(BaseModel):
