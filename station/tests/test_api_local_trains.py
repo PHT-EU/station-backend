@@ -27,7 +27,7 @@ def test_get_all_local_trains():
 
 @pytest.fixture
 def local_train():
-    train_creation_response = client.post("api/localTrains/withUuid")
+    train_creation_response = client.post("api/localTrains")
     assert train_creation_response.status_code == 200, train_creation_response.json
     train_creation_response_dict = json.loads(train_creation_response.text)
     return train_creation_response_dict
@@ -92,7 +92,7 @@ def test_change_query_in_config(config):
     assert delete_config_response.status_code == 200
 
 def test_config_changes():
-    train_creation_response = client.post("api/localTrains/withUuid")
+    train_creation_response = client.post("api/localTrains")
     assert train_creation_response.status_code == 200, train_creation_response.json
     train = json.loads(train_creation_response.text)
     create_config_response = client.post(

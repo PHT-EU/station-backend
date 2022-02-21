@@ -31,7 +31,7 @@ async def upload_train_file(train_id: str, upload_file: UploadFile = File(...)):
 
 
 @router.post("", response_model=LocalTrain)
-def create_local_train(create_msg: LocalTrainCreate, db: Session = Depends(dependencies.get_db)):
+def create_local_train(create_msg: LocalTrainCreate = None, db: Session = Depends(dependencies.get_db)):
     """
     creae a database entry for a new train with preset names from the create_msg
 
@@ -40,17 +40,6 @@ def create_local_train(create_msg: LocalTrainCreate, db: Session = Depends(depen
     @return:
     """
     train = local_train.create(db, obj_in=create_msg)
-    return train
-
-
-@router.post("/withUuid", response_model=LocalTrain)
-def create_local_train(db: Session = Depends(dependencies.get_db)):
-    """
-    create a database entry for a new train, the name is set as the train_id
-    @param db: reference to the postgres database
-    @return:
-    """
-    train = local_train.create(db, obj_in=None)
     return train
 
 
