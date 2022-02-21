@@ -28,14 +28,12 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
             train_id = str(uuid.uuid4())
             train = LocalTrain(train_id=train_id,
                                train_name=train_id,
-                               airflow_config_json=self._create_empty_config(train_id)
                                )
         else:
             train_id = str(uuid.uuid4())
             train = LocalTrain(
                 train_id=train_id,
                 train_name=obj_in.train_name,
-                airflow_config_json=self._create_empty_config(train_id)
             )
         # add and commit the new entry
         db.add(train)
