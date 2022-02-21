@@ -4,18 +4,14 @@ from fastapi import APIRouter, Depends, File, UploadFile
 from station.app.api import dependencies
 from station.app.local_train_minio.LocalTrainMinIO import train_data
 from fastapi.responses import Response
-from station.app.schemas.local_trains import LocalTrain, LocalTrainCreate, LocalTrainConfigCreate, \
-    LocalTrainAirflowConfig, \
-    LocalTrainAirflowConfigs, LocalTrainUploadTrainFileResponse, AllFilesTrain, LocalTrainInfo, \
-    MasterImagesList, LocalTrainSchemaList, LocalTrainBase, LocalTrainLog, LocalTrainConfigUpdate
-
+from station.app.schemas import local_trains as lt_schemas
 from station.app.crud.crud_local_train import local_train
 from station.clients.harbor_client import harbor_client
 
 router = APIRouter()
 
 
-@router.post("/{train_id}/uploadTrainFile", response_model=LocalTrainUploadTrainFileResponse)
+@router.post("/{train_id}/uploadTrainFile", response_model=lt_schemas.LocalTrainUploadTrainFileResponse)
 async def upload_train_file(train_id: str, upload_file: UploadFile = File(...)):
     """
     upload a singel file to minIO into the subfolder of the Train
@@ -30,8 +26,8 @@ async def upload_train_file(train_id: str, upload_file: UploadFile = File(...)):
             "filename": upload_file.filename}
 
 
-@router.post("", response_model=LocalTrain)
-def create_local_train(create_msg: LocalTrainCreate = None, db: Session = Depends(dependencies.get_db)):
+@router.post("", response_model=lt_schemas.LocalTrain)
+def create_local_train(create_msg: lt_schemas.LocalTrainCreate = None, db: Session = Depends(dependencies.get_db)):
     """
     creae a database entry for a new train with preset names from the create_msg
 
@@ -43,8 +39,8 @@ def create_local_train(create_msg: LocalTrainCreate = None, db: Session = Depend
     return train
 
 
-@router.post("/config", response_model=LocalTrainConfigCreate)
-def create_local_train_config(config_msg: LocalTrainConfigCreate, db: Session = Depends(dependencies.get_db)):
+@router.post("/config", response_model=lt_schemas.LocalTrainConfigCreate)
+def create_local_train_config(config_msg: lt_schemas.LocalTrainConfigCreate, db: Session = Depends(dependencies.get_db)):
     """
     create a database entry for config and if train id is defind in the config it gets added to a local train
     @parm db: reference to the postgres database
@@ -54,7 +50,7 @@ def create_local_train_config(config_msg: LocalTrainConfigCreate, db: Session = 
     return config
 
 
-@router.put("/{train_id}/{config_name}/config", response_model=LocalTrainAirflowConfig)
+@router.put("/{train_id}/{config_name}/config", response_model=lt_schemas.LocalTrainAirflowConfig)
 def put_local_train_config(train_id: str, config_name: str, db: Session = Depends(dependencies.get_db)):
     """
     assings a config to a train
@@ -63,8 +59,8 @@ def put_local_train_config(train_id: str, config_name: str, db: Session = Depend
     return config
 
 
-@router.put("/{config_name}/config", response_model=LocalTrainAirflowConfig)
-def update_local_train_config(config_name: str, config_msg: LocalTrainConfigUpdate,
+@router.put("/{config_name}/config", response_model=lt_schemas.LocalTrainAirflowConfig)
+def update_local_train_config(config_name: str, config_msg: lt_schemas.LocalTrainConfigUpdate,
                               db: Session = Depends(dependencies.get_db)):
     """
     updates the values of a config
@@ -73,8 +69,8 @@ def update_local_train_config(config_name: str, config_msg: LocalTrainConfigUpda
     return config
 
 
-@router.put("/{train_id}/config/train", response_model=LocalTrainAirflowConfig)
-def update_config_from_train(train_id: str, config_msg: LocalTrainConfigUpdate,
+@router.put("/{train_id}/config/train", response_model=lt_schemas.LocalTrainAirflowConfig)
+def update_config_from_train(train_id: str, config_msg: lt_schemas.LocalTrainConfigUpdate,
                              db: Session = Depends(dependencies.get_db)):
     """
     updates the values of a config from a train
@@ -84,7 +80,7 @@ def update_config_from_train(train_id: str, config_msg: LocalTrainConfigUpdate,
 
 
 
-@router.delete("/{train_id}/train", response_model=LocalTrain)
+@router.delete("/{train_id}/train", response_model=lt_schemas.LocalTrain)
 def delete_local_train(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
 
@@ -96,7 +92,7 @@ def delete_local_train(train_id: str, db: Session = Depends(dependencies.get_db)
     return obj
 
 
-@router.delete("/{train_id}/{file_name}/file", response_model=LocalTrainUploadTrainFileResponse)
+@router.delete("/{train_id}/{file_name}/file", response_model=lt_schemas.LocalTrainUploadTrainFileResponse)
 async def delete_file(train_id: str, file_name: str):
     """
 
@@ -109,7 +105,7 @@ async def delete_file(train_id: str, file_name: str):
             "filename": file_name}
 
 
-@router.delete("/{config_name}/config", response_model=LocalTrainAirflowConfig)
+@router.delete("/{config_name}/config", response_model=lt_schemas.LocalTrainAirflowConfig)
 def delete_config(config_name: str, db: Session = Depends(dependencies.get_db)):
     """
     removes a config by it's name
@@ -122,7 +118,7 @@ def delete_config(config_name: str, db: Session = Depends(dependencies.get_db)):
     return config
 
 
-@router.get("/{train_id}/allUploadedFileNames", response_model=AllFilesTrain)
+@router.get("/{train_id}/allUploadedFileNames", response_model=lt_schemas.AllFilesTrain)
 def get_all_uploaded_file_names(train_id: str):
     """
 
@@ -133,7 +129,7 @@ def get_all_uploaded_file_names(train_id: str):
     return {"files": files}
 
 
-@router.get("/{train_id}/info", response_model=LocalTrainInfo)
+@router.get("/{train_id}/info", response_model=lt_schemas.LocalTrainInfo)
 def get_train_status(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
     get all meta informaiton about the train
@@ -145,7 +141,7 @@ def get_train_status(train_id: str, db: Session = Depends(dependencies.get_db)):
     return obj
 
 
-@router.get("/masterImages", response_model=MasterImagesList)
+@router.get("/masterImages", response_model=lt_schemas.MasterImagesList)
 def get_master_images():
     """
     get all availabel master images
@@ -154,7 +150,7 @@ def get_master_images():
     return {"images": harbor_client.get_master_images()}
 
 
-@router.get("/trains", response_model=LocalTrainSchemaList)
+@router.get("/trains", response_model=lt_schemas.LocalTrainSchemaList)
 def get_all_local_trains(db: Session = Depends(dependencies.get_db)):
     """
 
@@ -164,7 +160,7 @@ def get_all_local_trains(db: Session = Depends(dependencies.get_db)):
     return {"trains": local_train.get_trains(db)}
 
 
-@router.get("/{train_id}/config/train", response_model=LocalTrainAirflowConfig)
+@router.get("/{train_id}/config/train", response_model=lt_schemas.LocalTrainAirflowConfig)
 def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
 
@@ -176,7 +172,7 @@ def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
     return config
 
 
-@router.get("/{config_name}/config", response_model=LocalTrainAirflowConfig)
+@router.get("/{config_name}/config", response_model=lt_schemas.LocalTrainAirflowConfig)
 def get_config_by_name(config_name : str,db:Session = Depends(dependencies.get_db)):
     """
      @param config_name: name of the config
@@ -187,13 +183,13 @@ def get_config_by_name(config_name : str,db:Session = Depends(dependencies.get_d
     return config
 
 
-@router.get("/configs", response_model=LocalTrainAirflowConfigs)
+@router.get("/configs", response_model=lt_schemas.LocalTrainAirflowConfigs)
 def get_all_configs(db: Session = Depends(dependencies.get_db)):
     configs = local_train.get_configs(db)
     return configs
 
 
-@router.get("/{train_id}/name", response_model=LocalTrainBase)
+@router.get("/{train_id}/name", response_model=lt_schemas.LocalTrainBase)
 def get_name(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
 
@@ -206,7 +202,7 @@ def get_name(train_id: str, db: Session = Depends(dependencies.get_db)):
             "train_id": train_id}
 
 
-@router.get("/{train_name}/id", response_model=LocalTrainBase)
+@router.get("/{train_name}/id", response_model=lt_schemas.LocalTrainBase)
 def get_id(train_name: str, db: Session = Depends(dependencies.get_db)):
     """
 
@@ -231,7 +227,7 @@ async def get_file(train_id: str, file_name: str):
     return Response(file)
 
 
-@router.get("/{train_id}/logs", response_model=list[LocalTrainLog])
+@router.get("/{train_id}/logs", response_model=list[lt_schemas.LocalTrainLog])
 def get_logs(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
     Returns the run logs for the runs of the train
@@ -244,7 +240,7 @@ def get_logs(train_id: str, db: Session = Depends(dependencies.get_db)):
     return logs
 
 
-@router.get("/{train_id}/lastLogs", response_model=LocalTrainLog)
+@router.get("/{train_id}/lastLogs", response_model=lt_schemas.LocalTrainLog)
 def get_last_log(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
     Returns the last run logs for the train

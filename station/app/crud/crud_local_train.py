@@ -3,20 +3,17 @@ import os
 import asyncio
 from datetime import datetime
 from typing import Union, Any
-
 from sqlalchemy.orm import Session
 from fastapi import UploadFile, HTTPException
-from fastapi.encoders import jsonable_encoder
 
 from station.app.crud.base import CRUDBase, ModelType
 from station.app.models.local_trains import LocalTrain, LocalTrainExecution, LocalTrainConfig
-from station.app.schemas.local_trains import LocalTrainCreate, LocalTrainUpdate, LocalTrainRun, LocalTrainConfigCreate, \
-    LocalTrainConfigUpdate
+from station.app.schemas import local_trains as lt_schemas
 from station.app.local_train_minio.LocalTrainMinIO import train_data
 
 
-class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
-    def create(self, db: Session, *, obj_in: LocalTrainCreate) -> ModelType:
+class CRUDLocalTrain(CRUDBase[LocalTrain, lt_schemas.LocalTrainCreate, lt_schemas.LocalTrainUpdate]):
+    def create(self, db: Session, *, obj_in: lt_schemas.LocalTrainCreate) -> ModelType:
         """
         Create the data base entry for a local train
         @param db: reference to the postgres database
@@ -41,7 +38,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         db.refresh(train)
         return train
 
-    def create_config(self, db: Session, *, obj_in: LocalTrainConfigCreate) -> ModelType:
+    def create_config(self, db: Session, *, obj_in: lt_schemas.LocalTrainConfigCreate) -> ModelType:
         db_config: LocalTrainConfig = db.query(LocalTrainConfig).filter(
             LocalTrainConfig.name == obj_in.name
         ).first()
@@ -66,7 +63,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
                     raise HTTPException(status_code=404, detail=f"Train with id '{obj_in.train_id}' was not found.")
         return obj_in
 
-    def create_run(self, db: Session, *, obj_in: LocalTrainRun) -> ModelType:
+    def create_run(self, db: Session, *, obj_in: lt_schemas.LocalTrainRun) -> ModelType:
         """
         create a database entry for a local train execution
 
@@ -131,12 +128,12 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         db.commit()
         return config.airflow_config
 
-    def update_config(self, db: Session, config_name: str, config_update: LocalTrainConfigUpdate):
+    def update_config(self, db: Session, config_name: str, config_update: lt_schemas.LocalTrainConfigUpdate):
         config = self._create_config(config_update)
         self._update_config(db, config_name, config)
         return config
 
-    def update_config_from_train(self, db: Session, train_id: str, config_update: LocalTrainConfigUpdate):
+    def update_config_from_train(self, db: Session, train_id: str, config_update: lt_schemas.LocalTrainConfigUpdate):
         config = self._create_config(config_update)
         self._update_config_local_train(db, train_id, config)
 
@@ -341,7 +338,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         print(runs)
 
     def _create_config(self, obj_in):
-        if not isinstance(obj_in, (LocalTrainConfigCreate, LocalTrainConfigUpdate)):
+        if not isinstance(obj_in, (lt_schemas.LocalTrainConfigCreate, lt_schemas.LocalTrainConfigUpdate)):
             raise HTTPException(status_code=400,
                                 detail=f"obj_in is not of type LocalTrainConfigSchema but of type {type(obj_in)}")
 
