@@ -120,23 +120,6 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         db.commit()
         return config.airflow_config
 
-    def remove_config_entry(self, db: Session, train_id: str, key: str):
-        """
-        set the value of the key in the train config to none
-
-        @param db: reference to the postgres database
-        @param train_id:  Id of the train that has to be changed
-        @param key: key that will be set to null
-        @return: json response about the removel
-        """
-        config = self.get_config(db, train_id)
-        try:
-            config[key] = None
-            self._update_config_local_train(db, train_id, config)
-            return config
-        except KeyError as e:
-            print(e)
-            return HTTPException(status_code=404, detail=f"{key} is not a key that can be reset")
 
     def put_config(self, db: Session, train_id: str, config_name: str):
         train = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).first()
@@ -159,60 +142,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         config = self._create_config(config_update)
         self._update_config_local_train(db, train_id, config)
 
-    '''def update_config_add_repository(self, db: Session, train_id: str, repository: str):
-        """
 
-        @param db:
-        @param train_id:
-        @param repository:
-        @return:
-        """
-        config = self._get_config(db, train_id)
-        harbor_api = os.getenv("HARBOR_URL")
-        harbor_url = harbor_api.split("/")[2]
-        config["repository"] = f"{harbor_url}/{repository}"
-        self._update_config_local_train(db, train_id, config)
-        return config
-
-    def update_config_add_tag(self, db: Session, train_id: str, tag: str):
-        """
-
-        @param db:
-        @param train_id:
-        @param tag:
-        @return:
-        """
-        config = self._get_config(db, train_id)
-        config["tag"] = f"{tag}"
-        self._update_config_local_train(db, train_id, config)
-        return config
-
-    def update_config_add_entrypoint(self, db: Session, train_id: str, entrypoint: str):
-        """
-
-        @param db:
-        @param train_id:
-        @param entrypoint:
-        @return:
-        """
-        config = self._get_config(db, train_id)
-        config["entrypoint"] = f"{entrypoint}"
-        self._update_config_local_train(db, train_id, config)
-        return config
-
-    def update_config_add_query(self, db: Session, train_id: str, query: str):
-        """
-
-        @param db:
-        @param train_id:
-        @param query:
-        @return:
-        """
-        config = self._get_config(db, train_id)
-        config["query"] = f"{query}"
-        self._update_config_local_train(db, train_id, config)
-        return config
-'''
     def _update_config_local_train(self, db, train_id, config):
         """
 
@@ -229,10 +159,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
                 {"airflow_config": config})
             db.commit()
         else:
-            # old with integrated config
-            db.query(LocalTrain).filter(LocalTrain.train_id == train_id).update({"updated_at": datetime.now()})
-            db.query(LocalTrain).filter(LocalTrain.train_id == train_id).update({"airflow_config_json": config})
-            db.commit()
+            raise HTTPException(status_code=404, detail=f"The Train {train_id} has no config assignt")
 
     def _update_config(self, db, config_name, config):
         db.query(LocalTrainConfig).filter(LocalTrainConfig.name == config_name).update(
@@ -241,25 +168,6 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
             {"airflow_config": config})
         db.commit()
 
-    def _get_config(self, db, train_id: str):
-        """
-
-        @param db:
-        @param train_id:
-        @return:
-        """
-        obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).first()
-        if obj.config_id is not None:
-            obj = db.query(LocalTrainConfig).filter(LocalTrainConfig.id == obj.config_id).first()
-            config = obj.airflow_config
-            return config
-
-        # old with integrated config
-        old_config = obj.airflow_config_json
-        if old_config is None:
-            self._create_empty_config(train_id)
-        else:
-            return old_config
 
     def _create_empty_config(self, train_id):
         """
@@ -371,7 +279,6 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
             obj = db.query(LocalTrainConfig).filter(LocalTrainConfig.id == obj.config_id).first()
             config = obj.airflow_config
             config["train_id"] = train_id
-            print("config from extrernal config")
 
             return config
         config = obj.airflow_config_json
@@ -471,7 +378,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         return f"{harbor_url}/{image}"
 
     def _get_image(self, repository: str):
-        harbor_api = os.getenv("HARBOR_URL")
+        harbor_api = os.getenv("HARBOR_URL").split("/")[2]
         image = repository.split(f"{harbor_api}/")[1]
         return image
 

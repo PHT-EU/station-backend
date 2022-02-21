@@ -84,7 +84,7 @@ def update_local_train_config(config_name: str, config_msg: LocalTrainConfigUpda
     return config
 
 
-@router.put("/{train_id}/config", response_model=LocalTrainAirflowConfig)
+@router.put("/{train_id}/config/train", response_model=LocalTrainAirflowConfig)
 def update_config_from_train(train_id: str, config_msg: LocalTrainConfigUpdate,
                              db: Session = Depends(dependencies.get_db)):
     """
@@ -175,7 +175,7 @@ def get_all_local_trains(db: Session = Depends(dependencies.get_db)):
     return {"trains": local_train.get_trains(db)}
 
 
-@router.get("/{train_id}/config", response_model=LocalTrainAirflowConfig)
+@router.get("/{train_id}/config/train", response_model=LocalTrainAirflowConfig)
 def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
 
@@ -184,6 +184,17 @@ def get_config(train_id: str, db: Session = Depends(dependencies.get_db)):
     @return:
     """
     config = local_train.get_train_config(db, train_id)
+    return config
+
+
+@router.get("/{config_name}/config", response_model=LocalTrainAirflowConfig)
+def get_config_by_name(config_name : str,db:Session = Depends(dependencies.get_db)):
+    """
+     @param config_name: name of the config
+    @param db: reference to the postgres database
+    @return:
+    """
+    config = local_train.get_config(db, config_name)
     return config
 
 

@@ -48,6 +48,7 @@ class LocalTrainConfigUpdate(LocalTrainConfigBase):
     pass
 
 class LocalTrainAirflowConfig(BaseModel):
+    image: Optional[str] = None
     repository: Optional[str] = None
     tag: Optional[str] = None
     env: Optional[str] = None
