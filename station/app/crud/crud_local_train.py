@@ -311,6 +311,8 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, lt_schemas.LocalTrainCreate, lt_schema
         @return: list of logs
         """
         runs = db.query(LocalTrainExecution).filter(LocalTrainExecution.train_id == train_id).all()
+        if not runs:
+            raise HTTPException(status_code=404, detail=f"No runs found for  {train_id} ")
         logs = []
         for run in runs:
             run_id = run.airflow_dag_run
@@ -328,6 +330,8 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, lt_schemas.LocalTrainCreate, lt_schema
         @return: log of
         """
         runs = db.query(LocalTrainExecution).filter(LocalTrainExecution.train_id == train_id).all()
+        if not runs:
+            raise HTTPException(status_code=404, detail=f"No runs found for  {train_id} ")
         run_id = runs[-1].airflow_dag_run
         log = {"run_id": run_id,
                "log": train_data.read_file(f"{train_id}/{run_id}/log.")}

@@ -235,7 +235,7 @@ def get_logs(train_id: str, all_logs: bool = False, db: Session = Depends(depend
 
     @param db: reference to the postgres database
     @param train_id: uid of a local train
-    @param all_logs: boll if all or only last log is returnd
+    @param all_logs: boll if all or only last log is returned
     @return:
     """
     if all_logs:
@@ -244,5 +244,3 @@ def get_logs(train_id: str, all_logs: bool = False, db: Session = Depends(depend
     else:
         log = local_train.get_last_train_logs(db, train_id)
         return log
-
-

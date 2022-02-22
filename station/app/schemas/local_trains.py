@@ -114,4 +114,4 @@ class LocalTrainDeleteTrainFileResponse(LocalTrainUploadTrainFileResponse):
 
 class LocalTrainLog(BaseModel):
     run_id: str
-    log: Optional[str]
+    log: str

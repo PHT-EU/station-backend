@@ -251,7 +251,7 @@ def test_create_and_run_local_train():
 
         # logs
         logs_response = client.get(
-            f"/api/localTrains/{train_creation_response_dict['train_id']}/logs" , json={"all_logs": True})
+            f"/api/localTrains/{train_creation_response_dict['train_id']}/logs" , params={"all_logs": True})
         assert logs_response.status_code == 200
         last_logs_response = client.get(
             f"/api/localTrains/{train_creation_response_dict['train_id']}/logs")
