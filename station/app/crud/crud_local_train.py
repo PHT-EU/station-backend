@@ -85,7 +85,11 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, lt_schemas.LocalTrainCreate, lt_schema
         @param train_id:
         @return:
         """
-        # TODO remove query results when exist
+        # ceck if train exist
+        train = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).first()
+        if not train:
+            return HTTPException(status_code=404, detail=f"train_id {train_id} dose not exit")
+
         # remove minIo entry
         files = self.get_all_uploaded_files(train_id)
         loop = asyncio.new_event_loop()
@@ -98,12 +102,9 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, lt_schemas.LocalTrainCreate, lt_schema
             db.delete(run)
         db.commit()
         # remove sql database entry for LocalTrain
-        obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).first()
-        if not obj:
-            return HTTPException(status_code=404, detail=f"train_id {train_id} dose not exit")
-        db.delete(obj)
+        db.delete(train)
         db.commit()
-        return obj
+        return train
 
     def remove_config(self, db: Session, config_name: str):
         config = db.query(LocalTrainConfig).filter(LocalTrainConfig.name == config_name).first()

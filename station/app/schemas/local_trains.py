@@ -29,6 +29,7 @@ class LocalTrain(DBSchema):
 class LocalTrainCreate(BaseModel):
     train_name: Optional[str] = None
 
+
 class LocalTrainConfigBase(BaseModel):
     name: str
     image: Optional[str] = None
@@ -47,6 +48,7 @@ class LocalTrainConfigCreate(LocalTrainConfigBase):
 class LocalTrainConfigUpdate(LocalTrainConfigBase):
     pass
 
+
 class LocalTrainAirflowConfig(BaseModel):
     image: Optional[str] = None
     repository: Optional[str] = None
@@ -62,15 +64,11 @@ class LocalTrainInfo(BaseModel):
     id: str
     train_id: str
     train_name: str
-    config_id:  Optional[str]
+    config_id: Optional[str]
     airflow_config_json: Optional[LocalTrainAirflowConfig]
     created_at: datetime
     updated_at: Optional[datetime]
     is_active: bool
-
-
-class LocalTrainSchemaList(BaseModel):
-    trains: list[LocalTrainInfo]
 
 
 class LocalTrainAirflowConfigs(BaseModel):
@@ -96,8 +94,10 @@ class MinIOFile(BaseModel):
 class AllFilesTrain(BaseModel):
     files: list[MinIOFile]
 
+
 class MasterImagesList(BaseModel):
     images: list[str]
+
 
 class LocalTrainUpdate(LocalTrainCreate):
     pass
@@ -106,6 +106,10 @@ class LocalTrainUpdate(LocalTrainCreate):
 class LocalTrainUploadTrainFileResponse(BaseModel):
     train_id: str
     filename: str
+
+
+class LocalTrainDeleteTrainFileResponse(LocalTrainUploadTrainFileResponse):
+    pass
 
 
 class LocalTrainLog(BaseModel):
