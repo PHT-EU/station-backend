@@ -71,16 +71,6 @@ def update_local_train_config(config_name: str, config_msg: lt_schemas.LocalTrai
     return config
 
 
-@router.put("/{train_id}/config", response_model=lt_schemas.LocalTrainAirflowConfig)
-def update_config_from_train(train_id: str, config_msg: lt_schemas.LocalTrainConfigUpdate,
-                             db: Session = Depends(dependencies.get_db)):
-    """
-    updates the values of a config from a train
-    """
-    config = local_train.update_config_from_train(db, train_id=train_id, config_update=config_msg)
-    return config
-
-
 @router.delete("/{train_id}", response_model=lt_schemas.LocalTrain)
 def delete_local_train(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
@@ -189,31 +179,6 @@ def get_all_configs(db: Session = Depends(dependencies.get_db)):
     configs = local_train.get_configs(db)
     return configs
 
-
-@router.get("/{train_id}/name", response_model=lt_schemas.LocalTrainBase)
-def get_name(train_id: str, db: Session = Depends(dependencies.get_db)):
-    """
-
-    @param train_id: uid of a local train
-    @param db: reference to the postgres database
-    @return:
-    """
-    train_name = local_train.get_train_name(db, train_id)
-    return {"train_name": train_name,
-            "train_id": train_id}
-
-
-@router.get("/{train_name}/id", response_model=lt_schemas.LocalTrainBase)
-def get_id(train_name: str, db: Session = Depends(dependencies.get_db)):
-    """
-
-    @param train_name:
-    @param db: reference to the postgres database
-    @return:
-    """
-    train_id = local_train.get_train_id(db, train_name)
-    return {"train_name": train_name,
-            "train_id": train_id}
 
 
 @router.get("/{train_id}/file/{file_name}")

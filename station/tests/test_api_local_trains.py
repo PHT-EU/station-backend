@@ -1,7 +1,6 @@
 import pytest
 import os
 import ast
-import uuid
 from fastapi.testclient import TestClient
 import json
 from station.app.main import app
@@ -59,14 +58,6 @@ def test_get_configs(config):
     assert delete_config_response.status_code == 200
 
 
-def test_create_local_train_without_name(local_train):
-    get_name_response = client.get(f"api/localTrains/{local_train['train_id']}/name")
-    get_name_response_dict = ast.literal_eval(get_name_response.text)
-    assert get_name_response_dict["train_name"] == local_train["train_id"]
-    get_id_response = client.get(f"api/localTrains/{local_train['train_id']}/id")
-    get_id_response_dict = ast.literal_eval(get_id_response.text)
-    assert get_id_response_dict["train_id"] == local_train["train_id"]
-
 
 def test_getting_local_train_informaion(local_train):
     get_info_response = client.get(f"api/localTrains/{local_train['train_id']}/info")
@@ -119,7 +110,7 @@ def test_config_changes():
     config["tag"] = tag
     config["name"] = "test_config"
     put_config_response = client.put(
-        f"/api/localTrains/{train['train_id']}/config",
+        f"/api/localTrains/config/{config_dict['name']}",
         json=config
     )
     assert put_config_response.status_code == 200
@@ -132,7 +123,6 @@ def test_config_changes():
 
 def test_store_and_get_files(local_train):
     if os.getenv("ENVIRONMENT") == "testing":
-    #if os.getenv("ENVIRONMENT") is None:
         entrypoint_name = "entrypoint.py"
         with open(f"./tests/test_files/{entrypoint_name}", "r") as f:
             upload_entrypoint_file_response = client.post(
@@ -177,7 +167,6 @@ def test_external_config(local_train):
 
 def test_create_and_run_local_train():
     if os.getenv("ENVIRONMENT") == "testing":
-    #if os.getenv("ENVIRONMENT") is None:
         # create local train
         train_creation_response = client.post("api/localTrains", json={"train_name": "testing_local_train"})
         assert train_creation_response.status_code == 200, train_creation_response.json

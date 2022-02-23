@@ -280,28 +280,6 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, lt_schemas.LocalTrainCreate, lt_schema
         config = obj.airflow_config_json
         return config
 
-    def get_train_name(self, db: Session, train_id: str):
-        """
-
-        @param db:
-        @param train_id:
-        @return:
-        """
-        obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()[0]
-        train_name = obj.train_name
-        return train_name
-
-    def get_train_id(self, db: Session, train_name: str):
-        """
-
-        @param db:
-        @param train_name:
-        @return:
-        """
-        obj = db.query(LocalTrain).filter(LocalTrain.train_name == train_name).all()[0]
-        train_id = obj.train_id
-        return train_id
-
     def get_train_logs(self, db: Session, train_id: str):
         """
         Returns the run logs for the runs of the train
