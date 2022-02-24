@@ -12,7 +12,7 @@ class AirflowClient:
         self.airflow_url = airflow_api_url if airflow_api_url else os.getenv("AIRFLOW_API_URL", "localhost:8080/api/v1")
         self.airflow_user = airflow_user if airflow_user else os.getenv("AIRFLOW_USER", "admin")
         self.airflow_pw = airflow_password if airflow_password else os.getenv("AIRFLOW_PW", "admin")
-        self.auth = HTTPBasicAuth(airflow_user, airflow_password)
+        self.auth = HTTPBasicAuth(self.airflow_user, self.airflow_pw)
 
     def trigger_dag(self, dag_id: str, config: dict = None) -> str:
         """
@@ -32,6 +32,7 @@ class AirflowClient:
 
         url = self.airflow_url + f"dags/{dag_id}/dagRuns"
         print(self.auth, self.airflow_user, self.airflow_pw)
+        print(url)
         r = requests.post(url=url, auth=self.auth, json=config_msg)
         print(r.json())
         r.raise_for_status()

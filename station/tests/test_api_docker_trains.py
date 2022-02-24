@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 
 from station.app.main import app
 from station.app.api.dependencies import get_db
+from dotenv import load_dotenv, find_dotenv
 
 from .test_db import override_get_db
 
@@ -14,6 +15,7 @@ client = TestClient(app)
 
 @pytest.fixture
 def train_id():
+    load_dotenv(find_dotenv())
     return "testTrain"
 
 
@@ -280,7 +282,6 @@ def test_run_docker_train(train_id, docker_train_config):
         }
         old_state = client.get(f"/api/trains/docker/{train_id}/state")
         print(old_state.json())
-
 
         response = client.post(f"/api/trains/docker/{train_id}/run", json={"config_id": 1})
         assert response.status_code == 200, response.text

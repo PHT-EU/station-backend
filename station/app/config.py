@@ -57,8 +57,8 @@ class StationEnvironmentVariables(Enum):
     # minio environment variables
     MINIO_HOST = "MINIO_HOST"
     MINIO_PORT = "MINIO_PORT"
-    MINIO_ACCESS_KEY = "MINIO_ACCESS_KEY"
-    MINIO_SECRET_KEY = "MINIO_SECRET_KEY"
+    MINIO_ACCESS_KEY = "MINIO_USER"
+    MINIO_SECRET_KEY = "MINIO_PW"
 
 
 class RegistrySettings(BaseModel):
