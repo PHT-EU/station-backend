@@ -23,7 +23,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     env:
-      MINIO_URL: ${{ secrets.MINIO_URL }}
+      MINIO_HOST: ${{ secrets.MINIO_HOST }}
       MINIO_USER: ${{ secrets.MINIO_USER }}
       MINIO_PW: ${{ secrets.MINIO_PW }}
       AIRFLOW_API_URL: ${{ secrets.AIRFLOW_API_URL }}
@@ -36,6 +36,7 @@ jobs:
       FERNET_KEY: XvKQY_wa9EtUh2j8numvvzKzamXLH4DvVmBAkopYdY4=
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      ENVIRONMENT: testing
 
 
     steps:
