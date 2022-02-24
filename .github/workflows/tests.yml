@@ -47,7 +47,7 @@ jobs:
           cache: "pipenv"
       - name: Install pipenv
         run: |
-          python3 -m pip install --user pipx
+          pip install pipx
           pipx install pipenv
       - name: Install dependencies
         run: pipenv install --dev
