@@ -39,8 +39,6 @@ def test_run(train_id):
             execution = client.get(f"/api/trains/docker/{train_id}/executions")
             assert execution.json()[-1]["airflow_dag_run"] == response_pht_train["run_id"]
 
-        # TODO tests for local trains
-
 
 def test_run_fails(train_id):
     if os.getenv("ENVIRONMENT") == "testing":
@@ -59,8 +57,6 @@ def test_get_airflow_run_information(train_id):
         run_info_response = client.get(f"/api/airflow/logs/run_pht_train/{run_id}")
         print(run_info_response.json())
         assert run_info_response.status_code == 200
-
-        # TODO tests for local trains
 
 
 def test_get_airflow_run_information_fails():
@@ -86,6 +82,14 @@ def test_get_airflow_task_log(train_id):
         for task in tasklist["task_instances"]:
             task_id = task["task_id"]
             task_info = client.get(f"/api/airflow/logs/run_pht_train/{run_id}/{task_id}")
+            assert task_info.json()["run_info"]
+            assert task_info.status_code == 200
+
+        # with given task try number
+        for task in tasklist["task_instances"]:
+            task_id = task["task_id"]
+            task_info = client.get(f"/api/airflow/logs/run_pht_train/{run_id}/{task_id}/?task_try_number=0")
+            assert task_info.json()["run_info"]
             assert task_info.status_code == 200
 
 

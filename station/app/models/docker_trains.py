@@ -23,7 +23,7 @@ class DockerTrainExecution(Base):
     start = Column(DateTime, default=datetime.now())
     end = Column(DateTime, nullable=True)
     airflow_dag_run = Column(String, nullable=True)
-    used_config = Column(Integer, ForeignKey('docker_train_configs.id'), nullable=True)
+    config = Column(Integer, ForeignKey('docker_train_configs.id'), nullable=True)
 
 
 class DockerTrainConfig(Base):
@@ -47,7 +47,7 @@ class DockerTrain(Base):
     updated_at = Column(DateTime, nullable=True)
     proposal_id = Column(Integer, default=0)
     config_id = Column(Integer, ForeignKey("docker_train_configs.id"), nullable=True)
-    config = relationship("DockerTrainConfig", back_populates="trains")
+    #config = relationship("DockerTrainConfig", back_populates="trains")
     is_active = Column(Boolean, default=False)
     state = relationship("DockerTrainState", uselist=False)
     # state = relationship("DockerTrainState", backref=backref('train', uselist=False))

@@ -84,7 +84,7 @@ def update_train(db: Session, db_train, run_id: str, config_id: int) -> DockerTr
     train_state = update_state(db, db_train, run_time)
 
     # Create an execution
-    execution = dte_model(train_id=db_train.id, airflow_dag_run=run_id, used_config=config_id)
+    execution = dte_model(train_id=db_train.id, airflow_dag_run=run_id, config=config_id)
     db.add(execution)
     db.commit()
     db.refresh(execution)

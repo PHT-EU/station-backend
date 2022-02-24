@@ -10,9 +10,9 @@ class HarborClient:
     def __init__(self, harbor_api_url: str = None, username: str = None, password: str = None):
         # Setup and verify connection parameters either based on arguments or .env vars
 
-        self.url = harbor_api_url if harbor_api_url else os.getenv("HARBOR_BASE_URL")
+        self.url = harbor_api_url if harbor_api_url else os.getenv("HARBOR_URL")
         assert self.url
-        self.url = self.url.rstrip("/") + "/api/v2.0"
+        #self.url = self.url.rstrip("/") + "/api/v2.0"
 
         self.username = username if username else os.getenv("HARBOR_USER")
         assert self.username

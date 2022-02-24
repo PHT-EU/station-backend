@@ -281,7 +281,7 @@ def test_run_docker_train(train_id, docker_train_config):
         # run with given config id
         response = client.post(f"/api/trains/docker/{train_id}/run", json={"config_id": 1})
         assert response.json()["airflow_dag_run"]
-        assert response.json()["used_config"] == 1
+        assert response.json()["config"] == 1
         assert response.status_code == 200, response.text
 
         state_response = client.get(f"/api/trains/docker/{train_id}/state")
@@ -295,7 +295,7 @@ def test_run_docker_train(train_id, docker_train_config):
         response = client.post(f"/api/trains/docker/{train_id}/run",
                                json={"config_id": "default"})
         assert response.json()["airflow_dag_run"]
-        assert response.json()["used_config"] is None
+        assert response.json()["config"] is None
         assert response.status_code == 200, response.text
 
         state_response = client.get(f"/api/trains/docker/{train_id}/state")
@@ -307,7 +307,7 @@ def test_run_docker_train(train_id, docker_train_config):
         # run with config assigned to train
         response = client.post(f"/api/trains/docker/{train_id}/run")
         assert response.json()["airflow_dag_run"]
-        assert response.json()["used_config"] == 1
+        assert response.json()["config"] == 1
         assert response.status_code == 200, response.text
 
         state_response = client.get(f"/api/trains/docker/{train_id}/state")
