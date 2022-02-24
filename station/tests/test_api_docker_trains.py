@@ -279,11 +279,13 @@ def test_run_docker_train(train_id, docker_train_config):
             "tag": "latest"
         }
         old_state = client.get(f"/api/trains/docker/{train_id}/state")
+        print(old_state.json())
 
 
         response = client.post(f"/api/trains/docker/{train_id}/run", json={"config_id": 1})
-        assert response.json()["airflow_dag_run"]
         assert response.status_code == 200, response.text
+        assert response.json()["airflow_dag_run"]
+
 
         state_response = client.get(f"/api/trains/docker/{train_id}/state")
         assert old_state.json() != state_response.json()

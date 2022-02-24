@@ -116,6 +116,7 @@ def run_train(db: Session, train_id: Any, execution_params: DockerTrainExecution
     # Execute the train using the airflow rest api
     try:
         run_id = airflow_client.trigger_dag("run_pht_train", config=config)
+        print(run_id)
         db_train = update_train(db, db_train, run_id)
         last_execution = db_train.executions[-1]
         return last_execution

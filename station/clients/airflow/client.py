@@ -8,8 +8,10 @@ from station.app.schemas.station_status import HealthStatus
 
 
 class AirflowClient:
-    def __init__(self, airflow_api_url: str = None, airflow_user: str = "admin", airflow_password: str = "admin"):
-        self.airflow_url = airflow_api_url if airflow_api_url else os.getenv("AIRFLOW_API_URL")
+    def __init__(self, airflow_api_url: str = None, airflow_user: str = None, airflow_password: str = None):
+        self.airflow_url = airflow_api_url if airflow_api_url else os.getenv("AIRFLOW_API_URL", "localhost:8080/api/v1")
+        self.airflow_user = airflow_user if airflow_user else os.getenv("AIRFLOW_USER", "admin")
+        self.airflow_pw = airflow_password if airflow_password else os.getenv("AIRFLOW_PW", "admin")
         self.auth = HTTPBasicAuth(airflow_user, airflow_password)
 
     def trigger_dag(self, dag_id: str, config: dict = None) -> str:
@@ -29,6 +31,7 @@ class AirflowClient:
             config_msg["conf"] = config
 
         url = self.airflow_url + f"dags/{dag_id}/dagRuns"
+        print(self.auth, self.airflow_user, self.airflow_pw)
         r = requests.post(url=url, auth=self.auth, json=config_msg)
         print(r.json())
         r.raise_for_status()
@@ -111,14 +114,3 @@ class AirflowClient:
 
 
 airflow_client = AirflowClient()
-
-if __name__ == '__main__':
-    load_dotenv(find_dotenv())
-    client = AirflowClient()
-
-    test_config = {
-
-    }
-
-    dag_runs = client.get_all_dag_runs("run_train")
-    dag_run_id = client.trigger_dag("run_train")
