@@ -23,6 +23,7 @@ def test_settings_init_env_vars():
                         StationEnvironmentVariables.MINIO_HOST.value: 'http://minio.example.com',
                         StationEnvironmentVariables.MINIO_ACCESS_KEY.value: 'minio_user',
                         StationEnvironmentVariables.MINIO_SECRET_KEY.value: 'minio_secret',
+                        StationEnvironmentVariables.STATION_DB.value: "postgres://db"
                     }):
         settings = Settings()
         settings.setup()
