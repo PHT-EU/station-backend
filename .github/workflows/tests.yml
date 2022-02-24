@@ -47,8 +47,7 @@ jobs:
           cache: "pipenv"
       - name: Install pipenv
         run: |
-          pip install pipx
-          pipx install pipenv
+          python -m pip install --upgrade pipenv wheel
       - name: Install dependencies
         run: pipenv install --dev
       - name: Lint with flake8
