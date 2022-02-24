@@ -46,7 +46,9 @@ jobs:
           python-version: 3.9
           cache: "pipenv"
       - name: Install pipenv
-        run: python3 -m pip install --user pipx
+        run: |
+          python3 -m pip install --user pipx
+          pipx install pipenv
       - name: Install dependencies
         run: pipenv install --dev
       - name: Lint with flake8
