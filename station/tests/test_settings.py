@@ -180,8 +180,8 @@ def test_config_file():
     assert file_config.registry.user == "test"
 
 
-def test_settings():
-    settings = Settings(config_path="station_config.yml")
-    settings.setup()
-    assert settings.config
-    os.remove("station_config.yml")
+# def test_settings():
+#     settings = Settings(config_path="station_config.yml")
+#     settings.setup()
+#     assert settings.config
+#     os.remove("station_config.yml")
