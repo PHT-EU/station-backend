@@ -68,7 +68,7 @@ and run the following commands to initialize the authentication server
 npm run setup
 ```
 
-the output should be with different keys:
+the output should be similar, with different keys:
 
 ```
 ✔ Generated rsa key-pair.
@@ -82,7 +82,7 @@ the output should be with different keys:
 copy and save the generated robot id and secret. Then run
 
 ```shell
-npm run setup
+npm run start
 ```
 
 to reset the database and seed it with the default users. Exit the container with `exit`
