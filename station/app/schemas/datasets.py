@@ -13,10 +13,14 @@ class DataSetBase(BaseModel):
     # TODO improve clarity of access definition
     access_path: Optional[str]
     n_items: Optional[int]
+    n_features: Optional[int]
 
 
 class DataSetCreate(DataSetBase):
     target_field: Optional[str]
+
+
+class DataSetFhirInformation(DataSetBase):
     fhir_user: Optional[str]
     fhir_password: Optional[str]
     fhir_server_type: Optional[str]
