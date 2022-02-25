@@ -120,7 +120,7 @@ def test_get_docker_train_config_by_id():
 
 
 def test_get_docker_train_config_by_id_fails():
-    response = client.get("/api/trains/docker/config/2")
+    response = client.get("/api/trains/docker/config/234")
     assert response.status_code == 404, response.text
 
 
@@ -137,7 +137,7 @@ def test_update_docker_train_config(docker_train_config):
 
 def test_update_docker_train_config_fails(docker_train_config):
     docker_train_config["name"] = "updated name"
-    response = client.put("/api/trains/docker/config/2",
+    response = client.put("/api/trains/docker/config/234",
                           json=docker_train_config)
     assert response.status_code == 404, response.text
 
