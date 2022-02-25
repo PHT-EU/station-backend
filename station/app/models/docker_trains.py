@@ -9,7 +9,7 @@ class DockerTrainState(Base):
     __tablename__ = "docker_train_states"
     id = Column(Integer, primary_key=True, index=True)
     train_id = Column(Integer, ForeignKey('docker_trains.id'))
-    train = relationship("DockerTrain", backref=backref("state", uselist=False))
+    #train = relationship("DockerTrain", backref=backref("state", uselist=False))
     last_execution = Column(DateTime, nullable=True)
     num_executions = Column(Integer, default=0)
     status = Column(String, default="inactive")
@@ -19,7 +19,7 @@ class DockerTrainExecution(Base):
     __tablename__ = "docker_train_executions"
     id = Column(Integer, primary_key=True, index=True)
     train_id = Column(Integer, ForeignKey('docker_trains.id'))
-    train_state_id = Column(Integer, ForeignKey('docker_train_states.id'), nullable=True)
+    #train_state_id = Column(Integer, ForeignKey('docker_train_states.id'), nullable=True)
     start = Column(DateTime, default=datetime.now())
     end = Column(DateTime, nullable=True)
     airflow_dag_run = Column(String, nullable=True)
@@ -50,5 +50,5 @@ class DockerTrain(Base):
     #config = relationship("DockerTrainConfig", back_populates="trains")
     is_active = Column(Boolean, default=False)
     state = relationship("DockerTrainState", uselist=False)
-    # state = relationship("DockerTrainState", backref=backref('train', uselist=False))
+    #state = relationship("DockerTrainState", backref=backref('train', uselist=False))
     executions = relationship("DockerTrainExecution")
