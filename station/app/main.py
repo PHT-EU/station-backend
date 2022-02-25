@@ -8,12 +8,8 @@ from station.app.logger import init_logging
 load_dotenv(find_dotenv())
 
 
-#app = FastAPI(
-#    title="PHT Station", docs_url="/api/v1/docs", redoc_url="/api/v1/redoc", openapi_url="/api/v1/openapi.json"
-#)
-
 app = FastAPI(
-    title="PHT Station"
+    title="PHT Station", docs_url="/api/docs", redoc_url="/api/redoc", openapi_url="/api/v1/openapi.json"
 )
 
 

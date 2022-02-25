@@ -70,6 +70,21 @@ services:
     ports:
       - "8080:8080"
 
+  auth:
+    image: ghcr.io/pht-medic/station-ui:latest
+    container_name: station-auth
+    volumes:
+      - auth_data:/usr/src/app/writable
+    ports:
+      - '3010:3010'
+    environment:
+      PORT: 3010
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: start123
+    command:
+      - server
+      - start
+
   minio:
     image: minio/minio:latest
     ports:

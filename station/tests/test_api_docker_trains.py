@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 
 from station.app.main import app
 from station.app.api.dependencies import get_db
+from dotenv import load_dotenv, find_dotenv
 
 from .test_db import override_get_db
 
@@ -14,6 +15,7 @@ client = TestClient(app)
 
 @pytest.fixture
 def train_id():
+    load_dotenv(find_dotenv())
     return "testTrain"
 
 

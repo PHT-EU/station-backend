@@ -4,6 +4,8 @@ from typing import Union, List
 
 from dotenv import load_dotenv, find_dotenv
 
+from station.app.schemas.station_status import HealthStatus
+
 
 class HarborClient:
 
@@ -58,7 +60,7 @@ class HarborClient:
         print(r.text)
         return [repositori["name"] for repositori in r.json()]
 
-    def health_check(self):
+    def health_check(self) -> HealthStatus:
         """
         requests the central service
         @return: dict: status of central harbor instance
@@ -67,12 +69,12 @@ class HarborClient:
         try:
             r = requests.get(url=url, auth=(self.username, self.password))
             if r and r.status_code == 200:
-                return r.json()
+                return HealthStatus.healthy
             else:
-                return {"status": None}
+                return HealthStatus.error
         except requests.exceptions.ConnectionError as e:
             print(e)
-        return {"status": None}
+        return HealthStatus.error
 
 
 harbor_client = HarborClient()
