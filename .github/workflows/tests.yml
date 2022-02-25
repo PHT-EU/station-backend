@@ -22,6 +22,9 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          # Maps port 6379 on service container to the host
+          - 6379:6379
     env:
       MINIO_HOST: ${{ secrets.MINIO_HOST }}
       MINIO_USER: ${{ secrets.MINIO_USER }}
@@ -34,7 +37,7 @@ jobs:
       HARBOR_PW: ${{ secrets.HARBOR_PW }}
       STATION_ID: 1
       FERNET_KEY: XvKQY_wa9EtUh2j8numvvzKzamXLH4DvVmBAkopYdY4=
-      REDIS_HOST: redis
+      REDIS_HOST: localhost
       REDIS_PORT: 6379
       ENVIRONMENT: testing
 
