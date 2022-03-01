@@ -31,6 +31,7 @@ class HarborClient:
         endpoint = f"/projects/station_{station_id}/repositories/"
         r = requests.get(self.url + endpoint, auth=(self.username, self.password))
         results = r.json()
+        print(results)
 
         link = True
         while link:

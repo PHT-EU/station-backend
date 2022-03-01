@@ -85,6 +85,7 @@ def test_list_docker_trains():
     response = client.get("/api/trains/docker")
 
     assert response.status_code == 200, response.text
+    print(response.json())
 
     assert len(response.json()) == 1
 
@@ -164,6 +165,7 @@ def test_get_config_for_train(train_id):
     response = client.get(f"/api/trains/docker/{train_id}/config")
     assert response.status_code == 200, response.text
     assert len(response.json()["trains"]) == 1
+    print(response.json())
 
     new_train_id = "no_config_train"
     response = client.post(
@@ -335,6 +337,8 @@ def test_run_docker_train_fails(train_id, docker_train_config):
 
         # no tag and no repository given
         response = client.post(f"/api/trains/docker/{train_id}/run", json={"config_id": 2})
+        response_conf = client.get("/api/trains/docker/config/2")
+        print(response_conf.json())
         state_response = client.get(f"/api/trains/docker/{train_id}/state")
         execution_response = client.get(f"/api/trains/docker/{train_id}/executions")
         assert old_state.json() == state_response.json()
