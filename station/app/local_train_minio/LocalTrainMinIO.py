@@ -2,16 +2,20 @@ from station.clients.docker.client import dockerClient
 from fastapi import UploadFile
 from station.clients.minio.client import MinioClient
 from minio.error import MinioException
+import os
 
 
 class LocalTrainMinIO:
     def __init__(self):
-        self.minio_client = MinioClient()
+        if os.getenv("MINIO_URL"):
+            self.minio_client = MinioClient()
+        else:
+            print("no MINIO url found")
         self.docker_client = dockerClient
         # TODO do over env file
 
         self.bucket_name = "localtrain"
-        self.minio_client.add_bucket(self.bucket_name)
+        #self.minio_client.add_bucket(self.bucket_name)
 
     async def store_endpoint(self, upload_file: UploadFile, train_id: str):
         await self.minio_client.store_files(self.bucket_name, f"{train_id}/endpoint.py", upload_file)

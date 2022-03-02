@@ -18,7 +18,7 @@ class Train(Base):
     token = Column(String, nullable=True)
     model = relationship("DLModel", uselist=False, backref="trains")
     dataset_id = Column(Integer, ForeignKey('datasets.id'), nullable=True)
-    dataset = relationship("DataSet", back_populates="trains")
+    #dataset = relationship("DataSet", back_populates="trains")
     config_id = Column(Integer, ForeignKey("federated_train_configs.id"), nullable=True)
     config = relationship("FederatedTrainConfig", back_populates="trains")
 
