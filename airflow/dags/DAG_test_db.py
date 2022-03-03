@@ -18,7 +18,6 @@ from station.app.crud.crud_docker_trains import *
 from station.app.models import docker_trains
 from station.app.schemas.docker_trains import *
 from station.clients.airflow.utils import UtilityFunctions
-from station.app.api.api_v1.endpoints.docker_trains import *
 from station.app.crud.crud_notifications import *
 from station.app.models import notification
 from station.app.schemas.notifications import *
@@ -62,11 +61,6 @@ def run_local_test_db():
         session = utils.create_session()
         session = session()
 
-
-        db_trains = get_available_trains(5, session)
-
-        for train in db_trains:
-            print("Available Trains : {}".format(train.train_id))
 
         train_id = str(uuid.uuid4())
 

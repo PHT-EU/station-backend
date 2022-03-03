@@ -18,3 +18,4 @@ minio
 python-keycloak
 fhir-kindling
 pht-train-container-library
+redis
