@@ -180,7 +180,6 @@ def test_config_file():
     assert file_config.station_id == "your_station_id"
     assert file_config.registry.user == "test"
 
-
 # def test_settings():
 #     settings = Settings(config_path="station_config.yml")
 #     settings.setup()

@@ -1,10 +1,11 @@
-FROM python:3.8
+FROM ubuntu
+MAINTAINER michael.graf@uni-tuebingen.de
 
 EXPOSE 8080 5555 8793
 
-RUN apt-get update -yqq \
-    && apt-get dist-upgrade -yqq \
-    && apt-get install -yqq --no-install-recommends --no-install-suggests \
+# install python3.8 and os dependencies
+RUN apt -y update && apt-get -y install software-properties-common && \
+    apt-get install -yqq --no-install-recommends --no-install-suggests \
         git \
         libffi-dev \
         libpq-dev \
@@ -12,22 +13,33 @@ RUN apt-get update -yqq \
         apt-utils \
         netcat \
         locales \
-    && rm -rf /var/lib/apt/lists
+        curl && \
+    # install python
+    add-apt-repository ppa:deadsnakes/ppa && \
+    apt-get install -y python3.8 && apt install python-is-python3 && apt install -y python3-pip && \
+    rm -rf /var/lib/apt/lists
 
-# TODO check how airflow is installed
-#RUN AIRFLOW_VERSION=2.1.3 && PYTHON_VERSION="$(python --version | cut -d " " -f 2 | cut -d "." -f 1-2)" && \
-#    CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-${PYTHON_VERSION}.txt" && \
-#    pip install "apache-airflow[async,postgres,celery, password, redis]==${AIRFLOW_VERSION}" --constraint "${CONSTRAINT_URL}"
-
-COPY requirements.txt /tmp/requirements.txt
-
-
-RUN pip install -r /tmp/requirements.txt
-RUN pip install git+https://github.com/PHT-Medic/train-container-library.git
 
 # Install container diff library
 RUN curl -LO https://storage.googleapis.com/container-diff/latest/container-diff-linux-amd64 && \
     install container-diff-linux-amd64 /usr/local/bin/container-diff
+
+# install airflow
+RUN pip install "apache-airflow[celery,crypto,hashicorp,password,postgres,redis]==2.2.4" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.2.4/constraints-3.8.txt"
+
+RUN mkdir /opt/train_data
+COPY .airflow/requirements.txt /tmp/requirements.txt
+
+
+RUN pip install -r /tmp/requirements.txt && \
+    pip install git+https://github.com/PHT-Medic/train-container-library.git
+
+COPY .airflow/entrypoint.sh /root/entrypoint.sh
+RUN chmod +x /root/entrypoint.sh
+ENTRYPOINT ["/root/entrypoint.sh"]
+CMD ["webserver"]
+
+
 
 COPY ./station /opt/station/station
 COPY ./station_worker /opt/station/station_worker

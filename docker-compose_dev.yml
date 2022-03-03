@@ -19,7 +19,6 @@ services:
       - POSTGRES_PASSWORD=admin
     ports:
       - "5432:5432"
-
   auth:
     image: ghcr.io/pht-medic/station-ui:latest
     container_name: station-auth
