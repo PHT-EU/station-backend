@@ -3,6 +3,7 @@ data
 *.env
 test_data
 
+.data/
 
 
 # Created by .ignore support plugin (hsz.mobi)
@@ -53,6 +54,8 @@ nosetests.xml
 coverage.xml
 *,cover
 .hypothesis/
+
+/station/test.db
 
 # Translations
 *.mo

@@ -3,8 +3,7 @@ import os
 import asyncio
 from datetime import datetime
 from sqlalchemy.orm import Session
-from fastapi import UploadFile
-
+from fastapi import UploadFile, HTTPException
 
 from station.app.crud.base import CRUDBase, ModelType
 from station.app.models.local_trains import LocalTrain, LocalTrainExecution
@@ -239,7 +238,10 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         @param train_id:
         @return:
         """
-        obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()[0]
+        try:
+            obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()[0]
+        except IndexError as _:
+            raise HTTPException(status_code=404, detail=f"Train with id '{train_id}' was not found.")
         config = obj.airflow_config_json
         return config
 

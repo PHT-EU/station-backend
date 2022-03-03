@@ -49,5 +49,6 @@ class DockerTrain(Base):
     #config = relationship("DockerTrainConfig", back_populates="trains")
     config = relationship("DockerTrainConfig")
     is_active = Column(Boolean, default=False)
+    # state = relationship("DockerTrainState", uselist=False)
     # state = relationship("DockerTrainState", backref=backref('train', uselist=False))
     executions = relationship("DockerTrainExecution")

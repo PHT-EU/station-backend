@@ -84,7 +84,7 @@ class AirflowClient:
         information["tasklist"] = task_list
         return information
 
-    def get_task_log(self, dag_id: str, run_id: str, task_id: str, task_try_number: int) -> dict:
+    def get_task_log(self, dag_id: str, run_id: str, task_id: str) -> dict:
         """
         get the log of a task for a spesific run
         @param dag_id:
@@ -92,7 +92,9 @@ class AirflowClient:
         @param task_id:
         @return:
         """
-        url = self.airflow_url + f"dags/{dag_id}/dagRuns/{run_id}/taskInstances/{task_id}/logs/{task_try_number}"
+
+        last_task_try_number = next(task["try_number"] for task in self.get_run_information(dag_id, run_id)["tasklist"]["task_instances"] if task["task_id"] == task_id)
+        url = self.airflow_url + f"dags/{dag_id}/dagRuns/{run_id}/taskInstances/{task_id}/logs/{last_task_try_number}"
         log = requests.get(url=url, auth=self.auth)
         log.raise_for_status()
         return log.content.decode("utf-8")
