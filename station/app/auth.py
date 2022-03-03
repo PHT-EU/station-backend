@@ -73,11 +73,12 @@ def validate_user_token(token: str, robot_token: str, token_url: str = None) -> 
     print(r.text)
     r.raise_for_status()
     response = r.json()
-    if response.get("entity").get("type") == "user":
-        user = User(**response.get("entity").get("data"))
+    if response.get("target").get("kind") == "user":
+        user = User(**response.get("target").get("entity"),
+                    permissions=response.get("target").get("permissions"))
         return user
     else:
-        raise NotImplemented("Only user entities are supported.")
+        raise NotImplementedError("Only user entities are supported.")
 
 
 def get_current_user(token: HTTPAuthorizationCredentials = Depends(HTTPBearer()),

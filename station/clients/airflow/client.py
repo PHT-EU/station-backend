@@ -2,12 +2,17 @@ import requests
 import os
 from dotenv import find_dotenv, load_dotenv
 from requests.auth import HTTPBasicAuth
+from loguru import logger
+
+from station.app.schemas.station_status import HealthStatus
 
 
 class AirflowClient:
-    def __init__(self, airflow_api_url: str = None, airflow_user: str = "admin", airflow_password: str = "admin"):
-        self.airflow_url = airflow_api_url if airflow_api_url else os.getenv("AIRFLOW_API_URL")
-        self.auth = HTTPBasicAuth(airflow_user, airflow_password)
+    def __init__(self, airflow_api_url: str = None, airflow_user: str = None, airflow_password: str = None):
+        self.airflow_url = airflow_api_url if airflow_api_url else os.getenv("AIRFLOW_API_URL", "localhost:8080/api/v1")
+        self.airflow_user = airflow_user if airflow_user else os.getenv("AIRFLOW_USER", "admin")
+        self.airflow_pw = airflow_password if airflow_password else os.getenv("AIRFLOW_PW", "admin")
+        self.auth = HTTPBasicAuth(self.airflow_user, self.airflow_pw)
 
     def trigger_dag(self, dag_id: str, config: dict = None) -> str:
         """
@@ -26,6 +31,8 @@ class AirflowClient:
             config_msg["conf"] = config
 
         url = self.airflow_url + f"dags/{dag_id}/dagRuns"
+        print(self.auth, self.airflow_user, self.airflow_pw)
+        print(url)
         r = requests.post(url=url, auth=self.auth, json=config_msg)
         print(r.json())
         r.raise_for_status()
@@ -57,14 +64,19 @@ class AirflowClient:
         print(r.json())
         r.raise_for_status()
 
-    def health_check(self) -> dict:
+    def health_check(self) -> HealthStatus:
         """
 
         @return: dict: Airflow Status
         """
         url = self.airflow_url + "health"
         r = requests.get(url=url)
-        return r.json()
+        try:
+            r.raise_for_status()
+            return HealthStatus.healthy
+        except Exception as e:
+            logger.error(f"Error checking airflow health: \n{e}")
+            return HealthStatus.error
 
     def get_run_information(self, dag_id: str, run_id: str) -> dict:
         """
@@ -93,7 +105,9 @@ class AirflowClient:
         @return:
         """
 
-        last_task_try_number = next(task["try_number"] for task in self.get_run_information(dag_id, run_id)["tasklist"]["task_instances"] if task["task_id"] == task_id)
+        last_task_try_number = next(
+            task["try_number"] for task in self.get_run_information(dag_id, run_id)["tasklist"]["task_instances"] if
+            task["task_id"] == task_id)
         url = self.airflow_url + f"dags/{dag_id}/dagRuns/{run_id}/taskInstances/{task_id}/logs/{last_task_try_number}"
         log = requests.get(url=url, auth=self.auth)
         log.raise_for_status()
@@ -101,14 +115,3 @@ class AirflowClient:
 
 
 airflow_client = AirflowClient()
-
-if __name__ == '__main__':
-    load_dotenv(find_dotenv())
-    client = AirflowClient()
-
-    test_config = {
-
-    }
-
-    dag_runs = client.get_all_dag_runs("run_train")
-    dag_run_id = client.trigger_dag("run_train")

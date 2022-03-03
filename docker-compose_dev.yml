@@ -21,17 +21,19 @@ services:
       - "5432:5432"
 
   auth:
-    image: station-auth
+    image: ghcr.io/pht-medic/station-ui:latest
     container_name: station-auth
     volumes:
       - auth_data:/usr/src/app/writable
     ports:
       - '3010:3010'
-    # todo typeorm url + config
     environment:
       PORT: 3010
       ADMIN_USER: admin
       ADMIN_PASSWORD: start123
+    command:
+      - server
+      - start
 
   redis:
     image: redislabs/rejson:latest
