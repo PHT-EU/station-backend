@@ -46,7 +46,6 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             train_id=obj_in.train_id,
             config_id=config_id
         )
-        print("DOCKER TRAIN OBJECT CREATED")
         db.add(db_train)
         db.commit()
         db.refresh(db_train)

@@ -8,11 +8,8 @@ from station.app.models import docker_trains, train
 
 # TODO use alembic
 def setup_db(dev=False):
-    print("try to create all tables")
     Base.metadata.create_all(bind=engine)
-    print("create all successful")
     if dev:
-        print("start seed_db_for_testing")
         seed_db_for_testing()
 
 
@@ -26,7 +23,6 @@ def reset_db(dev=False):
 
 def seed_db_for_testing():
     session = SessionLocal()
-    print("activate session")
     # create docker trains
     if not session.query(docker_trains.DockerTrain).all():
 

@@ -1,12 +1,14 @@
 import asyncio
 import datetime
 import logging
+import random
 import tarfile
 import os
 import time, datetime
 from io import BytesIO
 import shutil
 import docker
+import uuid
 from airflow.decorators import dag, task
 from airflow.operators.python import get_current_context
 from airflow.utils.dates import days_ago
@@ -17,18 +19,16 @@ from station.app.models import docker_trains
 from station.app.schemas.docker_trains import *
 from station.clients.airflow.utils import UtilityFunctions
 from station.app.api.api_v1.endpoints.docker_trains import *
+from station.app.crud.crud_notifications import *
+from station.app.models import notification
+from station.app.schemas.notifications import *
 from pydantic import BaseModel
 from station.app.crud.crud_docker_trains import *
 
 from train_lib.clients import PHTFhirClient
 from station.clients.minio import MinioClient
 
-# These args will get passed on to each operator
-# You can override them on a per-task basis during operator initialization
 
-
-TRAIN_PATH = "/opt/pht_train"
-RESULT_PATH = "/opt/pht_results"
 
 
 default_args = {
@@ -51,7 +51,7 @@ def run_local_test_db():
 
 
     @task()
-    def get_train_configuration() -> dict:
+    def create_example_train() -> dict:
         """
         extra the train state dict form airflow context
 
@@ -62,315 +62,61 @@ def run_local_test_db():
         session = utils.create_session()
         session = session()
 
-        print("session got created")
 
-        docker_train_create = DockerTrainCreate(train_id="test_train")
-        print("DockerTrainCreate obj : {}".format(docker_train_create))
+        db_trains = get_available_trains(5, session)
+
+        for train in db_trains:
+            print("Available Trains : {}".format(train.train_id))
+
+        train_id = str(uuid.uuid4())
 
         crud_docker_train = CRUDDockerTrain(DockerTrain)
-        print("CRUD DockerTrain : {}".format(crud_docker_train))
 
-        crud_create_db_train = crud_docker_train.create(session, obj_in=docker_train_create)
-        print("CRUD DockerTrain.create : {}".format(crud_create_db_train))
+        docker_train_create_obj = DockerTrainCreate(train_id=train_id)
 
-        crud_get_db_train = crud_docker_train.get_by_train_id(session, "test_train")
-        print("CRUD DockerTrain.get_by_train_id : {}".format(crud_get_db_train))
+        crud_create_db_train = crud_docker_train.create(session, obj_in=docker_train_create_obj)
+        print("CRUD DockerTrain.create.train_id : {}".format(crud_create_db_train.train_id))
 
-        #crud_docker_train.create(session, docker_train)
-        #print("CRUD docker_train create")
+        crud_get_db_train = crud_docker_train.get_by_train_id(session, train_id)
+        print("CRUD DockerTrain.get_by_train_id : {}".format(crud_get_db_train.train_id))
 
-        #docker_train_obj = CRUDDockerTrain(docker_train)
-        #docker_train_create = docker_train_obj.create(session, obj_in=docker_train)
-        #print("executed query - train_create : {}".format(docker_train_create))
-        #docker_train_get = docker_train_obj.get_by_train_id("test_train")
-        #print("executed query - train_get : {}".format(docker_train_get))
+        session.close()
 
 
-
-
-        context = get_current_context()
-        repository, tag, env, entrypoint, volumes, query, train_id, run_id = [context['dag_run'].conf.get(_, None) for _
-                                                                              in
-                                                                              ['repository', 'tag', 'env', 'entrypoint',
-                                                                               'volumes', 'query', 'train_id',
-                                                                               'run_id']]
-        img = repository + ":" + tag
-
-        # TODO Schemas for train config - returns the dict
-        # train_state = LocalTrainState.from_context(context)
-
-        train_state_dict = {
-            "repository": repository,
-            "train_id": train_id,
-            "tag": tag,
-            "img": img,
-            "env": env,
-            "volumes": volumes,
-            "query": query,
-            "entrypoint": entrypoint,
-            "build_dir": "./temp/",
-            "bucket_name": "localtrain",
-            "run_id": context['dag_run'].run_id
-        }
-
-
-
-
-        return train_state_dict
-
-
-
-
-
-
-
-
-
-
-
+        return {"success" : True}
 
     @task()
-    def pull_docker_image(train_state_dict) -> dict:
+    def create_notification_of_dag_status() -> dict:
         """
-        pull the master Image from harbor
+        extra the train state dict form airflow context
 
-        @param train_state_dict:
         @return: train_state_dict
         """
-        docker_client = docker.from_env()
-        harbor_address = os.getenv("HARBOR_API_URL")
-        docker_client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
-                            registry=harbor_address)
-        docker_client.images.pull(repository=train_state_dict["repository"], tag=train_state_dict["tag"])
+        utils = UtilityFunctions()
 
-        return train_state_dict
+        session = utils.create_session()
+        session = session()
 
-    @task()
-    def build_train(train_state_dict) -> dict:
-        """
-        Build the train by extracting the entrypoint from minIO and adding it to the pulled image
+        notification_id = random.randint(1, 100)
 
-        @param train_state_dict:
-        @return:
-        """
-        # create minIO client
-        docker_client = docker.from_env()
-        minio_client = MinioClient()
+        crud_notifications = CRUDNotifications(Notification)
 
-        # create the docker File like object that can be added to the master image
-        docker_file = f'''
-                            FROM {train_state_dict["img"]}
-                            RUN mkdir {RESULT_PATH}
-                            RUN mkdir {TRAIN_PATH}
-                            RUN chmod -R +x {TRAIN_PATH}
-                            CMD ["python", "{TRAIN_PATH}/{train_state_dict['entrypoint']}"]
-                            '''
-        docker_file = BytesIO(docker_file.encode("utf-8"))
+        notifcation_create_obj = NotificationCreate(id=notification_id, topic="DAG execution", message="DAG has been executed successfully")
+        print("NotificationCreate : {}".format(notifcation_create_obj.message))
 
-        # create docker container
-        image, logs = docker_client.images.build(fileobj=docker_file)
-        container = docker_client.containers.create(image.id)
+        crud_create_db_notification = crud_notifications.create_notification(session, obj_in=notifcation_create_obj)
 
-        # load the entrypoint form minIO into to a local tar file
-        entrypoint = minio_client.get_file(train_state_dict["bucket_name"],
-                                           f"{train_state_dict['train_id']}/{train_state_dict['entrypoint']}")
+        crud_get_db_notification = crud_notifications.get_notification_by_id(session, notification_id)
+        print("Notification with ID : {} contians message : {}".format(crud_get_db_notification.id, crud_get_db_notification.message))
 
-        name = train_state_dict['entrypoint']
-        archive_obj = BytesIO()
-        tar = tarfile.TarFile(fileobj=archive_obj, mode='w')
-        endpoint_info = tarfile.TarInfo(name)
-        endpoint_info.size = len(entrypoint)
-        endpoint_info.mtime = time.time()
-        tar.addfile(endpoint_info, BytesIO(entrypoint))
-        tar.close()
-        archive_obj.seek(0)
-        container.put_archive(TRAIN_PATH, archive_obj)
-        container.wait()
-        container.commit(repository="local_train", tag="latest")
-        container.wait()
-        return train_state_dict
-
-    @task()
-    def execute_query(train_state_dict) -> dict:
-        """
-        if a query is defind in the train parameters, the query file is loaded  and executed in the same way
-        as the normal trains.
-        the query results are saved localy into the AIRFLOW_DATA_DIR if exists(if not "/opt/station_data")
-        The train_state_dict gets updateted with the enviroment variabls and the volume information for the data folder
-
-        @param dict train_state_dict: train parameters
-        @return: dict train_state_dict: train parameters
-        """
-        # check if a query is defined
-        if train_state_dict["query"] is None:
-            return train_state_dict
-        # try to cache errors and save to logs
-        try:
-            query = train_state_dict.get("query", None)
-            if query:
-                print("Query found, setting up connection to FHIR server")
-
-                env_dict = train_state_dict.get("env", None)
-                if env_dict:
-                    fhir_url = env_dict.get("FHIR_ADDRESS", None)
-                    # Check that there is a FHIR server specified in the configuration dictionary
-                    if fhir_url:
-                        fhir_client = PHTFhirClient.from_dict(env_dict)
-
-                    else:
-                        fhir_client = PHTFhirClient.from_env()
-                else:
-                    fhir_client = PHTFhirClient.from_env()
-
-                query_result = fhir_client.execute_query(query=train_state_dict["query"])
-
-                output_file_name = query["data"]["filename"]
-
-                # Create the file path in which to store the FHIR query results
-                data_dir = os.getenv("AIRFLOW_DATA_DIR", "/opt/station_data")
-                train_data_dir = os.path.join(data_dir, train_state_dict["train_id"])
-
-                if not os.path.isdir(train_data_dir):
-                    os.mkdir(train_data_dir)
-
-                train_data_dir = os.path.abspath(train_data_dir)
-                print("train data dir: ", train_data_dir)
-
-                train_data_path = fhir_client.store_query_results(query_result, storage_dir=train_data_dir,
-                                                                  filename=output_file_name)
-                print("train data path: ", train_data_path)
-                host_data_path = os.path.join(os.getenv("STATION_DATA_DIR"), train_state_dict["train_id"],
-                                              output_file_name)
-
-                # Add the file containing the fhir query results to the volumes configuration
-                query_data_volume = {
-                    host_data_path: {
-                        "bind": f"/opt/train_data/{output_file_name}",
-                        "mode": "ro"
-                    }
-                }
-
-                data_dir_env = {
-                    "TRAIN_DATA_PATH": f"/opt/train_data/{output_file_name}"
-                }
-
-                if isinstance(train_state_dict.get("volumes"), dict):
-                    train_state_dict["volumes"] = {**query_data_volume, **train_state_dict["volumes"]}
-                else:
-                    train_state_dict["volumes"] = query_data_volume
-
-                if train_state_dict.get("env", None):
-                    train_state_dict["env"] = {**train_state_dict["env"], **data_dir_env}
-                else:
-                    train_state_dict["env"] = data_dir_env
-        except Exception as e:
-            # save logs for errors that happened during query execution
-            with open(f'{train_state_dict["build_dir"]}log.txt', 'a+') as f:
-                f.write(e)
-
-                #db = dependencies.get_db()
-            with SessionLocal() as session:
-                try:
-                    session.execute('INSERT INTO local_train_executions (airflow_dag_query_logs) VALUES e WHERE train_id = train_state_dict["train_id"];')
-                    session.commit()
-                    session.close()
-                except:
-                    session.close()
-
-            #UPDATE local_train_executions SET airflow_dag_logs = e;
-            #insert_postgress = PostgresOperator(task_id='insert_log_run_train',
-            #                                    sql="INSERT INTO local_train_executions (airflow_dag_logs) VALUES e;",
-            #                                    postgres_conn_id='my_postgres',
-            #                                    autocommit=True,
-            #                                    database=db,
-            #                                    dag=dag)
+        session.close()
 
 
-        return train_state_dict
 
-    @task()
-    def run_train(train_state_dict) -> dict:
-        """
-        The container gets executed with the environment variables and volumes
-        whait
-
-        @param dict train_state_dict: train parameters
-        @return: dict train_state_dict: train parameters
-        """
-        docker_client = docker.from_env()
-
-        environment = train_state_dict.get("env", {})
-        volumes = train_state_dict.get("volumes", {})
-        container = docker_client.containers.run("local_train", environment=environment, volumes=volumes,
-                                                 detach=True)
-        container.wait()
-        os.mkdir(train_state_dict["build_dir"])
-        with open(f'{train_state_dict["build_dir"]}results.tar', 'wb') as f:
-            bits, stat = container.get_archive(RESULT_PATH)
-            for chunk in bits:
-                f.write(chunk)
+        return {"success" : True}
 
 
-        logs = container.logs().decode("utf-8")
-        with open(f'{train_state_dict["build_dir"]}log.txt', 'a+') as f:
-            f.write(logs)
-
-
-        with SessionLocal() as session:
-            try:
-                session.execute('INSERT INTO local_train_executions (airflow_dag_exec_logs) VALUES logs WHERE train_id = train_state_dict["train_id"];')
-                session.commit()
-                session.close()
-            except:
-                session.close()
-        container.remove(v=True, force=True)
-        return train_state_dict
-
-    @task()
-    def save_results(train_state_dict) -> dict:
-        """
-        Stores the results and logs form the container inot minIO
-
-        @param dict train_state_dict: train parameters
-        @return: dict train_state_dict: train parameters
-        """
-        # todo from env
-        minio_client = MinioClient()
-        # Store results
-        with open(f'{train_state_dict["build_dir"]}results.tar', 'rb') as results_tar:
-            asyncio.run(
-                minio_client.store_files(bucket=train_state_dict["bucket_name"],
-                                         name=f"{train_state_dict['train_id']}/results.tar", file=results_tar))
-        # Store logs
-        with open(f'{train_state_dict["build_dir"]}log.txt', 'rb') as logs:
-            asyncio.run(
-                minio_client.store_files(bucket=train_state_dict["bucket_name"],
-                                         name=f"{train_state_dict['train_id']}/{train_state_dict['run_id']}/log.",
-                                         file=logs))
-
-        return train_state_dict
-
-    @task()
-    def clean_up(train_state_dict):
-        """
-        Remove all temporary data form the build dir
-
-        @param dict train_state_dict: train parameters
-        @return:
-        """
-        try:
-            shutil.rmtree(str(train_state_dict["build_dir"]))
-        except OSError as e:
-            print("Error: %s - %s." % (e.filename, e.strerror))
-
-        # TODO add the removeing or storage of query results
-    local_train = get_train_configuration()
-    local_train = pull_docker_image(local_train)
-    local_train = build_train(local_train)
-    local_train = execute_query(local_train)
-    local_train = run_train(local_train)
-    local_train = save_results(local_train)
-    clean_up(local_train)
-
+    local_train = create_example_train()
+    local_train = create_notification_of_dag_status()
 
 run_local = run_local_test_db()

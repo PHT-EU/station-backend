@@ -19,8 +19,5 @@ engine = create_engine(
     SQLALCHEMY_DATABASE_URL,  # connect_args={"check_same_thread": False}  For sqlite db
 )
 
-#hook = PostgresHook(postgres_conn_id=os.getenv('STATION_DB_CONN_ID'))
-#engine = hook.get_sqlalchemy_engine()
-
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-print("SessionLocal got created")
+

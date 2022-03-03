@@ -18,14 +18,9 @@ class UtilityFunctions:
 
         session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-        #setup_db()
-        print("Setup db executed")
-
-
 
         return session
 
 
 
 utils = UtilityFunctions()
-utils.create_session()
