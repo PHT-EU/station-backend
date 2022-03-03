@@ -2,7 +2,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import os
 from dotenv import load_dotenv, find_dotenv
-from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 load_dotenv(find_dotenv())
 

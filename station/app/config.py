@@ -81,7 +81,7 @@ class RegistrySettings(BaseModel):
 
 class AirflowSettings(BaseModel):
     host: Union[AnyHttpUrl, str] = "airflow"
-    port: Optional[int] = None
+    port: Optional[int] = 8080
     user: Optional[str] = "admin"
     password: Optional[SecretStr] = "admin"
 
@@ -146,7 +146,7 @@ class StationConfig(BaseModel):
     host: Optional[Union[AnyHttpUrl, str]] = os.getenv(StationEnvironmentVariables.STATION_API_HOST.value, "127.0.0.1")
     port: Optional[int] = os.getenv(StationEnvironmentVariables.STATION_API_PORT.value, 8001)
     db: Optional[SecretStr] = "sqlite:///./app.db"
-    environment: Optional[StationRuntimeEnvironment] = StationRuntimeEnvironment.PRODUCTION
+    environment: Optional[StationRuntimeEnvironment] = StationRuntimeEnvironment.DEVELOPMENT
     fernet_key: Optional[SecretStr] = None
     registry: RegistrySettings
     auth: Optional[AuthConfig] = None
@@ -551,6 +551,12 @@ class Settings:
             port=StationEnvironmentVariables.AIRFLOW_PORT,
             user=StationEnvironmentVariables.AIRFLOW_USER,
             secret=StationEnvironmentVariables.AIRFLOW_PW)
+
+        print("AIRFLOW HOST : {}".format(env_airflow_host))
+        print("AIRFLOW PORT : {}".format(env_airflow_port))
+        print("AIRFLOW USER : {}".format(env_airflow_user))
+        print("AIRFLOW SECRET : {}".format(env_airflow_secret))
+
 
         # get airflow from config file or construct dummy
         _airflow_config = False

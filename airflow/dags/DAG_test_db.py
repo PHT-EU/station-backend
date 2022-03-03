@@ -14,7 +14,7 @@ from airflow.operators.python import get_current_context
 from airflow.utils.dates import days_ago
 
 
-from station.app.crud.crud_docker_trains import *
+from station.app.crud.crud_docker_trains import CRUDDockerTrain
 from station.app.models import docker_trains
 from station.app.schemas.docker_trains import *
 from station.clients.airflow.utils import UtilityFunctions
