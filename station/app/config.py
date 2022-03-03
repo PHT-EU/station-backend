@@ -600,7 +600,7 @@ class Settings:
                 logger.warning(f"No airflow config specified in config or env vars, ignoring in development mode")
 
     def _setup_database_connection(self):
-        logger.info(f"Creating connection to the station database...")
+        logger.info(f"Creating connection to the station database in airflow...")
 
 
         airflow_host = self.config.airflow.host
@@ -693,17 +693,17 @@ class Settings:
         r = requests.get(url=url_get, auth=auth)
 
         if r.status_code != 200:
-            logger.debug(f"\t{Emojis.INFO}Database connection with connection id {self.config.station_db.connection_id} does not exist,"
+            logger.debug(f"\t{Emojis.INFO}Database connection in airflow with connection id {self.config.station_db.connection_id} does not exist,"
                          f" creating new one from environment variables.")
             try:
                 r = requests.post(url=url_post, auth=auth, json=conn)
                 r.raise_for_status()
-                logger.info(f"\t{Emojis.INFO} Database connection with id {self.config.station_db.connection_id} got created.")
+                logger.info(f"\t{Emojis.INFO} Database connection in airflow with id {self.config.station_db.connection_id} got created.")
             except Exception as e:
-                f"\t{Emojis.WARNING}Error occured while trying to create the database connection with id {self.config.station_db.connection_id}."
+                f"\t{Emojis.WARNING}Error occured while trying to create the database connection in airflow with id {self.config.station_db.connection_id}."
                 f"\t{Emojis.WARNING} -- {e}."
         else:
-            logger.info(f"\t{Emojis.INFO} Database connection with id {self.config.station_db.connection_id} exists.")
+            logger.info(f"\t{Emojis.INFO} Database connection in airflow with id {self.config.station_db.connection_id} exists.")
 
 
 
