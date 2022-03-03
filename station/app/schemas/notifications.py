@@ -13,13 +13,10 @@ class NotificationBase(BaseModel):
     message: str
 
 
-class NotificationCreate(DBSchema):
+class NotificationCreate(BaseModel):
     id: int
-    target_user: Optional[str] = "all"
-    topic: str
+    topic: Optional[str] = "trains"
     message: str
-    is_read: Optional[bool] = False
-    created_at: Optional[datetime] = datetime.now()
 
 
 class NotificationUpdate(NotificationBase):
@@ -29,7 +26,7 @@ class NotificationUpdate(NotificationBase):
 class Notification(DBSchema):
     id: int
     target_user: Optional[str] = "all"
-    topic: str
+    topic: Optional[str] = "trains"
     message: str
     is_read: Optional[bool] = False
     created_at: Optional[datetime] = datetime.now()

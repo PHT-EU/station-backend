@@ -111,7 +111,7 @@ class DatabaseConnectionSettings(BaseModel):
     host: Optional[str] = "pg_station"
     port: Optional[int] = 5432
     user: Optional[str] = "admin"
-    password: Optional[str] = "admin"
+    password: Optional[SecretStr] = "admin"
 
 
 class AuthConfig(BaseModel):
@@ -683,7 +683,7 @@ class Settings:
             "host": self.config.station_db.host,
             "login": self.config.station_db.user,
             "port": int(self.config.station_db.port),
-            "password": self.config.station_db.password
+            "password": self.config.station_db.password.get_secret_value()
         }
 
         #Check whether connection with connection_id already exists, if not create it
