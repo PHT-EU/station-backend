@@ -9,7 +9,8 @@ import os
 class LocalTrainMinIO:
     def __init__(self):
         if os.getenv("MINIO_URL"):
-            self.minio_client = MinioClient()
+            None
+            #self.minio_client = MinioClient()
         else:
             print("no MINIO url found")
         self.docker_client = dockerClient
@@ -18,7 +19,7 @@ class LocalTrainMinIO:
         self.bucket_name = "localtrain"
         #self.minio_client.add_bucket(self.bucket_name)
 
-    async def store_endpoint(self, upload_file: UploadFile, train_id: str):
+    '''async def store_endpoint(self, upload_file: UploadFile, train_id: str):
         await self.minio_client.store_files(self.bucket_name, f"{train_id}/endpoint.py", upload_file)
 
     async def store_train_file(self, upload_file: UploadFile, train_id: str):
@@ -70,7 +71,7 @@ class LocalTrainMinIO:
             else:
                 out_files.append(file)
 
-        return out_files
+        return out_files'''
 
 
 train_data = LocalTrainMinIO()

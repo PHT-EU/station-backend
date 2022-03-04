@@ -40,7 +40,7 @@ class ModelCheckpoint(Base):
 class DLModel(Base):
     __tablename__ = "dl_models"
     id = Column(Integer, primary_key=True, index=True)
-    train_id = Column(Integer, ForeignKey('trains.id'), nullable=True)
+    train_id = Column(Integer, nullable=True)
     model_id = Column(String, nullable=True, unique=True)
     created_at = Column(DateTime, default=datetime.now())
     updated_at = Column(DateTime, nullable=True)

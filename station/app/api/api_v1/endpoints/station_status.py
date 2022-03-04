@@ -8,7 +8,7 @@ from station.app.schemas import station_status as status_schema
 import psutil
 
 # todo singleton minio client
-minio_client = MinioClient()
+#minio_client = MinioClient()
 router = APIRouter()
 """
 The station status  endpoint returns the status of local and global components  (fhir  airflow harbo minio
@@ -23,7 +23,7 @@ def service_health_check():
     services = {
         "airflow": airflow_client.health_check(),
         "harbor": harbor_client.health_check(),
-        "minio": minio_client.health_check(),
+#        "minio": minio_client.health_check(),
     }
     for service, health in services.items():
         service_status.append(status_schema.ServiceStatus(
