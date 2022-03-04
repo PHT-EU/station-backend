@@ -28,13 +28,13 @@ RUN curl -LO https://storage.googleapis.com/container-diff/latest/container-diff
 RUN pip install "apache-airflow[celery,crypto,hashicorp,password,postgres,redis]==2.2.4" --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.2.4/constraints-3.8.txt"
 
 RUN mkdir /opt/train_data
-COPY .airflow/requirements.txt /tmp/requirements.txt
+COPY ./airflow/requirements.txt /tmp/requirements.txt
 
 
 RUN pip install -r /tmp/requirements.txt && \
     pip install git+https://github.com/PHT-Medic/train-container-library.git
 
-COPY .airflow/entrypoint.sh /root/entrypoint.sh
+COPY ./airflow/entrypoint.sh /root/entrypoint.sh
 RUN chmod +x /root/entrypoint.sh
 ENTRYPOINT ["/root/entrypoint.sh"]
 CMD ["webserver"]
