@@ -677,7 +677,7 @@ class Settings:
         else:
             # raise error if no station_db is configured in production mode
             if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
-                raise ValueError(f"{Emojis.ERROR}   No station_db config specified in config or env vars")
+                logger.info(f"{Emojis.ERROR}   No station_db config specified in config or env vars")
             else:
                 logger.warning(f"No station_db config specified in config or env vars, ignoring in development mode")
 
