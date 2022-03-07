@@ -6,21 +6,18 @@ from station.app.db.setup_db import *
 from station.app.db.session import *
 
 
-class UtilityFunctions:
-    def __init__(self):
-         self.connection_id = 'psql_station_db'
 
-    def create_session(self):
+def create_session(connection_id: str) -> sessionmaker:
+    """
+    Creates Session from connection_id string
+    """
 
-        hook = PostgresHook(postgres_conn_id=self.connection_id)
-        engine = hook.get_sqlalchemy_engine()
-        print("Engine : {}".format(engine))
+    hook = PostgresHook(postgres_conn_id=connection_id)
+    engine = hook.get_sqlalchemy_engine()
+    print("Engine : {}".format(engine))
 
-        session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-        return session
+    session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
+    return session
 
-utils = UtilityFunctions()

@@ -17,7 +17,7 @@ from airflow.utils.dates import days_ago
 from station.app.crud.crud_docker_trains import CRUDDockerTrain
 from station.app.models import docker_trains
 from station.app.schemas.docker_trains import *
-from station.clients.airflow.utils import UtilityFunctions
+from station.clients.airflow.utils import *
 from station.app.crud.crud_notifications import *
 from station.app.models import notification
 from station.app.schemas.notifications import *
@@ -56,9 +56,10 @@ def run_local_test_db():
 
         @return: train_state_dict
         """
-        utils = UtilityFunctions()
 
-        session = utils.create_session()
+        connection_id = "psql_station_db"
+
+        session = create_session(connection_id)
         session = session()
 
 
@@ -86,22 +87,23 @@ def run_local_test_db():
 
         @return: train_state_dict
         """
-        utils = UtilityFunctions()
+        connection_id = "psql_station_db"
 
-        session = utils.create_session()
+        session = create_session(connection_id)
         session = session()
 
-        notification_id = random.randint(1, 100)
+        #notification_id = random.randint(1, 100)
 
         crud_notifications = CRUDNotifications(Notification)
 
-        notifcation_create_obj = NotificationCreate(id=notification_id, topic="DAG execution", message="DAG has been executed successfully")
+        notifcation_create_obj = NotificationCreate(topic="DAG execution", message="DAG has been executed successfully")
         print("NotificationCreate : {}".format(notifcation_create_obj.message))
 
         crud_create_db_notification = crud_notifications.create_notification(session, obj_in=notifcation_create_obj)
+        print("CRUD create db_notification : {}".format(crud_create_db_notification.message))
 
-        crud_get_db_notification = crud_notifications.get_notification_by_id(session, notification_id)
-        print("Notification with ID : {} contians message : {}".format(crud_get_db_notification.id, crud_get_db_notification.message))
+        #crud_get_db_notification = crud_notifications.get_notification_by_id(session, notification_id)
+        #print("Notification with ID : {} contians message : {}".format(crud_get_db_notification.id, crud_get_db_notification.message))
 
         session.close()
 

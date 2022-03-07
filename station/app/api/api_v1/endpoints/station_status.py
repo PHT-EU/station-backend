@@ -8,6 +8,7 @@ from station.app.schemas import station_status as status_schema
 import psutil
 
 # todo singleton minio client
+# TODO resolve connection error to MinIO
 #minio_client = MinioClient()
 router = APIRouter()
 """
@@ -19,6 +20,7 @@ def service_health_check():
     """
     Get the health status of all connected services
     """
+    minio_client = get_minio_client()
     service_status = []
     services = {
         "airflow": airflow_client.health_check(),
@@ -31,6 +33,16 @@ def service_health_check():
             status=health
         ))
     return service_status
+
+def get_minio_client():
+    """
+    Get a MinIo Client
+    """
+    try:
+        minio_client = MinioClient()
+        return minio_client
+    except:
+        return None
 
 
 def get_hardware_resources_status():

@@ -27,7 +27,6 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             config_id = db_config.id
 
         elif isinstance(obj_in.config, DockerTrainConfigCreate):
-            print("CASE DOCKERTRAIN CREATE")
             db_config: DockerTrainConfig = db.query(DockerTrainConfig).filter(
                 DockerTrainConfig.name == obj_in.config.name
             ).first()

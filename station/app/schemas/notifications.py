@@ -14,7 +14,7 @@ class NotificationBase(BaseModel):
 
 
 class NotificationCreate(BaseModel):
-    id: int
+    target_user: Optional[str] = "all"
     topic: Optional[str] = "trains"
     message: str
 

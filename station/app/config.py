@@ -35,8 +35,6 @@ class StationEnvironmentVariables(Enum):
     CONFIG_PATH = "STATION_CONFIG_PATH"
 
     #station database environment variables
-    STATION_DB_CONN_ID = "STATION_DB_CONN_ID"
-    STATION_DB_CONN_TYPE = "STATION_DB_CONN_TYPE"
     STATION_DB_HOST = "STATION_DB_HOST"
     STATION_DB_USER = "STATION_DB_USER"
     STATION_DB_SECRET = "STATION_DB_SECRET"
@@ -84,6 +82,8 @@ class AirflowSettings(BaseModel):
     port: Optional[int] = 8080
     user: Optional[str] = "admin"
     password: Optional[SecretStr] = "admin"
+    station_db_conn_id: Optional[str] = "psql_station_db"
+    station_db_conn_type: Optional[str] = "postgres"
 
 
 class MinioSettings(BaseModel):
@@ -106,8 +106,6 @@ class RedisSettings(BaseModel):
     db: Optional[int] = 0
 
 class DatabaseConnectionSettings(BaseModel):
-    connection_id: Optional[str] = "psql_station_db"
-    conn_type: Optional[str] = "postgres"
     host: Optional[str] = "pg_station"
     port: Optional[int] = 5432
     user: Optional[str] = "admin"
@@ -299,13 +297,14 @@ class Settings:
             self.config.station_id = env_station_id
 
         # parse environment variables
+        self._setup_database_connection()
+        self._setup_airflow_connection()
         self._setup_station_api()
         self._setup_fernet()
         self._setup_station_auth()
         self._setup_registry_connection()
         self._setup_minio_connection()
-        self._setup_airflow_connection()
-        self._setup_database_connection()
+
 
     def _setup_station_api(self):
         """
@@ -552,11 +551,6 @@ class Settings:
             user=StationEnvironmentVariables.AIRFLOW_USER,
             secret=StationEnvironmentVariables.AIRFLOW_PW)
 
-        print("AIRFLOW HOST : {}".format(env_airflow_host))
-        print("AIRFLOW PORT : {}".format(env_airflow_port))
-        print("AIRFLOW USER : {}".format(env_airflow_user))
-        print("AIRFLOW SECRET : {}".format(env_airflow_secret))
-
 
         # get airflow from config file or construct dummy
         _airflow_config = False
@@ -605,13 +599,52 @@ class Settings:
             else:
                 logger.warning(f"No airflow config specified in config or env vars, ignoring in development mode")
 
+
+        if (self.config.airflow and self.config.station_db):
+
+            conn = {
+                "connection_id": self.config.airflow.station_db_conn_id,
+                "conn_type": self.config.airflow.station_db_conn_type,
+                "host": self.config.station_db.host,
+                "login": self.config.station_db.user,
+                "port": int(self.config.station_db.port),
+                "password": self.config.station_db.password.get_secret_value()
+            }
+
+            print("CONN ID : {}".format(self.config.airflow.station_db_conn_id))
+            print("CONN TYPE : {}".format(self.config.airflow.station_db_conn_type))
+            print("AIRFLOW HOST : {}".format(self.config.airflow.host))
+            print("AIRFLOW USER : {}".format(self.config.airflow.user))
+            print("AIRFLOW PSW : {}".format(self.config.airflow.password.get_secret_value()))
+            print("AIRFLOW PORT : {}".format(self.config.airflow.port))
+            print("CONN JSON : {}".format(conn))
+
+
+            #Check whether connection with connection_id already exists, if not create it
+            url_get = self.config.airflow.host + f"connections/{self.config.airflow.station_db_conn_id}"
+            url_post = self.config.airflow.host + "connections"
+            auth = HTTPBasicAuth(self.config.airflow.user, self.config.airflow.password.get_secret_value())
+            r = requests.get(url=url_get, auth=auth)
+
+            if r.status_code != 200:
+                logger.debug(f"\t{Emojis.INFO}Database connection in airflow with connection id {self.config.airflow.station_db_conn_id} does not exist,"
+                             f" creating new one from environment variables.")
+                try:
+                    r = requests.post(url=url_post, auth=auth, json=conn)
+                    r.raise_for_status()
+                    logger.info(f"\t{Emojis.INFO} Database connection in airflow with id {self.config.airflow.station_db_conn_id} got created.")
+                except Exception as e:
+                    f"\t{Emojis.WARNING}Error occured while trying to create the database connection in airflow with id {self.config.airflow.station_db_conn_id}."
+                    f"\t{Emojis.WARNING} -- {e}."
+            else:
+                logger.info(f"\t{Emojis.INFO} Database connection in airflow with id {self.config.airflow.station_db_conn_id} exists.")
+
+        else:
+            logger.debug(f"\t{Emojis.INFO} No station_db/airflow config detected. Skipping the process of intializing database connection in airflow. ")
+
     def _setup_database_connection(self):
         logger.info(f"Creating connection to the station database in airflow...")
 
-
-        airflow_host = self.config.airflow.host
-        airflow_user = self.config.airflow.user
-        airflow_password = self.config.airflow.password.get_secret_value()
 
         # get the environment variables for the station database
         env_db_host, env_db_port, env_db_user, env_db_secret = self._get_internal_service_env_vars(
@@ -620,12 +653,6 @@ class Settings:
             user=StationEnvironmentVariables.STATION_DB_USER,
             secret=StationEnvironmentVariables.STATION_DB_SECRET)
 
-
-        # get the environment variables for a database connection
-        env_db_conn_id, env_db_conn_type = self._get_databse_connection_env_vars(
-            conn_id=StationEnvironmentVariables.STATION_DB_CONN_ID,
-            conn_type=StationEnvironmentVariables.STATION_DB_CONN_TYPE,
-        )
 
 
     # get station_db from config file or construct dummy
@@ -638,12 +665,8 @@ class Settings:
             station_db_config = DatabaseConnectionSettings.construct()
 
         # override station_db config if config and env vars are present and validate afterwards
-        if _station_db_config and (env_db_host or env_db_port or env_db_user or env_db_user or env_db_conn_id or env_db_conn_type):
+        if _station_db_config and (env_db_host or env_db_port or env_db_user or env_db_secret):
             logger.debug(f"Overriding station_db config with env var specifications.")
-            if env_db_conn_id:
-                station_db_config.connection_id = env_db_conn_id
-            if env_db_conn_type:
-                station_db_config.conn_type = env_db_conn_type
             if env_db_host:
                 station_db_config.host = env_db_host
             if env_db_port:
@@ -660,8 +683,6 @@ class Settings:
         # no config but environment variables are found
         elif not _station_db_config and (env_db_host and env_db_user and env_db_secret):
             logger.debug(f"{Emojis.INFO}No station_db config found, creating new one from env vars.")
-            station_db_config.connection_id = env_db_conn_id
-            station_db_config.conn_type = env_db_conn_type
             station_db_config.host = env_db_host
             station_db_config.user = env_db_user
             station_db_config.password = env_db_secret
@@ -680,39 +701,6 @@ class Settings:
                 logger.warning(f"{Emojis.ERROR}   No station_db config specified in config or env vars")
             else:
                 logger.warning(f"No station_db config specified in config or env vars, ignoring in development mode")
-
-        if (self.config.station_db):
-
-            conn = {
-                "connection_id": self.config.station_db.connection_id,
-                "conn_type": self.config.station_db.conn_type,
-                "host": self.config.station_db.host,
-                "login": self.config.station_db.user,
-                "port": int(self.config.station_db.port),
-                "password": self.config.station_db.password.get_secret_value()
-            }
-
-            #Check whether connection with connection_id already exists, if not create it
-            url_get = airflow_host + f"connections/{self.config.station_db.connection_id}"
-            url_post = airflow_host + "connections"
-            auth = HTTPBasicAuth(airflow_user, airflow_password)
-            r = requests.get(url=url_get, auth=auth)
-
-            if r.status_code != 200:
-                logger.debug(f"\t{Emojis.INFO}Database connection in airflow with connection id {self.config.station_db.connection_id} does not exist,"
-                             f" creating new one from environment variables.")
-                try:
-                    r = requests.post(url=url_post, auth=auth, json=conn)
-                    r.raise_for_status()
-                    logger.info(f"\t{Emojis.INFO} Database connection in airflow with id {self.config.station_db.connection_id} got created.")
-                except Exception as e:
-                    f"\t{Emojis.WARNING}Error occured while trying to create the database connection in airflow with id {self.config.station_db.connection_id}."
-                    f"\t{Emojis.WARNING} -- {e}."
-            else:
-                logger.info(f"\t{Emojis.INFO} Database connection in airflow with id {self.config.station_db.connection_id} exists.")
-
-        else:
-            logger.debug(f"\t{Emojis.INFO} No station_db config detected. Skipping the process of intializing database connection in airflow. ")
 
 
 
@@ -761,7 +749,7 @@ class Settings:
         return env_server_host, env_server_port, env_server_user, env_server_secret
 
     @staticmethod
-    def _get_databse_connection_env_vars(
+    def _get_database_connection_env_vars(
             conn_id: StationEnvironmentVariables,
             conn_type: StationEnvironmentVariables,) -> Tuple[str, str]:
         """

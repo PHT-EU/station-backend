@@ -15,6 +15,7 @@ class LocalTrainMinIO:
             print("no MINIO url found")
         self.docker_client = dockerClient
         # TODO do over env file
+        # TODO resolve connection error to MinIO
 
         self.bucket_name = "localtrain"
         #self.minio_client.add_bucket(self.bucket_name)
