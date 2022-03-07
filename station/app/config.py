@@ -542,7 +542,7 @@ class Settings:
 
     def _setup_airflow_connection(self):
 
-        logger.info(f"Setting up airflow connection...")
+        logger.info(f"Setting up airflow connection and airflow-connection to station database...")
 
         # get the environment variables for airflow
         env_airflow_host, env_airflow_port, env_airflow_user, env_airflow_secret = self._get_internal_service_env_vars(
@@ -635,7 +635,7 @@ class Settings:
             logger.debug(f"\t{Emojis.INFO} No station_db/airflow config detected. Skipping the process of intializing database connection in airflow. ")
 
     def _setup_database_connection(self):
-        logger.info(f"Creating connection to the station database in airflow...")
+        logger.info(f"Creating station database connection...")
 
 
         # get the environment variables for the station database
