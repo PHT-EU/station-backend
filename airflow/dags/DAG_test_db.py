@@ -92,9 +92,20 @@ def run_local_test_db():
         session = create_session(connection_id)
         session = session()
 
-        #notification_id = random.randint(1, 100)
+        list_ids = []
 
         crud_notifications = CRUDNotifications(Notification)
+
+        notifications_all = crud_notifications.get_all_notifications(session)
+
+
+        for notification in notifications_all:
+            print("NOTIFICATION_ ID : {}".format(notification.id))
+            list_ids.append(notification.id)
+
+        for n in list_ids:
+            crud_notifications.delete_notification_by_id(session, n)
+
 
         notifcation_create_obj = NotificationCreate(topic="DAG execution", message="DAG has been executed successfully")
         print("NotificationCreate : {}".format(notifcation_create_obj.message))
@@ -102,8 +113,6 @@ def run_local_test_db():
         crud_create_db_notification = crud_notifications.create_notification(session, obj_in=notifcation_create_obj)
         print("CRUD create db_notification : {}".format(crud_create_db_notification.message))
 
-        #crud_get_db_notification = crud_notifications.get_notification_by_id(session, notification_id)
-        #print("Notification with ID : {} contians message : {}".format(crud_get_db_notification.id, crud_get_db_notification.message))
 
         session.close()
 

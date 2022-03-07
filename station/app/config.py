@@ -611,14 +611,6 @@ class Settings:
                 "password": self.config.station_db.password.get_secret_value()
             }
 
-            print("CONN ID : {}".format(self.config.airflow.station_db_conn_id))
-            print("CONN TYPE : {}".format(self.config.airflow.station_db_conn_type))
-            print("AIRFLOW HOST : {}".format(self.config.airflow.host))
-            print("AIRFLOW USER : {}".format(self.config.airflow.user))
-            print("AIRFLOW PSW : {}".format(self.config.airflow.password.get_secret_value()))
-            print("AIRFLOW PORT : {}".format(self.config.airflow.port))
-            print("CONN JSON : {}".format(conn))
-
 
             #Check whether connection with connection_id already exists, if not create it
             url_get = self.config.airflow.host + f"connections/{self.config.airflow.station_db_conn_id}"
