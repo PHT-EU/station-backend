@@ -10,6 +10,8 @@ from station.clients.minio import MinioClient
 
 class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
 
+    # TODO fix MinIO Client connection
+    # using the .create function from the base CRUD operators
     def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
         obj_in_data = jsonable_encoder(obj_in)
         db_obj = self.model(**obj_in_data)

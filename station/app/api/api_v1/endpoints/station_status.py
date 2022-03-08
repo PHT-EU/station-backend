@@ -4,6 +4,7 @@ from station.clients.airflow.client import airflow_client
 from station.clients.harbor_client import harbor_client
 from station.clients.minio.client import MinioClient
 from station.app.schemas import station_status as status_schema
+from loguru import logger
 
 import psutil
 
@@ -42,6 +43,7 @@ def get_minio_client():
         minio_client = MinioClient()
         return minio_client
     except:
+        logger.warning("Unable to create connection to MinIO. No client could be created.")
         return None
 
 
