@@ -315,9 +315,12 @@ class Settings:
             logger.debug(f"\t{Emojis.INFO}Overriding station db with env var specification.")
             self.config.db = station_db
         else:
-            raise ValueError(f"{Emojis.ERROR} Connection string to station database needs to be specified in"
-                             f" environment variables.")
-
+            if self.config.environment == "production":
+                raise ValueError(f"{Emojis.ERROR} Connection string to station database needs to be specified in"
+                                 f" environment variables.")
+            else:
+                logger.warning(f"{Emojis.WARNING} Connection string to station database is not specified in"
+                               f" environment variables. Default database is used.")
         if "sqlite" in self.config.db.lower():
             if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
                 raise ValueError(f"{Emojis.ERROR}   SQLite database not supported for production mode.")
