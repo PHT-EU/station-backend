@@ -6,6 +6,7 @@ volumes:
     external: True
 
   blaze_data:
+  auth_data:
 
 services:
   pg_station:
@@ -17,7 +18,28 @@ services:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
     ports:
-      - "5442:5432"
+      - "5432:5432"
+  auth:
+    image: ghcr.io/pht-medic/station-ui:latest
+    container_name: station-auth
+    volumes:
+      - auth_data:/usr/src/app/writable
+    ports:
+      - '3010:3010'
+    environment:
+      PORT: 3010
+      ADMIN_USER: admin
+      ADMIN_PASSWORD: start123
+    command:
+      - server
+      - start
+
+  redis:
+    image: redislabs/rejson:latest
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./.data/redis:/data
 
   airflow:
     container_name: station-airflow
@@ -33,35 +55,15 @@ services:
       # - ./station /opt/station
     depends_on:
       - pg_station
-    environment:
-      - AIRFLOW_HOME=/root/airflow
-      - AIRFLOW_USER=admin
-      - AIRFLOW_PW=admin
-      - FHIR_ADDRESS=https://fhir.personalhealhtrain.de
-      - FHIR_USER=fhiruser
-      - FHIR_PW=
-      - MINIO_URL=
-      - MINIO_USER=minio_admin
-      - MINIO_PW=minio_admin
-      - HARBOR_USER=
-      - HARBOR_PW=
-      - STATION_DB_CONN_ID=psql_station_db
-      - STATION_DB_CONN_TYPE=postgres
-      - STATION_DB_HOST=pg_station
-      - STATION_DB_USER=admin
-      - STATION_DB_SECRET=admin
-      - STATION_DB_PORT=5432
-      - STATION_DB=postgresql+psycopg2://admin:admin@pg_station:5432/psql_station_db
-      - STATION_ID=1
-      - STATION_PRIVATE_KEY_PATH=/opt/private_key.pem
-      - HARBOR_API_URL=https://harbor.personalhealthtrain.de/api/v2.0
+    env_file:
+      - .env
     ports:
       - "8080:8080"
 
   minio:
     image: minio/minio:latest
     ports:
-      - "9001:9000"
+      - "9000:9000"
     volumes:
       - ./test_data:/data
 
@@ -81,4 +83,3 @@ services:
       OPENID_PROVIDER_URL: "https://dev-keycloak.grafm.de/auth/realms/blaze"
     ports:
       - "8082:8080"
-
