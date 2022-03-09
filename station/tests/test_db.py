@@ -12,7 +12,7 @@ from fastapi.encoders import jsonable_encoder
 from station.app.crud.crud_docker_trains import *
 from station.app.crud.crud_datasets import *
 from station.app.schemas.dl_models import *
-from station.app.models.dl_models import *
+#from station.app.models.dl_models import *
 
 # Create new sqlite database for testing
 
@@ -165,36 +165,3 @@ def test_crud_datasets():
 
     session.close()
 
-def test_crud_torch_model():
-
-    session = TestingSessionLocal()
-
-    list_ids = []
-
-    model_id = str(uuid.uuid4())
-
-    crud_torch_models = CRUDBase(TorchModel)
-
-    torch_model_create = TorchModelCreate(model_id=model_id)
-    print("TorchModelCreate : {}".format(jsonable_encoder(torch_model_create)))
-
-    crud_torch_model_create = crud_torch_models.create(session, obj_in=torch_model_create)
-    print("CRUDTorchModelCreate : {}".format(jsonable_encoder(crud_torch_model_create)))
-
-    torch_id = crud_torch_model_create.id
-
-    crud_torch_model_get = crud_torch_models.get(session, id=torch_id)
-    print("CRUDTorchModelGet : {}".format(jsonable_encoder(crud_torch_model_get)))
-
-    torch_model_all = crud_torch_models.get_multi(session)
-
-
-    for torch_model in torch_model_all:
-        print("Torch Model with ID {} exists in the database.".format(torch_model.id))
-        list_ids.append(torch_model.id)
-
-    for n in list_ids:
-        crud_torch_models.remove(session, id=n)
-        print("Torch Model with ID {} got deleted.".format(n))
-
-    session.close()
