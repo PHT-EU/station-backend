@@ -135,6 +135,7 @@ def get_train_status(train_id: str, db: Session = Depends(dependencies.get_db)):
 @router.get("/masterImages", response_model=lt_schemas.MasterImagesList)
 def get_master_images():
     """
+    #TODO move to general endpoints
     get all availabel master images
     @return:
     """

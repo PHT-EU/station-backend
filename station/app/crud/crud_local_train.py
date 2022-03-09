@@ -275,10 +275,10 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, lt_schemas.LocalTrainCreate, lt_schema
             obj = db.query(LocalTrainConfig).filter(LocalTrainConfig.id == obj.config_id).first()
             config = obj.airflow_config
             config["train_id"] = train_id
-
+            config["config_id"] = obj.name
             return config
-        config = obj.airflow_config_json
-        return config
+        else:
+            raise HTTPException(status_code=404, detail=f"Train with id '{train_id}' hase no config")
 
     def get_train_logs(self, db: Session, train_id: str):
         """

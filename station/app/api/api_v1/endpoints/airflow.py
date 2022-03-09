@@ -29,7 +29,7 @@ def run(run_msg: AirflowRunMsg, dag_id: str, db: Session = Depends(dependencies.
         run_id = airflow_client.trigger_dag("run_local", config)
         run_information = LocalTrainRun(train_id=run_msg.train_id, run_id=run_id)
         local_train.create_run(db, obj_in=run_information)
-
+        config_id = config["config_id"]
     elif dag_id == "run_pht_train":
         train = docker_trains.get_by_train_id(db, run_msg.train_id)
         if not train.config_id:
