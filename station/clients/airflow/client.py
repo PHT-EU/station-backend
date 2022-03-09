@@ -81,8 +81,8 @@ class AirflowClient:
     def get_run_information(self, dag_id: str, run_id: str) -> dict:
         """
         requests the information about a dag run state from airflow.
-        @param dag_id: ID of the dag (e.g. "run_train" or "run_local"
-        @param run_id: Airflow ID of the run ( has the form of e.g. " "manual__2021-11-09T14:12:24.622670+00:00")
+        @param dag_id: ID of the dag (e.g. "run_train" or "run_local")
+        @param run_id: Airflow ID of the run (has the form of e.g. " "manual__2021-11-09T14:12:24.622670+00:00")
         @return: dict: information about the run
         """
         url = self.airflow_url + f"dags/{dag_id}/dagRuns/{run_id}/taskInstances"
@@ -96,22 +96,34 @@ class AirflowClient:
         information["tasklist"] = task_list
         return information
 
-    def get_task_log(self, dag_id: str, run_id: str, task_id: str) -> dict:
+    def get_task_log(self, dag_id: str, run_id: str, task_id: str, task_try_number: int = None) -> dict:
         """
-        get the log of a task for a spesific run
-        @param dag_id:
-        @param run_id:
-        @param task_id:
-        @return:
+        get the log of a task for a specific run
+        @param dag_id: dag under which the task is run
+        @param run_id: id for specific run
+        @param task_id: task for which the logs are requested
+        @param task_try_number: specific try number of the task, default is the last try
+        @return: logs of the task run
         """
 
-        last_task_try_number = next(
-            task["try_number"] for task in self.get_run_information(dag_id, run_id)["tasklist"]["task_instances"] if
-            task["task_id"] == task_id)
-        url = self.airflow_url + f"dags/{dag_id}/dagRuns/{run_id}/taskInstances/{task_id}/logs/{last_task_try_number}"
-        log = requests.get(url=url, auth=self.auth)
-        log.raise_for_status()
-        return log.content.decode("utf-8")
+        task_number_list = []
+        task_known = False
+        for task in self.get_run_information(dag_id, run_id)["tasklist"]["task_instances"]:
+            if task["task_id"] == task_id:
+                task_known = True
+                task_number_list.append(task["try_number"])
+        if task_known:
+            last_task_try_number = max(task_number_list)
+            if task_try_number and task_try_number <= last_task_try_number:
+                try_number = task_try_number
+            else:
+                try_number = last_task_try_number
+            url = self.airflow_url + f"dags/{dag_id}/dagRuns/{run_id}/taskInstances/{task_id}/logs/{try_number}"
+            log = requests.get(url=url, auth=self.auth)
+            log.raise_for_status()
+            return log.content.decode("utf-8")
+        else:
+            return None
 
 
 airflow_client = AirflowClient()

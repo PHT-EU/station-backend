@@ -10,7 +10,7 @@ if __name__ == '__main__':
     load_dotenv(find_dotenv())
     # todo remove reset in production
     # reset_db(dev=os.getenv("ENVIRONMENT") != "prod")
-    setup_db(dev=os.getenv("ENVIRONMENT") == "development")
+    setup_db(dev=os.getenv("ENVIRONMENT") != "prod")
 
     # Configure logging behaviour
     log_config = uvicorn.config.LOGGING_CONFIG
