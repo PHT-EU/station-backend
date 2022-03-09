@@ -65,7 +65,6 @@ def test_crud_docker_train():
 
     session.close()
 
-
 def test_crud_notifications():
 
     session = TestingSessionLocal()
@@ -95,7 +94,6 @@ def test_crud_notifications():
 
 
     session.close()
-
 
 def test_crud_train_config():
 
@@ -131,7 +129,6 @@ def test_crud_train_config():
         print("Train Config with ID {} got deleted.".format(n))
 
     session.close()
-
 
 def test_crud_datasets():
 
