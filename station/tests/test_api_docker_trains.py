@@ -53,6 +53,13 @@ def config_id(docker_train_config):
     return response.json()["id"]
 
 
+@pytest.fixture(scope='session', autouse=True)
+def train_list_length():
+    response = client.get("/api/trains/docker")
+    length = len(response.json())
+    return length
+
+
 def test_config_create(docker_train_config, config_id):
     response = client.get(f"/api/trains/docker/config/{config_id}")
     assert response.status_code == 200, response.text
@@ -100,13 +107,13 @@ def test_get_train_by_id_fails():
     assert response.status_code == 404, response.text
 
 
-def test_list_docker_trains():
+def test_list_docker_trains(train_list_length):
     response = client.get("/api/trains/docker")
 
     assert response.status_code == 200, response.text
     print(response.json())
 
-    assert len(response.json()) == 1
+    assert len(response.json()) == train_list_length+1
 
 
 def test_docker_train_config_create_fails(docker_train_config):
