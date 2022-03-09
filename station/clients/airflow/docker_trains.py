@@ -1,18 +1,17 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from typing import Any
+from typing import Any, Dict
 import os
 from datetime import datetime
-import json
 
 from .client import airflow_client
 from station.app.crud.crud_docker_trains import docker_trains
 from station.app.crud.crud_train_configs import docker_train_config
-from station.app.schemas.docker_trains import DockerTrainExecution, DockerTrainSavedExecution, DockerTrainAirflowConfig, DockerTrainState
+from station.app.schemas.docker_trains import DockerTrainExecution, DockerTrainSavedExecution, DockerTrainState, DockerTrain
 from station.app.models.docker_trains import DockerTrainState as dts_model, DockerTrainExecution as dte_model
 
 
-def update_state(db, db_train, run_time) -> DockerTrainState:
+def update_state(db: Session, db_train, run_time) -> DockerTrainState:
     """
     Update the train state object corresponding to the train
     :param db: database session
@@ -34,7 +33,7 @@ def update_state(db, db_train, run_time) -> DockerTrainState:
     return train_state
 
 
-def validate_run_config(db: Session, train_id: Any, execution_params: DockerTrainExecution) -> DockerTrainAirflowConfig:
+def validate_run_config(db: Session, train_id: str, execution_params: DockerTrainExecution) -> dict:
     """
     Validate the config used for the triggered run
     :param db: database session
@@ -45,13 +44,13 @@ def validate_run_config(db: Session, train_id: Any, execution_params: DockerTrai
     # Extract config by id if given
     if execution_params.config_id != "default":
         config_general = docker_train_config.get(db, execution_params.config_id)
+        config_id = execution_params.config_id
         try:
             config = config_general.airflow_config
+            if not config:
+                raise ValueError
         except:
             raise HTTPException(status_code=400, detail="No airflow config given by this id.")
-    # Extract config as defined in the execution
-    elif execution_params.config_json:
-        config = execution_params.config_json.dict()
     # Using the default config
     else:
         print(f"Starting train {train_id} using default config")
@@ -60,16 +59,18 @@ def validate_run_config(db: Session, train_id: Any, execution_params: DockerTrai
             "repository": f"{os.getenv('HARBOR_BASE_URL')}/station_{os.getenv('STATION_ID')}/{train_id}",
             "tag": "latest"
         }
+        config_id = None
 
     if config["repository"] is None or config["tag"] is None:
         raise HTTPException(status_code=400, detail="Train run parameters are missing.")
 
-    return config
+    return {"config": config, "config_id": config_id}
 
 
-def update_train(db, db_train, run_id):
+def update_train(db: Session, db_train, run_id: str, config_id: int) -> DockerTrain:
     """
     Update train parameters
+    :param config_id: config id to save for execution
     :param db: database session
     :param db_train: db_train object to update
     :param run_id: run_id of the triggered run
@@ -83,7 +84,7 @@ def update_train(db, db_train, run_id):
     train_state = update_state(db, db_train, run_time)
 
     # Create an execution
-    execution = dte_model(train_id=db_train.id, airflow_dag_run=run_id)
+    execution = dte_model(train_id=db_train.id, airflow_dag_run=run_id, config=config_id)
     db.add(execution)
     db.commit()
     db.refresh(execution)
@@ -91,6 +92,7 @@ def update_train(db, db_train, run_id):
     db.commit()
 
     return db_train
+
 
 def run_train(db: Session, train_id: Any, execution_params: DockerTrainExecution) -> DockerTrainSavedExecution:
     """
@@ -101,22 +103,25 @@ def run_train(db: Session, train_id: Any, execution_params: DockerTrainExecution
     :param execution_params: given config_id or config_json can be used for running train
     :return:
     """
-    # Use default config if there is no config defined.
-    if execution_params is None:
-        execution_params = DockerTrainExecution(config_id="default")
-        print("No config defined. Default config is used.")
-
-    config = validate_run_config(db, train_id, execution_params)
-
     # Extract the train from the database
     db_train = docker_trains.get_by_train_id(db, train_id)
     if not db_train:
         raise HTTPException(status_code=404, detail=f"Train with id '{train_id}' not found.")
 
+    # Use default config if there is no config defined.
+    if execution_params is None:
+        config_id = db_train.config_id
+        if not config_id:
+            config_id = "default"
+            print("No config defined. Default config is used.")
+        execution_params = DockerTrainExecution(config_id=config_id)
+
+    config_dict = validate_run_config(db, train_id, execution_params)
+
     # Execute the train using the airflow rest api
     try:
-        run_id = airflow_client.trigger_dag("run_pht_train", config=config)
-        db_train = update_train(db, db_train, run_id)
+        run_id = airflow_client.trigger_dag("run_pht_train", config=config_dict["config"])
+        db_train = update_train(db, db_train, run_id, config_dict["config_id"])
         last_execution = db_train.executions[-1]
         return last_execution
     except:

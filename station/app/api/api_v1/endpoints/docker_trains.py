@@ -73,9 +73,10 @@ def run_docker_train(train_id: str, run_config: DockerTrainExecution = None, db:
 @router.get("/{train_id}/config", response_model=DockerTrainConfig)
 def get_config_for_train(train_id: str, db: Session = Depends(dependencies.get_db)):
     train = docker_trains.get_by_train_id(db, train_id)
-    if not train.config:
+    if not train.config_id:
         raise HTTPException(status_code=404, detail=f"Train '{train_id}' does not have an assigned config.")
-    return train.config
+    config = docker_train_config.get(db, train.config_id)
+    return config
 
 
 @router.post("/{train_id}/config/{config_id}", response_model=DockerTrain)

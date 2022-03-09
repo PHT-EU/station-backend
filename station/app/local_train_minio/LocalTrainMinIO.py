@@ -7,6 +7,8 @@ from minio.error import MinioException
 
 class LocalTrainMinIO:
     def __init__(self):
+        # todo remove this -> singleton minio client for api
+        settings.setup()
         self.minio_client = MinioClient()
         self.docker_client = dockerClient
         # TODO do over env file

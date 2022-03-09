@@ -9,8 +9,9 @@ load_dotenv(find_dotenv())
 
 
 app = FastAPI(
-    title="PHT Station", docs_url="/api/v1/docs", redoc_url="/api/v1/redoc", openapi_url="/api/v1/openapi.json"
+    title="PHT Station", docs_url="/api/docs", redoc_url="/api/redoc", openapi_url="/api/v1/openapi.json"
 )
+
 
 # Setup logging
 # init_logging()
