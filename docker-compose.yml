@@ -5,10 +5,36 @@ volumes:
   pg_pht_station:
     external: True
 
-  blaze_data:
-  auth_data:
+  fhir-data:
+
 
 services:
+
+  station:
+    build: .
+    environment:
+      - STATION_ID=dev
+      - STATION_DB=postgresql+psycopg2://admin:admin@pg_station/pht_station
+      - ENVIRONMENT=production
+      - MINIO_URL=minio:9000
+      - MINIO_HOST=minio
+      - MINIO_USER=minio_admin
+      - MINIO_PW=minio_admin
+      - FERNET_KEY=XvKQY_wa9EtUh2j8numvvzKzamXLH4DvVmBAkopYdY4=
+      - HARBOR_URL=https://dev-harbor.grafm.de
+      - HARBOR_USER=admin
+      - HARBOR_PW=admin
+      - AUTH_SERVER_HOST=station-auth
+      - AUTH_SERVER_PORT=3010
+      - REDIS_HOST=redis
+      - AIRFLOW_USER=admin
+      - AIRFLOW_PW=start123
+      - STATION_API_HOST=0.0.0.0
+      - STATION_API_PORT=8001
+    ports:
+      - "8001:8001"
+    command: [ "./wait-for-it.sh","--timeout=10", "pg_station:5432", "--", "python", "/home/station/run_station.py" ]
+
   pg_station:
     image: postgres:13
     volumes:
@@ -19,6 +45,31 @@ services:
       - POSTGRES_PASSWORD=admin
     ports:
       - "5432:5432"
+
+  airflow:
+    container_name: station-airflow
+    build:
+      context: '.'
+      dockerfile: './airflow/Dockerfile'
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Station Private Key needs to be set and registered
+      - ./S_2_sk.pem:/opt/private_key.pem
+      # Mount the dags directory as a volume
+      - ./airflow/dags:/root/airflow/dags
+      # - ./station /opt/station
+    depends_on:
+      - pg_station
+    env_file:
+      - .env
+    #    environment:
+    #      - FHIR_ADDRESS=$FHIR_SERVER_URL
+    #      - STATION_ID=$STATION_ID
+    #      - PRIVATE_KEY_PATH=/opt/private_key.pem
+    #      - STATION_DATA_DIR=$STATION_DATA_DIR
+    ports:
+      - "8080:8080"
+
   auth:
     image: ghcr.io/pht-medic/station-ui:latest
     container_name: station-auth
@@ -34,52 +85,23 @@ services:
       - server
       - start
 
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./data/minio:/data
+
+    environment:
+      - MINIO_ROOT_USER=minio_admin
+      - MINIO_ROOT_PASSWORD=minio_admin
+
+    command: server /data --console-address ":9001"
+
   redis:
     image: redislabs/rejson:latest
     ports:
       - "6379:6379"
     volumes:
       - ./.data/redis:/data
-
-  airflow:
-    container_name: station-airflow
-    build:
-      context: .
-      dockerfile: ./airflow/Dockerfile
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      # Station Private Key needs to be set and registered
-      # - ./station/station_leipzig_private_key.pem:/opt/private_key.pem
-      # Mount the dags directory as a volume
-      - ./airflow/dags:/root/airflow/dags
-      # - ./station /opt/station
-    depends_on:
-      - pg_station
-    env_file:
-      - .env
-    ports:
-      - "8080:8080"
-
-  minio:
-    image: minio/minio:latest
-    ports:
-      - "9000:9000"
-    volumes:
-      - ./test_data:/data
-
-    environment:
-      - MINIO_ACCESS_KEY=minio_admin
-      - MINIO_SECRET_KEY=minio_admin
-
-    command: server /data
-
-  fhir-blaze:
-    image: samply/blaze
-    volumes:
-      - blaze_data:/app/data
-    environment:
-      BASE_URL: "127.0.0.1:8082"
-      JAVA_TOOL_OPTIONS: "-Xmx2g"
-      OPENID_PROVIDER_URL: "https://dev-keycloak.grafm.de/auth/realms/blaze"
-    ports:
-      - "8082:8080"
