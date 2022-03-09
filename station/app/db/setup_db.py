@@ -3,7 +3,7 @@ import uuid
 from station.app.db.session import engine, SessionLocal
 from station.app.db.base import Base
 
-from station.app.models import docker_trains, train
+from station.app.models import docker_trains
 
 
 # TODO use alembic
@@ -52,32 +52,6 @@ def seed_db_for_testing():
             name="default"
         )
 
-        session.add(config)
-        session.commit()
-
-    # create federated trains
-    if not session.query(train.Train).all():
-
-        fts = []
-        for i in range(1, 4):
-            tr = train.Train(name=str(i))
-            fts.append(tr)
-
-        session.add_all(fts)
-        session.commit()
-
-        states = []
-        for tr in fts:
-            state = train.TrainState(
-                train_id=tr.id
-            )
-            states.append(state)
-
-        session.add_all(states)
-
-        config = train.FederatedTrainConfig(
-            name="default"
-        )
         session.add(config)
         session.commit()
 

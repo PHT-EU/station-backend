@@ -57,8 +57,8 @@ class StationEnvironmentVariables(Enum):
     # minio environment variables
     MINIO_HOST = "MINIO_HOST"
     MINIO_PORT = "MINIO_PORT"
-    MINIO_ACCESS_KEY = "MINIO_ACCESS_KEY"
-    MINIO_SECRET_KEY = "MINIO_SECRET_KEY"
+    MINIO_ACCESS_KEY = "MINIO_USER"
+    MINIO_SECRET_KEY = "MINIO_PW"
 
 
 class RegistrySettings(BaseModel):
@@ -69,14 +69,14 @@ class RegistrySettings(BaseModel):
 
 class AirflowSettings(BaseModel):
     host: Union[AnyHttpUrl, str] = "airflow"
-    port: Optional[int] = 8080
+    port: Optional[int] = None
     user: Optional[str] = "admin"
     password: Optional[SecretStr] = "admin"
 
 
 class MinioSettings(BaseModel):
     host: Union[AnyHttpUrl, AnyUrl, str]
-    port: Optional[int] = 9000
+    port: Optional[int] = None
     access_key: Optional[str] = "admin"
     secret_key: Optional[SecretStr] = "admin"
 

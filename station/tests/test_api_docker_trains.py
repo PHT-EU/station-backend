@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 
 from station.app.main import app
 from station.app.api.dependencies import get_db
+from dotenv import load_dotenv, find_dotenv
 
 from .test_db import override_get_db
 
@@ -14,10 +15,11 @@ client = TestClient(app)
 
 @pytest.fixture
 def train_id():
+    load_dotenv(find_dotenv())
     return "testTrain"
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def docker_train_config():
     config = {
         "name": "test_config",
@@ -42,7 +44,33 @@ def docker_train_config():
     return config
 
 
+@pytest.fixture(scope='session')
+def config_id(docker_train_config):
+    response = client.post(
+        "/api/trains/docker/config",
+        json=docker_train_config
+    )
+    return response.json()["id"]
+
+
+@pytest.fixture(scope='session', autouse=True)
+def train_list_length():
+    response = client.get("/api/trains/docker")
+    length = len(response.json())
+    return length
+
+
+def test_config_create(docker_train_config, config_id):
+    response = client.get(f"/api/trains/docker/config/{config_id}")
+    assert response.status_code == 200, response.text
+
+    assert response.json()["name"] == docker_train_config["name"]
+    assert response.json()["auto_execute"]
+
+
 def test_docker_train_create(train_id):
+    response = client.get("/api/trains/docker/configs/all")
+    print(response.json())
     response = client.post("/api/trains/docker", json={
         "train_id": train_id
 
@@ -79,23 +107,13 @@ def test_get_train_by_id_fails():
     assert response.status_code == 404, response.text
 
 
-def test_list_docker_trains():
+def test_list_docker_trains(train_list_length):
     response = client.get("/api/trains/docker")
 
     assert response.status_code == 200, response.text
+    print(response.json())
 
-    assert len(response.json()) == 1
-
-
-def test_docker_train_config_create(docker_train_config):
-    response = client.post(
-        "/api/trains/docker/config",
-        json=docker_train_config
-    )
-    assert response.status_code == 200, response.text
-
-    assert response.json()["name"] == docker_train_config["name"]
-    assert response.json()["auto_execute"]
+    assert len(response.json()) == train_list_length+1
 
 
 def test_docker_train_config_create_fails(docker_train_config):
@@ -112,40 +130,40 @@ def test_get_docker_train_configs():
     assert len(response.json()) >= 1
 
 
-def test_get_docker_train_config_by_id():
+def test_get_docker_train_config_by_id(config_id):
     response = client.get("/api/trains/docker/config/1")
     assert response.status_code == 200, response.text
 
 
 def test_get_docker_train_config_by_id_fails():
-    response = client.get("/api/trains/docker/config/2")
+    response = client.get("/api/trains/docker/config/234")
     assert response.status_code == 404, response.text
 
 
-def test_update_docker_train_config(docker_train_config):
+def test_update_docker_train_config(docker_train_config, config_id):
     docker_train_config["name"] = "updated name"
-    response = client.put("/api/trains/docker/config/1",
+    response = client.put(f"/api/trains/docker/config/{config_id}",
                           json=docker_train_config)
 
     assert response.status_code == 200, response.text
-    response = client.get("/api/trains/docker/config/1")
+    response = client.get(f"/api/trains/docker/config/{config_id}")
 
     assert response.json()["name"] == "updated name"
 
 
 def test_update_docker_train_config_fails(docker_train_config):
     docker_train_config["name"] = "updated name"
-    response = client.put("/api/trains/docker/config/2",
+    response = client.put("/api/trains/docker/config/234",
                           json=docker_train_config)
     assert response.status_code == 404, response.text
 
 
-def test_assign_docker_train_config(train_id):
-    response = client.post(f"/api/trains/docker/{train_id}/config/1")
+def test_assign_docker_train_config(train_id, config_id):
+    response = client.post(f"/api/trains/docker/{train_id}/config/{config_id}")
     assert response.status_code == 200, response.text
     response = client.get(f"/api/trains/docker/{train_id}")
 
-    assert response.json()["config_id"] == 1
+    assert response.json()["config_id"] == config_id
 
     # test non existing config error
     response = client.post(f"/api/trains/docker/{train_id}/config/321")
@@ -162,6 +180,7 @@ def test_get_config_for_train(train_id):
     response = client.get(f"/api/trains/docker/{train_id}/config")
     assert response.status_code == 200, response.text
     assert len(response.json()["trains"]) == 1
+    print(response.json())
 
     new_train_id = "no_config_train"
     response = client.post(
@@ -177,13 +196,13 @@ def test_get_config_for_train(train_id):
     assert response.status_code == 404
 
 
-def test_create_train_with_config(docker_train_config):
+def test_create_train_with_config(docker_train_config, config_id):
     # assign existing config
     response = client.post(
         "/api/trains/docker",
         json={
             "train_id": "with_existing_config",
-            "config": 1
+            "config": config_id
         }
     )
     assert response.status_code == 200, response.text
@@ -274,7 +293,7 @@ def test_synchronize_database_fails():
         assert response.status_code == 404, response.text
 
 
-def test_run_docker_train(train_id, docker_train_config):
+def test_run_docker_train(train_id, docker_train_config, config_id):
     if os.getenv("ENVIRONMENT") == "testing":
         old_state = client.get(f"/api/trains/docker/{train_id}/state")
 
@@ -307,7 +326,7 @@ def test_run_docker_train(train_id, docker_train_config):
         # run with config assigned to train
         response = client.post(f"/api/trains/docker/{train_id}/run")
         assert response.json()["airflow_dag_run"]
-        assert response.json()["config"] == 1
+        assert response.json()["config"] == config_id
         assert response.status_code == 200, response.text
 
         state_response = client.get(f"/api/trains/docker/{train_id}/state")
@@ -317,14 +336,14 @@ def test_run_docker_train(train_id, docker_train_config):
         assert execution_response.json()[-1]["airflow_dag_run"] == response.json()["airflow_dag_run"]
 
 
-def test_run_docker_train_fails(train_id, docker_train_config):
+def test_run_docker_train_fails(train_id, docker_train_config, config_id):
     old_state = client.get(f"/api/trains/docker/{train_id}/state")
     old_executions = client.get(f"/api/trains/docker/{train_id}/executions")
 
     if os.getenv("ENVIRONMENT") == "testing":
 
         # no config with id given
-        response = client.post(f"/api/trains/docker/{train_id}/run", json={"config_id": 4})
+        response = client.post(f"/api/trains/docker/{train_id}/run", json={"config_id": 3213})
         state_response = client.get(f"/api/trains/docker/{train_id}/state")
         execution_response = client.get(f"/api/trains/docker/{train_id}/executions")
         assert old_state.json() == state_response.json()
@@ -332,7 +351,10 @@ def test_run_docker_train_fails(train_id, docker_train_config):
         assert response.status_code == 400, response.text
 
         # no tag and no repository given
-        response = client.post(f"/api/trains/docker/{train_id}/run", json={"config_id": 2})
+        specific_id = config_id+1
+        response = client.post(f"/api/trains/docker/{train_id}/run", json={"config_id": specific_id})
+        response_conf = client.get(f"/api/trains/docker/config/{specific_id}")
+        print(response_conf.json())
         state_response = client.get(f"/api/trains/docker/{train_id}/state")
         execution_response = client.get(f"/api/trains/docker/{train_id}/executions")
         assert old_state.json() == state_response.json()
