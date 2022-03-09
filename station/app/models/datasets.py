@@ -22,4 +22,3 @@ class DataSet(Base):
     target_field = Column(String, default=None)
     class_distribution = Column(String, default=None)
     #trains = relationship("Train", back_populates="dataset")
-    trains = Column(Integer, default=0)
