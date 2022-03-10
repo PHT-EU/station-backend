@@ -15,7 +15,6 @@ def create_session(connection_id: str) -> Session:
 
     hook = PostgresHook(postgres_conn_id=connection_id)
     engine = hook.get_sqlalchemy_engine()
-    print("Engine : {}".format(engine))
 
     session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     session = session()

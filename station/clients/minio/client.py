@@ -26,7 +26,6 @@ class MinioClient:
         :param secret_key: minio password
         """
         # Initialize class fields based on constructor values or environment variables
-        print("SETTINGS CONFIG: {}".format(settings.config))
 
         if settings.config.minio.port:
             minio_url = f"{settings.config.minio.host}:{settings.config.minio.port}"

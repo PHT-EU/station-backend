@@ -74,6 +74,7 @@ class RegistrySettings(BaseModel):
 
 class AirflowSettings(BaseModel):
     host: Union[AnyHttpUrl, str] = "airflow"
+    api_url: Optional[str] = "http://localhost:8080/api/v1/"
     port: Optional[int] = 8080
     user: Optional[str] = "admin"
     password: Optional[SecretStr] = "admin"
@@ -540,7 +541,7 @@ class Settings:
         logger.info(f"Setting up airflow connection and airflow-connection to station database...")
 
         # get the environment variables for airflow
-        env_airflow_host, env_airflow_port, env_airflow_user, env_airflow_secret = self._get_internal_service_env_vars(
+        env_airflow_api_url, env_airflow_port, env_airflow_user, env_airflow_secret = self._get_internal_service_env_vars(
             host=StationEnvironmentVariables.AIRFLOW_API_URL,
             port=StationEnvironmentVariables.AIRFLOW_PORT,
             user=StationEnvironmentVariables.AIRFLOW_USER,
@@ -557,10 +558,10 @@ class Settings:
             airflow_config = AirflowSettings.construct()
 
         # override airflow config if config and env vars are present and validate afterwards
-        if _airflow_config and (env_airflow_host or env_airflow_port or env_airflow_user or env_airflow_secret):
+        if _airflow_config and (env_airflow_api_url or env_airflow_port or env_airflow_user or env_airflow_secret):
             logger.debug(f"Overriding airflow config with env var specifications.")
-            if env_airflow_host:
-                airflow_config.host = env_airflow_host
+            if env_airflow_api_url:
+                airflow_config.host = env_airflow_api_url
             if env_airflow_port:
                 airflow_config.port = env_airflow_port
             if env_airflow_user:
@@ -569,13 +570,13 @@ class Settings:
                 airflow_config.password = env_airflow_secret
             _airflow_config = True
         # no airflow config found
-        elif not _airflow_config and not (env_airflow_host and env_airflow_user and env_airflow_secret):
+        elif not _airflow_config and not (env_airflow_api_url and env_airflow_user and env_airflow_secret):
             _airflow_config = False
 
         # no config but environment variables are found
-        elif not _airflow_config and (env_airflow_host and env_airflow_user and env_airflow_secret):
+        elif not _airflow_config and (env_airflow_api_url and env_airflow_user and env_airflow_secret):
             logger.debug(f"{Emojis.INFO}No airflow config found, creating new one from env vars.")
-            airflow_config.host = env_airflow_host
+            airflow_config.host = env_airflow_api_url
             airflow_config.user = env_airflow_user
             airflow_config.password = env_airflow_secret
             if env_airflow_port:
@@ -586,7 +587,7 @@ class Settings:
         if _airflow_config:
             # validate the overridden config
             self.config.airflow = AirflowSettings(**airflow_config.dict())
-            logger.info(f"Airflow: host - {self.config.airflow.host}, port - {self.config.airflow.port}")
+            logger.info(f"Airflow: API url - {self.config.airflow.api_url}, port - {self.config.airflow.port}")
         else:
             # raise error if no airflow is configured in production mode
             if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
@@ -619,8 +620,8 @@ class Settings:
 
 
         #Check whether connection with connection_id already exists, if not create it
-        url_get = self.config.airflow.host + f"connections/{self.config.airflow.station_db_conn_id}"
-        url_post = self.config.airflow.host + "connections"
+        url_get = self.config.airflow.api_url + f"connections/{self.config.airflow.station_db_conn_id}"
+        url_post = self.config.airflow.api_url + "connections"
         auth = HTTPBasicAuth(self.config.airflow.user, self.config.airflow.password.get_secret_value())
         r = requests.get(url=url_get, auth=auth)
 

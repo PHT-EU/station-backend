@@ -24,12 +24,7 @@ class NotificationUpdate(NotificationBase):
 class Notification(DBSchema):
     id: int
     message: str
+    topic: Optional[str] = "trains"
+    target_user: Optional[str] = "all"
 
-'''class Notification(NotificationBase):
-    id: int
-    created_at: datetime
-    is_read: bool
-
-    class Config:
-        orm_mode = True'''
 
