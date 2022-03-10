@@ -561,7 +561,7 @@ class Settings:
         if _airflow_config and (env_airflow_api_url or env_airflow_port or env_airflow_user or env_airflow_secret):
             logger.debug(f"Overriding airflow config with env var specifications.")
             if env_airflow_api_url:
-                airflow_config.host = env_airflow_api_url
+                airflow_config.api_url = env_airflow_api_url
             if env_airflow_port:
                 airflow_config.port = env_airflow_port
             if env_airflow_user:
@@ -576,7 +576,7 @@ class Settings:
         # no config but environment variables are found
         elif not _airflow_config and (env_airflow_api_url and env_airflow_user and env_airflow_secret):
             logger.debug(f"{Emojis.INFO}No airflow config found, creating new one from env vars.")
-            airflow_config.host = env_airflow_api_url
+            airflow_config.api_url = env_airflow_api_url
             airflow_config.user = env_airflow_user
             airflow_config.password = env_airflow_secret
             if env_airflow_port:
