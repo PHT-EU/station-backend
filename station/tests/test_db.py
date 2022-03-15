@@ -2,7 +2,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from station.app.db.base import Base
-
 # Create new sqlite database for testing
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
@@ -22,3 +21,4 @@ def override_get_db():
         yield db
     finally:
         db.close()
+

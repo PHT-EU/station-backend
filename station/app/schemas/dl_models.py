@@ -4,7 +4,6 @@ from typing import Optional
 
 
 class TorchModelBase(BaseModel):
-    train_id: Optional[int] = None
     model_id: Optional[str] = None
 
 

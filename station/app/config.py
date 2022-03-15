@@ -1,11 +1,15 @@
 import json
 import os
+import requests
 from typing import Union, Optional, Tuple
 from cryptography.fernet import Fernet
 from pydantic import BaseModel, AnyHttpUrl, SecretStr, AnyUrl
 from enum import Enum
 from loguru import logger
+from requests.auth import HTTPBasicAuth
 from yaml import safe_dump, safe_load
+from urllib.parse import urlparse
+
 
 from dotenv import load_dotenv, find_dotenv
 
@@ -36,6 +40,7 @@ class StationEnvironmentVariables(Enum):
     AIRFLOW_PORT = "AIRFLOW_PORT"
     AIRFLOW_USER = "AIRFLOW_USER"
     AIRFLOW_PW = "AIRFLOW_PW"
+    AIRFLOW_API_URL = "AIRFLOW_API_URL"
 
     # Redis environment variables
     REDIS_HOST = "REDIS_HOST"
@@ -69,9 +74,14 @@ class RegistrySettings(BaseModel):
 
 class AirflowSettings(BaseModel):
     host: Union[AnyHttpUrl, str] = "airflow"
-    port: Optional[int] = None
+    api_url: Optional[str] = "http://localhost:8080/api/v1/"
+    port: Optional[int] = 8080
     user: Optional[str] = "admin"
     password: Optional[SecretStr] = "admin"
+    station_db_conn_id: Optional[str] = "psql_station_db"
+    station_db_conn_type: Optional[str] = "postgres"
+    station_db_port: Optional[int] = 5432
+    station_db_host: Optional[str] = 'pg_station'
 
 
 class MinioSettings(BaseModel):
@@ -126,7 +136,7 @@ class StationConfig(BaseModel):
     host: Optional[Union[AnyHttpUrl, str]] = os.getenv(StationEnvironmentVariables.STATION_API_HOST.value, "127.0.0.1")
     port: Optional[int] = os.getenv(StationEnvironmentVariables.STATION_API_PORT.value, 8001)
     db: Optional[SecretStr] = "sqlite:///./app.db"
-    environment: Optional[StationRuntimeEnvironment] = StationRuntimeEnvironment.PRODUCTION
+    environment: Optional[StationRuntimeEnvironment] = StationRuntimeEnvironment.DEVELOPMENT
     fernet_key: Optional[SecretStr] = None
     registry: RegistrySettings
     auth: Optional[AuthConfig] = None
@@ -181,7 +191,6 @@ class Settings:
         # validate the runtime environment
         self._setup_runtime_environment()
         self._setup_station_environment()
-        # todo redis settings
 
         logger.info(f"Station backend setup successful {Emojis.SUCCESS}")
         return self.config
@@ -280,10 +289,12 @@ class Settings:
 
         # parse environment variables
         self._setup_station_api()
+        self._setup_airflow()
         self._setup_fernet()
         self._setup_station_auth()
         self._setup_registry_connection()
         self._setup_minio_connection()
+
 
     def _setup_station_api(self):
         """
@@ -304,7 +315,13 @@ class Settings:
         if station_db:
             logger.debug(f"\t{Emojis.INFO}Overriding station db with env var specification.")
             self.config.db = station_db
-
+        else:
+            if self.config.environment == "production":
+                raise ValueError(f"{Emojis.ERROR} Connection string to station database needs to be specified in"
+                                 f" environment variables.")
+            else:
+                logger.warning(f"{Emojis.WARNING} Connection string to station database is not specified in"
+                               f" environment variables. Default database is used.")
         if "sqlite" in self.config.db.lower():
             if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
                 raise ValueError(f"{Emojis.ERROR}   SQLite database not supported for production mode.")
@@ -519,6 +536,108 @@ class Settings:
             else:
                 logger.warning(f"No minio config specified in config or env vars, ignoring in development mode")
 
+    def _setup_airflow(self):
+
+        logger.info(f"Setting up airflow connection and airflow-connection to station database...")
+
+        # get the environment variables for airflow
+        env_airflow_api_url, env_airflow_port, env_airflow_user, env_airflow_secret = self._get_internal_service_env_vars(
+            host=StationEnvironmentVariables.AIRFLOW_API_URL,
+            port=StationEnvironmentVariables.AIRFLOW_PORT,
+            user=StationEnvironmentVariables.AIRFLOW_USER,
+            secret=StationEnvironmentVariables.AIRFLOW_PW)
+
+
+        # get airflow from config file or construct dummy
+        _airflow_config = False
+        airflow_config = self.config.airflow
+        if airflow_config:
+            _airflow_config = True
+            logger.debug("Airflow config found, checking for env vars.")
+        else:
+            airflow_config = AirflowSettings.construct()
+
+        # override airflow config if config and env vars are present and validate afterwards
+        if _airflow_config and (env_airflow_api_url or env_airflow_port or env_airflow_user or env_airflow_secret):
+            logger.debug(f"Overriding airflow config with env var specifications.")
+            if env_airflow_api_url:
+                airflow_config.api_url = env_airflow_api_url
+            if env_airflow_port:
+                airflow_config.port = env_airflow_port
+            if env_airflow_user:
+                airflow_config.user = env_airflow_user
+            if env_airflow_secret:
+                airflow_config.password = env_airflow_secret
+            _airflow_config = True
+        # no airflow config found
+        elif not _airflow_config and not (env_airflow_api_url and env_airflow_user and env_airflow_secret):
+            _airflow_config = False
+
+        # no config but environment variables are found
+        elif not _airflow_config and (env_airflow_api_url and env_airflow_user and env_airflow_secret):
+            logger.debug(f"{Emojis.INFO}No airflow config found, creating new one from env vars.")
+            airflow_config.api_url = env_airflow_api_url
+            airflow_config.user = env_airflow_user
+            airflow_config.password = env_airflow_secret
+            if env_airflow_port:
+                airflow_config.port = env_airflow_port
+            _airflow_config = True
+
+        # log airflow config and status
+        if _airflow_config:
+            # validate the overridden config
+            self.config.airflow = AirflowSettings(**airflow_config.dict())
+            logger.info(f"Airflow: API url - {self.config.airflow.api_url}, port - {self.config.airflow.port}")
+        else:
+            # raise error if no airflow is configured in production mode
+            if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
+                raise ValueError(f"{Emojis.ERROR}   No airflow config specified in config or env vars")
+            else:
+                logger.warning(f"No airflow config specified in config or env vars, ignoring in development mode")
+
+        #Check whether connection to station database with connection_id already exists, if not create it
+        self.create_station_db_connection()
+
+
+    def create_station_db_connection(self):
+
+        station_db_param = urlparse(self.config.db)
+        station_db_schema = self.config.db.split('/')[-1]
+        station_db_login = station_db_param.username
+        station_db_password = station_db_param.password
+
+
+        conn = {
+            "connection_id": self.config.airflow.station_db_conn_id,
+            "conn_type": self.config.airflow.station_db_conn_type,
+            "host": self.config.airflow.station_db_host,
+            "login": station_db_login,
+            "port": int(self.config.airflow.station_db_port),
+            "password": station_db_password,
+            "schema": station_db_schema
+        }
+
+
+
+        #Check whether connection with connection_id already exists, if not create it
+        url_get = self.config.airflow.api_url + f"connections/{self.config.airflow.station_db_conn_id}"
+        url_post = self.config.airflow.api_url + "connections"
+        auth = HTTPBasicAuth(self.config.airflow.user, self.config.airflow.password.get_secret_value())
+        r = requests.get(url=url_get, auth=auth)
+
+        if r.status_code != 200:
+            logger.debug(f"\t{Emojis.INFO}Database connection in airflow with connection id {self.config.airflow.station_db_conn_id} does not exist,"
+                         f" creating new one from environment variables.")
+            try:
+                r = requests.post(url=url_post, auth=auth, json=conn)
+                r.raise_for_status()
+                logger.info(f"\t{Emojis.INFO} Database connection in airflow with id {self.config.airflow.station_db_conn_id} got created.")
+            except Exception as e:
+                f"\t{Emojis.WARNING}Error occured while trying to create the database connection in airflow with id {self.config.airflow.station_db_conn_id}."
+                f"\t{Emojis.WARNING} -- {e}."
+        else:
+            logger.info(f"\t{Emojis.INFO} Database connection in airflow with id {self.config.airflow.station_db_conn_id} exists.")
+
     @staticmethod
     def _get_external_service_env_vars(url: StationEnvironmentVariables,
                                        client_id: StationEnvironmentVariables,
@@ -564,5 +683,6 @@ class Settings:
         return env_server_host, env_server_port, env_server_user, env_server_secret
 
 
+
 settings = Settings()
-settings.setup()
+#settings.setup()

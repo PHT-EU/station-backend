@@ -62,11 +62,11 @@ services:
       - pg_station
     env_file:
       - .env
-#    environment:
-#      - FHIR_ADDRESS=$FHIR_SERVER_URL
-#      - STATION_ID=$STATION_ID
-#      - PRIVATE_KEY_PATH=/opt/private_key.pem
-#      - STATION_DATA_DIR=$STATION_DATA_DIR
+    #    environment:
+    #      - FHIR_ADDRESS=$FHIR_SERVER_URL
+    #      - STATION_ID=$STATION_ID
+    #      - PRIVATE_KEY_PATH=/opt/private_key.pem
+    #      - STATION_DATA_DIR=$STATION_DATA_DIR
     ports:
       - "8080:8080"
 

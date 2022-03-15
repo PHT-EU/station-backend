@@ -4,11 +4,13 @@ from station.clients.airflow.client import airflow_client
 from station.clients.harbor_client import harbor_client
 from station.clients.minio.client import MinioClient
 from station.app.schemas import station_status as status_schema
+from loguru import logger
 
 import psutil
 
 # todo singleton minio client
-minio_client = MinioClient()
+# TODO resolve connection error to MinIO
+#minio_client = MinioClient()
 router = APIRouter()
 """
 The station status  endpoint returns the status of local and global components  (fhir  airflow harbo minio
@@ -19,11 +21,12 @@ def service_health_check():
     """
     Get the health status of all connected services
     """
+    minio_client = get_minio_client()
     service_status = []
     services = {
         "airflow": airflow_client.health_check(),
         "harbor": harbor_client.health_check(),
-        "minio": minio_client.health_check(),
+#        "minio": minio_client.health_check(),
     }
     for service, health in services.items():
         service_status.append(status_schema.ServiceStatus(
@@ -31,6 +34,17 @@ def service_health_check():
             status=health
         ))
     return service_status
+
+def get_minio_client():
+    """
+    Get a MinIo Client
+    """
+    try:
+        minio_client = MinioClient()
+        return minio_client
+    except:
+        logger.warning("Unable to create connection to MinIO. No client could be created.")
+        return None
 
 
 def get_hardware_resources_status():

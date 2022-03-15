@@ -23,7 +23,6 @@ def reset_db(dev=False):
 
 def seed_db_for_testing():
     session = SessionLocal()
-
     # create docker trains
     if not session.query(docker_trains.DockerTrain).all():
 

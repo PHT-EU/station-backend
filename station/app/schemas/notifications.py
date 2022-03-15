@@ -3,24 +3,28 @@ from pydantic import BaseModel
 from datetime import datetime
 
 
+class DBSchema(BaseModel):
+    class Config:
+        orm_mode = True
+
 class NotificationBase(BaseModel):
-    target_user: Optional[str] = "all"
     topic: str
     message: str
+    target_user: Optional[str] = "all"
 
 
 class NotificationCreate(NotificationBase):
-    pass
+     pass
 
 
 class NotificationUpdate(NotificationBase):
     is_read: bool
 
 
-class Notification(NotificationBase):
+class Notification(DBSchema):
     id: int
-    created_at: datetime
-    is_read: bool
+    message: str
+    topic: Optional[str] = "trains"
+    target_user: Optional[str] = "all"
 
-    class Config:
-        orm_mode = True
+
