@@ -1,0 +1,42 @@
+from typing import Any
+import urllib.parse
+
+import requests
+import pendulum
+
+
+class CentralApiClient:
+
+    def __init__(self, api_url: str, robot_id: str, robot_secret: str):
+        self.api_url = api_url
+        self.robot_id = robot_id
+        self.robot_secret = robot_secret
+        self.token = None
+        self.token_expiration = None
+
+    @property
+    def headers(self) -> dict:
+        token = self._get_token()
+
+        return {"Authorization": f"Bearer {token}"}
+
+    def get_trains(self) -> list:
+        pass
+
+    def get_registry_credentials(self, station_id: Any) -> dict:
+        url = self.api_url + f"/stations/{station_id}?"
+        filters = "fields[station]=+secure_id,+registry_project_account_name,+registry_project_account_token"
+        safe_filters = urllib.parse.quote(filters, safe="=")
+        safe_url = url + safe_filters
+        r = requests.get(safe_url, headers=self.headers)
+        r.raise_for_status()
+        return r.json()
+
+    def _get_token(self) -> str:
+        if not self.token or self.token_expiration < pendulum.now():
+            r = requests.post(f"{self.api_url}/token", data={"id": self.robot_id, "secret": self.robot_secret}).json()
+            print(r)
+            self.token = r["access_token"]
+            self.token_expiration = pendulum.now().add(seconds=r["expires_in"])
+
+        return self.token

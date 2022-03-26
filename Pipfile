@@ -19,6 +19,8 @@ pht-train-container-library = "*"
 SQLAlchemy = "*"
 psutil = "*"
 loguru = "*"
+jinja2 = "*"
+click = "*"
 
 [dev-packages]
 pytest = "*"

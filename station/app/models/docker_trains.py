@@ -37,6 +37,7 @@ class DockerTrainConfig(Base):
     cpu_requirements = Column(JSON, nullable=True)
     gpu_requirements = Column(JSON, nullable=True)
     auto_execute = Column(Boolean, default=False)
+    dataset_id = Column(Integer, ForeignKey('datasets.id'), nullable=True)
 
 
 class DockerTrain(Base):

@@ -1,28 +1,43 @@
+import sys
 import os
 import os.path
+
 import docker
 from airflow.decorators import dag, task
 from airflow.operators.python import get_current_context
+
 from docker.errors import APIError
+
 from airflow.utils.dates import days_ago
 
 from train_lib.docker_util.docker_ops import extract_train_config, extract_query_json
-from train_lib.security.SecurityProtocol import SecurityProtocol
+from train_lib.security.protocol import SecurityProtocol
 from train_lib.clients import PHTFhirClient
 from train_lib.docker_util.validate_master_image import validate_train_image
-from json import JSONDecoder
+from train_lib.security.train_config import TrainConfig
 
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
     'email': ['airflow@example.com'],
     'email_on_failure': False,
-    'email_on_retry': False
+    'email_on_retry': False,
+    # 'retries': 1,
+    # 'retry_delay': timedelta(minutes=5),
+    # 'queue': 'bash_queue',
+    # 'pool': 'backfill',
+    # 'priority_weight': 10,
+    # 'end_date': datetime(2016, 1, 1),
+    # 'wait_for_downstream': False,
+    # 'dag': dag,
+    # 'sla': timedelta(hours=2),
+    # 'execution_timeout': timedelta(seconds=300),
+    # 'on_failure_callback': some_function,
+    # 'on_success_callback': some_other_function,
+    # 'on_retry_callback': another_function,
+    # 'sla_miss_callback': yet_another_function,
+    # 'trigger_rule': 'all_success'
 }
-
-TRAIN_PATH = "/opt/pht_train"
-RESULT_PATH = "/opt/pht_results"
-CONFIG_PATH = "/opt/train_config.json"
 
 
 @dag(default_args=default_args, schedule_interval=None, start_date=days_ago(2), tags=['pht', 'train'])
@@ -33,12 +48,11 @@ def run_pht_train():
         repository, tag, env, volumes = [context['dag_run'].conf.get(_, None) for _ in
                                          ['repository', 'tag', 'env', 'volumes']]
 
-        # use default tag latest if none is given
         if not tag:
             tag = "latest"
         img = repository + ":" + tag
 
-        # check and process the volumes passed to the dag via the config
+        # check an process the volumes passed to the dag via the config
         if volumes:
             assert isinstance(volumes, dict)
             # if a volume in the dictionary follows the docker format pass it as is
@@ -56,16 +70,13 @@ def run_pht_train():
                     }
 
         train_id = repository.split("/")[-1]
-        # todo make class
         train_state_dict = {
-            "train_id": train_id,  # trainId
-            "repository": repository,  # imageRepository
-            "tag": tag,  # imageTag
-            "img": img,  # imageFullPath
+            "train_id": train_id,
+            "repository": repository,
+            "tag": tag,
+            "img": img,
             "env": env,
-            "volumes": volumes,
-            "private_key_path": os.getenv("PRIVATE_KEY_PATH"),  # stationPrivateKey
-            "station_id": os.getenv("STATION_ID"),  # stationId
+            "volumes": volumes
         }
 
         return train_state_dict
@@ -75,13 +86,19 @@ def run_pht_train():
         client = docker.from_env()
 
         registry_address = os.getenv("HARBOR_API_URL").split("//")[-1]
+        print(registry_address)
         client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
                      registry=registry_address)
-
         client.images.pull(repository=train_state["repository"], tag=train_state["tag"])
-        print("Image was successfully pulled.")
+
         # Pull base image as well
         client.images.pull(repository=train_state["repository"], tag='base')
+        # Make sure the image with the desired tag is there.
+        images = client.images.list()
+        image_tags = sum([i.tags for i in images], [])
+        assert (':'.join([train_state["repository"], train_state["tag"]]) in image_tags)
+        print("Image was successfully pulled.")
+        assert (':'.join([train_state["repository"], 'base']) in image_tags)
         print("Base image was successfully pulled.")
 
         return train_state
@@ -89,41 +106,37 @@ def run_pht_train():
     @task()
     def extract_config_and_query(train_state):
         config = extract_train_config(train_state["img"])
-        train_state["config"] = config
+        train_state["config"] = config.dict(by_alias=True)
 
-        # todo make based on train config more detailed exception handling
         # try to extract th query json if it exists under the specified path
         try:
             query = extract_query_json(train_state["img"])
             train_state["query"] = query
-        except APIError as e:
-            print("No query.json available for train, assuming no query was submitted...")
-            train_state["query"] = None
-        except JSONDecoder as e:
-            print("Error decoding query json:")
+        except Exception as e:
             print(e)
-            raise e
+            train_state["query"] = None
+            print("No query file found ")
 
         return train_state
 
-    @task()
-    def validate_against_master_image(train_state):
-        # todo adapt to state class
-        master_image = train_state["config"]["master_image"]
-        img = train_state["img"]
-        validate_train_image(train_img=img, master_image=master_image)
-        return train_state
+    # @task()
+    # def validate_against_master_image(train_state):
+    #     master_image = train_state["config"]["master_image"]
+    #     img = train_state["img"]
+    #     validate_train_image(train_img=img, master_image=master_image)
+    #     return train_state
 
     @task()
     def pre_run_protocol(train_state):
-        config = train_state["config"]
-        sp = SecurityProtocol(station_id=train_state["station_id"], config=config)
-        sp.pre_run_protocol(img=train_state["img"], private_key_path=train_state["private_key_path"])
+        config = TrainConfig(**train_state["config"])
+        sp = SecurityProtocol(os.getenv("STATION_ID"), config=config)
+        sp.pre_run_protocol(train_state["img"], os.getenv("PRIVATE_KEY_PATH"))
 
         return train_state
 
     @task()
     def execute_query(train_state):
+        print(train_state)
         query = train_state.get("query", None)
         if query:
             print("Query found, setting up connection to FHIR server")
@@ -197,33 +210,53 @@ def run_pht_train():
         # If the container is already in use remove it
         except APIError as e:
             print(e)
-            client.containers.prune()
             container = client.containers.run(train_state["img"], environment=environment, volumes=volumes,
                                               detach=True, network_disabled=True, stderr=True, stdout=True)
-        # wait for the execution to finish and output the container logs
         container_output = container.wait()
+        # Print The logs generated from std out und err out during the container run
+        logs = container.logs().decode("utf-8")
+        print(f"logs_container_start({logs})logs_end")
         exit_code = container_output["StatusCode"]
-        print(f"Container logs: \n\n {container.logs().decode('utf-8')}")
+
         if exit_code != 0:
+            print(container_output)
             raise ValueError(f"The train execution returned a non zero exit code: {exit_code}")
+
+        def _copy(from_cont, from_path, to_cont, to_path):
+            """
+            Copies a file from one container to another container
+            :param from_cont:
+            :param from_path:
+            :param to_cont:
+            :param to_path:
+            :return:
+            """
+            tar_stream, _ = from_cont.get_archive(from_path)
+            to_cont.put_archive(os.path.dirname(to_path), tar_stream)
 
         base_image = ':'.join([train_state["repository"], 'base'])
         to_container = client.containers.create(base_image)
-
-        # Copy results to base image and perform rebasing
-        tar_stream, _ = container.get_archive(RESULT_PATH)
-        to_container.put_archive(os.path.dirname(RESULT_PATH), tar_stream)
+        # Copy results to base image
+        _copy(from_cont=container,
+              from_path="/opt/pht_results",
+              to_cont=to_container,
+              to_path="/opt/pht_results")
 
         to_container.commit(repository=train_state["repository"], tag=train_state["tag"])
         container.remove(v=True, force=True)
+        if exit_code != 0:
+            raise ValueError(f"The train execution returned a non zero exit code: {exit_code}")
 
         return train_state
 
     @task()
     def post_run_protocol(train_state):
-        config = train_state["config"]
-        sp = SecurityProtocol(station_id=train_state["station_id"], config=config)
-        sp.post_run_protocol(img=train_state["img"], private_key_path=train_state["private_key_path"])
+
+        config = TrainConfig(**train_state["config"])
+        sp = SecurityProtocol(os.getenv("STATION_ID"), config=config)
+        sp.post_run_protocol(img=train_state["img"],
+                             private_key_path=os.getenv("PRIVATE_KEY_PATH"))
+
         return train_state
 
     @task()
@@ -231,6 +264,7 @@ def run_pht_train():
         base_image = ':'.join([train_state["repository"], 'base'])
         client = docker.from_env(timeout=120)
         to_container = client.containers.create(base_image)
+        updated_tag = train_state["tag"]
 
         def _copy(from_cont, from_path, to_cont, to_path):
             """
@@ -248,25 +282,31 @@ def run_pht_train():
 
         # Copy results to base image
         _copy(from_cont=from_container,
-              from_path=RESULT_PATH,
+              from_path="/opt/pht_results",
               to_cont=to_container,
-              to_path=RESULT_PATH)
+              to_path="/opt/pht_results")
 
         # Hardcoded copying of train_config.json
         _copy(from_cont=from_container,
-              from_path=CONFIG_PATH,
+              from_path="/opt/train_config.json",
               to_cont=to_container,
-              to_path=CONFIG_PATH)
+              to_path="/opt/train_config.json")
 
-        print('Copied files into base image')
-        print(f'Creating rebased image: {train_state["repository"]}:{train_state["tag"]}')
-        # Commit the rebased image under the given repository and tag
-        to_container.commit(repository=train_state["repository"], tag=train_state["tag"])
-        # remove executed containers -> only images needed from this point
-        print('Removing containers')
-        to_container.remove()
-        from_container.remove()
-        return train_state
+        print('Copied files into baseimage')
+
+        print(f'Creating image: {train_state["repository"]}:{updated_tag}')
+        print(type(to_container))
+        # Rebase the train
+        try:
+            img = to_container.commit(repository=train_state["repository"], tag=train_state["tag"])
+            # remove executed containers -> only images needed from this point
+            print('Removing containers')
+            to_container.remove()
+            from_container.remove()
+            return train_state
+        except Exception as err:
+            print(err)
+            sys.exit()
 
     @task()
     def push_train_image(train_state):
@@ -274,7 +314,8 @@ def run_pht_train():
 
         registry_address = os.getenv("HARBOR_API_URL").split("//")[-1]
 
-        client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"), registry=registry_address)
+        client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
+                     registry=registry_address)
 
         response = client.images.push(
             repository=train_state["repository"],
@@ -282,17 +323,19 @@ def run_pht_train():
             stream=False, decode=False
         )
         print(response)
+        client.images.remove(f'{train_state["repository"]}:{train_state["tag"]}', noprune=False, force=True)
+        client.images.remove(f'{train_state["repository"]}:base', noprune=False, force=True)
 
-    state = get_train_image_info()
-    state = pull_docker_image(state)
-    state = extract_config_and_query(state)
-    state = validate_against_master_image(state)
-    state = pre_run_protocol(state)
-    state = execute_query(state)
-    state = execute_container(state)
-    state = post_run_protocol(state)
-    state = rebase(state)
-    push_train_image(state)
+    train_state = get_train_image_info()
+    train_state = pull_docker_image(train_state)
+    train_state = extract_config_and_query(train_state)
+    # train_state = validate_against_master_image(train_state)
+    train_state = pre_run_protocol(train_state)
+    train_state = execute_query(train_state)
+    train_state = execute_container(train_state)
+    train_state = post_run_protocol(train_state)
+    train_state = rebase(train_state)
+    push_train_image(train_state)
 
 
 run_train_dag = run_pht_train()

@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  station-api:
+    image: ghcr.io/pht-medic/station-api:{{ api_version }}
+    restart: unless-stopped
+    environment:
+      - STATION_API_PORT={{ station_port }}
+      - STATION_API_HOST=
+    ports:
+      - "{{ station_port }}:8001"
+
+

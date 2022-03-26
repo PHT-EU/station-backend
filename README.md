@@ -65,7 +65,7 @@ docker exec -it station-auth sh
 and run the following commands to initialize the authentication server
 
 ```shell
-npm run setup
+npm run setup --workspace=packages/server
 ```
 
 the output should be similar, with different keys:
@@ -89,7 +89,7 @@ to reset the database and seed it with the default users. Exit the container wit
 and restart the authentication container.
 
 ```shell
-docker-compose -f docker-compose_dev.yml restart station-auth
+docker-compose -f docker-compose_dev.yml restart auth
 ```
 
 ## Third party services
