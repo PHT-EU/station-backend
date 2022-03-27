@@ -7,7 +7,7 @@ volumes:
 
 services:
   postgres:
-    image: postgres:13
+    image: {{ service_images.db }}
     restart: unless-stopped
     container_name: pht-station-db
     volumes:
@@ -19,7 +19,7 @@ services:
       {% endfor %}
 
   traefik:
-    image: traefik:v2.6
+    image: {{ service_images.traefik }}
     restart: unless-stopped
     container_name: pht-station-traefik
     ports:
@@ -39,7 +39,7 @@ services:
       {% endfor %}
 
   station-auth:
-    image: ghcr.io/pht-medic/station-ui:{{ pht_version }}
+    image: {{ pht_images.auth }}:{{ pht_version }}
     container_name: station-auth
     volumes:
       - {{ service_data_dir }}/auth:/usr/src/app/writable
@@ -54,7 +54,7 @@ services:
       - start
 
   station-api:
-    image: ghcr.io/pht-medic/station-api:{{ pht_version }}
+    image: {{ pht_images.api }}:{{ pht_version }}
     restart: unless-stopped
     container_name: pht-station-api
     environment:
@@ -69,7 +69,7 @@ services:
       {% endfor %}
 
   redis:
-    image: redislabs/rejson:latest
+    image: {{ service_images.redis }}
     restart: unless-stopped
     container_name: pht-station-redis
     ports:

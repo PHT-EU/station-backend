@@ -1,6 +1,11 @@
 import yaml
 from enum import Enum
 import os
+from pydantic import BaseSettings
+
+
+class StationConfig(BaseSettings):
+    pass
 
 
 class ConfigFiles(Enum):
@@ -8,7 +13,7 @@ class ConfigFiles(Enum):
     Enum for config file names
     """
     STATION_CONFIG = 'station_config.yml'
-    STATION_CONTROL = 'config.yml'
+    STATION_CONFIG_SHORT = 'config.yml'
 
 
 def load_config(file_name) -> dict:
