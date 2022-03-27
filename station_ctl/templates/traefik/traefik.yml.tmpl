@@ -1,0 +1,35 @@
+global:
+  sendAnonymousUsage: false
+
+api:
+  dashboard: {{ traefik_dashboard }}
+  insecure: {{ traefik_insecure }}
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    watch: true
+    exposedByDefault: false
+
+  file:
+    filename: /etc/traefik/config.yml
+    watch: true
+
+log:
+  level: INFO
+  format: common
+
+entryPoints:
+  http:
+    address: ":{{ http_port }}"
+    {% if https_enabled %}
+      http:
+        redirections:
+         entryPoint:
+            to: https
+            scheme: https
+    {% endif %}
+  {% if https_enabled %}
+    https:
+      address: ":{{ https_port }}"
+  {% endif %} %}

@@ -5,7 +5,7 @@ from station.clients.central.central_client import CentralApiClient
 from station_ctl.constants import Icons
 
 @click.command(help="Install the station software based on the configuration file.")
-@click.option('--output-dir', '-o',
+@click.option('--install-dir',
               type=click.Path(exists=True, file_okay=False, dir_okay=True),
               help='Install location for station software. Defaults to current working directory.')
 @click.pass_context
