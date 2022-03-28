@@ -2,6 +2,7 @@ import os
 
 import pytest
 from dotenv import load_dotenv, find_dotenv
+import yaml
 
 from station.clients.central.central_client import CentralApiClient
 
@@ -42,3 +43,31 @@ def test_render_init_sql():
     assert len(lines) == 4
     assert lines[-1].endswith("test_db_user;")
     assert lines[-2].endswith("test_db_user;")
+
+
+def test_render_traefik_configs():
+    traefik_config, router_config = templates.render_traefik_configs(
+        http_port=80,
+        https_port=443,
+        domain="test.com",
+        https_enabled=True,
+        certs=[{"cert": "test", "key": "test"}],
+    )
+    assert traefik_config
+    assert router_config
+
+    print(traefik_config)
+    print(router_config)
+
+    traefik_dict = yaml.safe_load(traefik_config)
+    router_dict = yaml.safe_load(router_config)
+    print(traefik_dict)
+    print(router_dict)
+
+    assert traefik_dict["entryPoints"]["http"]["address"] == ":80"
+    assert traefik_dict["entryPoints"]["https"]["address"] == ":443"
+
+    assert router_dict["http"]["routers"]["traefik"]["tls"]["domains"][0]["main"] == "test.com"
+    assert router_dict["tls"]["certificates"][0]["certFile"] == "test"
+    assert router_dict["tls"]["certificates"][0]["keyFile"] == "test"
+

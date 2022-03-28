@@ -2,8 +2,8 @@ global:
   sendAnonymousUsage: false
 
 api:
-  dashboard: {{ traefik_dashboard }}
-  insecure: {{ traefik_insecure }}
+  dashboard: {{ dashboard }}
+  insecure: {{ dashboard }}
 
 providers:
   docker:
@@ -23,13 +23,13 @@ entryPoints:
   http:
     address: ":{{ http_port }}"
     {% if https_enabled %}
-      http:
-        redirections:
-         entryPoint:
-            to: https
-            scheme: https
+    http:
+    redirections:
+     entryPoint:
+        to: https
+        scheme: https
     {% endif %}
   {% if https_enabled %}
-    https:
-      address: ":{{ https_port }}"
-  {% endif %} %}
+  https:
+    address: ":{{ https_port }}"
+  {% endif %}

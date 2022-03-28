@@ -23,4 +23,4 @@ def test_get_token(central_client):
 def test_get_registry_credentials(central_client):
     registry_credentials = central_client.get_registry_credentials(os.getenv("STATION_ID"))
     print(registry_credentials)
-    assert registry_credentials is not None
+    assert registry_credentials

@@ -14,6 +14,7 @@ class ConfigFiles(Enum):
     """
     STATION_CONFIG = 'station_config.yml'
     STATION_CONFIG_SHORT = 'config.yml'
+    STATION = 'station.yml'
 
 
 def load_config(file_name) -> dict:

@@ -35,7 +35,6 @@ class CentralApiClient:
     def _get_token(self) -> str:
         if not self.token or self.token_expiration < pendulum.now():
             r = requests.post(f"{self.api_url}/token", data={"id": self.robot_id, "secret": self.robot_secret}).json()
-            print(r)
             self.token = r["access_token"]
             self.token_expiration = pendulum.now().add(seconds=r["expires_in"])
 

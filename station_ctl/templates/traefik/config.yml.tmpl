@@ -9,9 +9,11 @@ http:
             sans:
               - "*.{{ domain }}"
 
+{% if https_enabled %}
 tls:
   certificates:
     {% for cert in certs %}
     - certFile: "{{ cert.cert }}"
       keyFile: "{{ cert.key }}"
     {% endfor %}
+{% endif %}

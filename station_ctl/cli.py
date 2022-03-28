@@ -3,6 +3,7 @@ import os
 import click
 from config import load_config, find_config
 from install.command import install
+from station_ctl.constants import Icons
 
 
 @click.group()
@@ -14,8 +15,14 @@ def cli(ctx, config):
     if config:
         ctx.obj = load_config(config)
     else:
-        click.echo('No config file given. Looking for config file in current directory.')
-        ctx.obj = find_config(os.getcwd())
+        click.echo('No config file given. Looking for config file in current directory... ', nl=False)
+        try:
+            ctx.obj = find_config(os.getcwd())
+            click.echo(Icons.CHECKMARK.value)
+        except FileNotFoundError:
+            click.echo(Icons.CROSS.value)
+            click.echo('No config file found')
+
 
 @cli.command()
 @click.pass_context
@@ -34,8 +41,8 @@ def update(ctx):
 def services(ctx):
     pass
 
-cli.add_command(install)
 
+cli.add_command(install)
 
 if __name__ == '__main__':
     cli()
