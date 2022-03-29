@@ -15,6 +15,6 @@ def test_validate_config():
         },
     }
 
-    table = validate_config(config)
+    results, table = validate_config(config)
     console = Console()
     console.print(table)

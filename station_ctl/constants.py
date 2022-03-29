@@ -26,6 +26,8 @@ class DefaultValues(Enum):
     CERT = "example-cert.pem"
     KEY = "example-key.pem"
     DOMAIN = "station.localhost"
+    ROBOT_ID = "central-robot-id"
+    ROBOT_SECRET = "central-robot-secret"
 
 
 class PHTDirectories(Enum):

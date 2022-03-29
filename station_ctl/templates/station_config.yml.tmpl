@@ -1,0 +1,85 @@
+# configure station variables
+station_id: "{{ station_id }}"
+version: "{{ version }}"
+
+# station runtime environment set to development to allow for debugging and reduced security settings
+# if no value is given or any value other than 'development' is given it defaults to a production environment
+environment: "{{ environment }}"
+
+# Configure authentication for central services
+central:
+  api_url: "{{ central.api_url }}"
+  robot_id: "{{ central.robot_id }}"
+  robot_secret: "{{ central.robot_secret }}"
+  private_key: "{{ central.private_key }}"
+
+http:
+  port: "{{ http.port }}"
+{% if https %}
+https:
+  port: "{{ https.port }}"
+  domain: "{{ https.domain }}"
+  # list of path to certificate files (cert/key)
+  certs:
+    {% for cert in https.certs %}
+    - cert: "example-cert.pem"
+      key: "example-key.pem"
+    {% endfor %}
+
+{% endif %}
+traefik:
+  dashboard:
+    port: 8081
+
+
+# Configures the address and credentials for the central container registry
+registry:
+  address: "{{ registry.domain }}"
+  user: "{{ registry.user }}"
+  password: "{{ registry.password }}"
+  {% if registry.project %}
+  project: "{{ registry.project }}"
+  {% endif %}
+
+
+# configure admin user for the postgres database
+db:
+  admin_user: "{{ db.admin_user }}"
+  admin_password: "{{ db.admin_password }}"
+
+api:
+  # Fernet key for encryption of sensitive values stored in the database
+  fernet_key: "{{ api.fernet_key }}"
+
+
+# configure airflow connection
+airflow:
+  # set admin user and password for airflow
+  username: "{{ airflow.admin_user }}"
+  password: "{{ airflow.admin_password }}"
+  # path to a custom airflow configuration file
+  {% if airflow.config_file %}
+  config_file: {{ airflow.config_file }}
+  {% endif %}
+  # if you want to load your own DAGs from a different location set the path here, only the libraries installed in the
+  # airflow_dags folder will be available to code inside the DAGs
+  {% if airflow.custom_dags_dir %}
+  extra_dags_dir: "{{ airflow.custom_dags_dir }}"
+  {% endif %}
+
+
+# Configure the connection to the authentication server
+auth:
+  host: "127.0.0.1"
+  port: 3010
+  robot_id: "your_robot_id"
+  robot_secret: '**********'
+
+# configure minio connection
+minio:
+  host: "minio"
+  port: 9000
+  access_key: "minio_access_key"
+  secret_key: "minio_secret_key"
+
+

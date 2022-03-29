@@ -16,6 +16,10 @@ test_data
 # C extensions
 *.so
 
+station_config.yml
+config.yml
+station.yml
+
 # Distribution / packaging
 .Python
 env/
