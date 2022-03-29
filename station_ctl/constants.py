@@ -20,21 +20,21 @@ class DefaultValues(Enum):
     Default values for the station configuration
     """
     FERNET_KEY = "your_fernet_key"
-    DB_ADMIN_USER = "admin"
-    DB_ADMIN_PASSWORD = "admin"
+    ADMIN = "admin"
     PRIVATE_KEY = "/path/to/private_key.pem"
     STATION_DOMAIN = "example-station.com"
     CERT = "example-cert.pem"
     KEY = "example-key.pem"
+    DOMAIN = "station.localhost"
 
 
 class PHTDirectories(Enum):
-    SERVICE_DATA_DIR = "/service_data"
-    SERVICE_LOG_DIR = "/logs"
-    CONFIG_DIR = "/configs"
-    CERTS_DIR = "/certs"
-    STATION_DATA_DIR = "/data"
-    SETUP_SCRIPT_DIR = "/setup_scripts"
+    SERVICE_DATA_DIR = "service_data"
+    SERVICE_LOG_DIR = "logs"
+    CONFIG_DIR = "configs"
+    CERTS_DIR = "certs"
+    STATION_DATA_DIR = "data"
+    SETUP_SCRIPT_DIR = "setup_scripts"
 
 
 class ServiceDirectories(Enum):
@@ -47,3 +47,4 @@ class ServiceDirectories(Enum):
 class Icons(Enum):
     CHECKMARK = "✔"
     CROSS = "❌"
+    WARNING = "⚠"

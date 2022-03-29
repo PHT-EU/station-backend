@@ -20,15 +20,15 @@ class CentralApiClient:
 
         return {"Authorization": f"Bearer {token}"}
 
-    def get_trains(self) -> list:
+    def get_trains(self, station_id: Any) -> list:
         pass
 
     def get_registry_credentials(self, station_id: Any) -> dict:
         url = self.api_url + f"/stations/{station_id}?"
         filters = "fields[station]=+secure_id,+registry_project_account_name,+registry_project_account_token"
         safe_filters = urllib.parse.quote(filters, safe="=")
-        safe_url = url + safe_filters
-        r = requests.get(safe_url, headers=self.headers)
+        url = url + safe_filters
+        r = requests.get(url, headers=self.headers)
         r.raise_for_status()
         return r.json()
 

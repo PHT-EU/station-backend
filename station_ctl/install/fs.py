@@ -1,10 +1,29 @@
 import os
 from enum import Enum
+import click
 
 from station_ctl.constants import PHTDirectories, ServiceDirectories
 
 
-def ensure_directory_structure(path):
+def check_create_pht_dirs(path):
+    """
+    Check that the directory structure exists, if it does prompt the user for update/overwrite, otherwise create it.
+    """
+    # check that pht directories exist
+    pht_dir_check = _check_dirs_from_enum(path, PHTDirectories)
+    service_dir_check = _check_dirs_from_enum(
+        os.path.join(path, PHTDirectories.SERVICE_DATA_DIR.value),
+        ServiceDirectories
+    )
+
+    if pht_dir_check and service_dir_check:
+        click.confirm('The previous installation found, do you want to overwrite it?', abort=True)
+        create_pht_dirs(path)
+    else:
+        create_pht_dirs(path)
+
+
+def create_pht_dirs(path):
     """
     Ensure the directory structure exists.
     """
@@ -23,3 +42,11 @@ def _make_dirs_from_enum(path, dir_enum: Enum):
         dir_path = os.path.join(path, dir.value)
         if not os.path.isdir(dir_path):
             os.makedirs(dir_path)
+
+
+def _check_dirs_from_enum(path, dir_enum: Enum):
+    for dir in dir_enum:
+        dir_path = os.path.join(path, dir.value)
+        if not os.path.isdir(dir_path):
+            return False
+    return True

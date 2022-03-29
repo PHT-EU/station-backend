@@ -2,9 +2,17 @@ from typing import List, Tuple
 
 from jinja2 import Environment, PackageLoader
 
+
 def render_station_config():
     pass
 
+
+def render_airflow_config(domain: str, sql_alchemy_conn: str, env: Environment = None) -> str:
+    if not env:
+        env = _get_template_env()
+
+    template = env.get_template('airflow.cfg.tmpl')
+    return template.render(domain=domain, sql_alchemy_conn=sql_alchemy_conn)
 
 
 def render_traefik_configs(

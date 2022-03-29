@@ -7,7 +7,7 @@ import yaml
 from station.clients.central.central_client import CentralApiClient
 
 from station_ctl.install import templates
-from station_ctl.install.fs import ensure_directory_structure
+from station_ctl.install.fs import create_pht_dirs
 from station_ctl.constants import PHTDirectories
 
 
@@ -22,7 +22,7 @@ def central_client():
 
 def test_ensure_directory_structure(tmp_path):
     p = tmp_path / "station"
-    ensure_directory_structure(p)
+    create_pht_dirs(p)
     for dir in PHTDirectories:
         assert p.joinpath(dir.value).exists()
 

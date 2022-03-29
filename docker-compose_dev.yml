@@ -35,8 +35,8 @@ services:
       # The Web UI (enabled by --api.insecure=true)
       - "8081:8080"
     volumes:
-      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
-      - ./traefik/config.yml:/etc/traefik/config.yml:ro
+      - ./configs/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./configs/traefik/config.yml:/etc/traefik/config.yml:ro
       - ./certs:/etc/certs:ro
       # So that Traefik can listen to the Docker events
       - /var/run/docker.sock:/var/run/docker.sock
@@ -89,9 +89,11 @@ services:
       - traefik.enable=true
       - traefik.http.routers.airflow.tls=true
       - traefik.http.routers.airflow.rule=Host("airflow.station.localhost")
-#      - traefik.http.routers.airflow.rule=Host("station.localhost") && Path("/airflow")
-#      - "traefik.http.middlewares.airflow-strip.stripprefix.prefixes=/airflow"
-#      - traefik.http.routers.airflow.middlewares=airflow-strip
+      - traefik.http.routers.airflow.rule=Host("station.localhost") && Path("/airflow")
+      - "traefik.http.middlewares.test-replacepathregex.replacepathregex.regex=^/airflow/(.*)"
+      - "traefik.http.middlewares.test-replacepathregex.replacepathregex.replacement=/$$1"
+      - traefik.http.middlewares.airflow-strip.stripprefix.prefixes=/airflow
+      - traefik.http.routers.airflow.middlewares=airflow-strip
       - traefik.http.services.airflow.loadbalancer.server.port=8080
 
   minio:

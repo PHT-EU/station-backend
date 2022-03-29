@@ -1,10 +1,15 @@
 import os
+from typing import Any, Callable, Tuple
 
 import click
 import docker
+from rich.console import Console
+from rich.table import Column, Table
 
 from station.clients.central.central_client import CentralApiClient
+from station_ctl.config import StationConfig, ApplicationEnvironment
 from station_ctl.constants import Icons, PHTImages, ServiceImages
+from station_ctl.install.fs import check_create_pht_dirs
 
 
 @click.command(help="Install the station software based on the configuration file.")
@@ -17,8 +22,9 @@ def install(ctx, install_dir):
         install_dir = os.getcwd()
     ctx.obj['install_dir'] = install_dir
     click.echo('Installing station software to {}'.format(install_dir))
+    check_create_pht_dirs(install_dir)
     credentials = _request_registry_credentials(ctx)
-    _download_docker_images(ctx)
+    # _download_docker_images(ctx)
 
 
 def _request_registry_credentials(ctx):

@@ -21,6 +21,7 @@ psutil = "*"
 loguru = "*"
 jinja2 = "*"
 click = "*"
+rich = "*"
 
 [dev-packages]
 pytest = "*"
