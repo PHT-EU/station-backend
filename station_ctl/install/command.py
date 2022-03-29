@@ -30,8 +30,8 @@ def install(ctx, install_dir):
 def _request_registry_credentials(ctx):
     click.echo('Requesting registry credentials from central api... ', nl=False)
     url = ctx.obj['central']['api_url']
-    client = ctx.obj['central']['client_id']
-    secret = ctx.obj['central']['client_secret']
+    client = ctx.obj['central']['robot_id']
+    secret = ctx.obj['central']['robot_secret']
     client = CentralApiClient(url, client, secret)
 
     credentials = client.get_registry_credentials(ctx.obj["station_id"])

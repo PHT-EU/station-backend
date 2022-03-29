@@ -13,6 +13,10 @@ class CentralApiClient:
         self.robot_secret = robot_secret
         self.token = None
         self.token_expiration = None
+        self.setup()
+
+    def setup(self):
+        self._get_token()
 
     @property
     def headers(self) -> dict:
@@ -21,6 +25,10 @@ class CentralApiClient:
         return {"Authorization": f"Bearer {token}"}
 
     def get_trains(self, station_id: Any) -> list:
+        pass
+
+    def update_public_key(self, station_id: Any, public_key: Any) -> None:
+        # todo
         pass
 
     def get_registry_credentials(self, station_id: Any) -> dict:
