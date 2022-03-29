@@ -64,7 +64,7 @@ def validate_config(config: dict) -> Table:
     """
     strict = config["environment"] != "development"
 
-    table = Table(title="Config validation issues")
+    table = Table(title="Config validation issues", show_lines=True)
     table.add_column("Status", justify="center")
     table.add_column("Field", justify="center")
     table.add_column("Message", justify="center")
@@ -72,12 +72,12 @@ def validate_config(config: dict) -> Table:
 
     # validate top level config items
     result, field, generator, message = _validate_config_value(config, "station_id", None, None, None)
-    if result == "valid":
-        table.add_row(result, field, message, "Generate a new station_id")
-    table.add_row(result, field, message, None)
+    if result != "valid":
+        table.add_row(result, field, message, "Login to user interface and obtain your station id")
     result, field, generator, message = _validate_config_value(config, "environment", None, _environment_validator,
                                                                None)
-    table.add_row(result, field, message, "default to production environment")
+    if result != "valid":
+        table.add_row(result, field, message, "defaults to production environment")
 
     return table
 
@@ -114,4 +114,4 @@ def _environment_validator(environment: str) -> Tuple[bool, Union[str, None]]:
 
         return True, None
     except ValueError:
-        return False, f'Invalid environment "{environment}". Defaulting to production environment'
+        return False, f'Invalid environment "{environment}"'
