@@ -28,6 +28,8 @@ class DefaultValues(Enum):
     DOMAIN = "station.localhost"
     ROBOT_ID = "central-robot-id"
     ROBOT_SECRET = "central-robot-secret"
+    HTTP_PORT = 80
+    HTTPS_PORT = 443
 
 
 class PHTDirectories(Enum):

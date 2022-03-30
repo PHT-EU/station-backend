@@ -1,6 +1,8 @@
 import pytest
-from station_ctl.config import validate_config, StationConfig
 from rich.console import Console
+
+from station_ctl.config import validate_config, StationConfig
+from station_ctl.constants import DefaultValues
 
 
 def test_validate_config():
@@ -10,11 +12,21 @@ def test_validate_config():
         "environment": "test",
         "central": {
             "api_url": "https://api.test.com",
-            "robot_id": "123456789",
-            "robot_secret": "123456789",
+            "robot_id": "test-robot",
+            "robot_secret": "test-secret",
         },
+        "http": {
+            "port": 8080,
+        },
+        "https": {
+            "port": 8443,
+            "domain": "test.com",
+            "certs": []
+        }
+
     }
 
     results, table = validate_config(config)
     console = Console()
+    print()
     console.print(table)

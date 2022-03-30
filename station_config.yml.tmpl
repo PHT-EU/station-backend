@@ -9,9 +9,12 @@ environment: "production"
 # Configure authentication for central services
 central:
   api_url: "https://staging-pht.tada5hi.net/api"
+  # Robot credentials for accessing central services, these can be obtained in the central UI
   robot_id: "central-robot-id"
   robot_secret: "central-robot-secret"
   private_key: "/path/to/private_key.pem"
+  # optional password for private key
+  private_key_passphrase: "admin"
 
 http:
   port: 80
