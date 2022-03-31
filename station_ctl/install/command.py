@@ -7,7 +7,8 @@ from rich.console import Console
 from rich.table import Column, Table
 
 from station.clients.central.central_client import CentralApiClient
-from station_ctl.config import StationConfig, ApplicationEnvironment
+from station_ctl.config import StationConfig, ApplicationEnvironment, validate_config, ConfigItemValidationStatus, \
+    fix_config
 from station_ctl.constants import Icons, PHTImages, ServiceImages
 from station_ctl.install.fs import check_create_pht_dirs
 
@@ -18,8 +19,28 @@ from station_ctl.install.fs import check_create_pht_dirs
               help='Install location for station software. Defaults to current working directory.')
 @click.pass_context
 def install(ctx, install_dir):
+    # validate configuration before installing
+    click.echo('Validating configuration... ', nl=False)
+    validation_results, table = validate_config(ctx.obj)
+
+    errors = [result for result in validation_results if result.status != ConfigItemValidationStatus.VALID]
+
+    if errors:
+        click.echo(Icons.CROSS.value)
+        console = Console()
+        console.print(table)
+        # todo optionally fix configuration via cli
+        click.confirm(f"{Icons.CROSS.value} Station configuration is invalid. Please fix the errors displayed above. \n"
+                      f"Would you like to fix the configuration now?", abort=True)
+
+        config = fix_config(ctx.obj, validation_results)
+        ctx.obj = config
+    else:
+        click.echo(Icons.CHECKMARK.value)
+
     if not install_dir:
         install_dir = os.getcwd()
+
     ctx.obj['install_dir'] = install_dir
     click.echo('Installing station software to {}'.format(install_dir))
     check_create_pht_dirs(install_dir)

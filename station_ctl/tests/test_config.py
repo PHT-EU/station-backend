@@ -21,7 +21,16 @@ def test_validate_config():
         "https": {
             "port": 8443,
             "domain": "test.com",
-            "certs": []
+            "certs": [
+                {
+                    "key": "test-key",
+                    "cert": "test-cert",
+                },
+                {
+                    "key": "test-key2"
+                }
+
+            ]
         }
 
     }
