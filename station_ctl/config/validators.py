@@ -1,25 +1,46 @@
 import re
-from typing import Any, Callable, Tuple, Union, List, Optional
-
-import yaml
 from enum import Enum
+from typing import Any, Callable, Tuple, Union, List, Optional
 import os
-from pydantic import BaseSettings, BaseModel
+
 import click
-from rich.table import Table
-import random
-import string
-
 from cryptography.fernet import Fernet
-from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.hazmat.primitives import serialization
+from pydantic import BaseModel
 
+from station_ctl.config.generators import _password_generator, _generate_private_key, _generate_fernet_key
 from station_ctl.constants import Icons, DefaultValues
-from station_ctl.config import ConfigItemValidationResult, ConfigItemValidationStatus, ConfigIssueLevel, \
-    ApplicationEnvironment
 
 
-def _validate_db_config(db_config: dict) -> List[ConfigItemValidationResult]:
+class ApplicationEnvironment(str, Enum):
+    DEVELOPMENT = "development"
+    PRODUCTION = "production"
+
+
+class ConfigItemValidationStatus(str, Enum):
+    VALID = 0
+    INVALID = 1
+    MISSING = 2
+    FORBIDDEN_DEFAULT = 3
+
+
+class ConfigIssueLevel(str, Enum):
+    WARN = "WARNING"
+    ERROR = "ERROR"
+
+
+class ConfigItemValidationResult(BaseModel):
+    status: ConfigItemValidationStatus
+    level: Optional[ConfigIssueLevel] = ConfigIssueLevel.WARN
+    field: str
+    display_field: str
+    value: Optional[Any] = None
+    message: Optional[str] = ""
+    generator: Optional[Callable[[], Any]] = None
+    fix_hint: Optional[str] = ""
+    validator: Optional[Callable[[Any], Tuple[bool, Union[None, str]]]] = None
+
+
+def validate_db_config(db_config: dict) -> List[ConfigItemValidationResult]:
     validation_results = []
     # error if no db config is given at all
     if db_config is None:
@@ -45,7 +66,7 @@ def _validate_db_config(db_config: dict) -> List[ConfigItemValidationResult]:
     return validation_results
 
 
-def _validate_api_config(api_config: dict) -> List[ConfigItemValidationResult]:
+def validate_api_config(api_config: dict) -> List[ConfigItemValidationResult]:
     validation_results = []
     # error if no api config is given at all
     if api_config is None:
@@ -75,7 +96,7 @@ def _validate_api_config(api_config: dict) -> List[ConfigItemValidationResult]:
     return validation_results
 
 
-def _validate_minio_config(minio_config: dict) -> List[ConfigItemValidationResult]:
+def validate_minio_config(minio_config: dict) -> List[ConfigItemValidationResult]:
     validation_results = []
     # error if no minio config is given at all
     if minio_config is None:
@@ -95,7 +116,7 @@ def _validate_minio_config(minio_config: dict) -> List[ConfigItemValidationResul
     return validation_results
 
 
-def _validate_airflow_config(airflow_config: dict) -> List[ConfigItemValidationResult]:
+def validate_airflow_config(airflow_config: dict) -> List[ConfigItemValidationResult]:
     validation_results = []
     # error if no airflow config is given at all
     if airflow_config is None:
@@ -144,7 +165,7 @@ def _validate_airflow_config(airflow_config: dict) -> List[ConfigItemValidationR
     return validation_results
 
 
-def _validate_web_config(config: dict, strict: bool = True) -> List[ConfigItemValidationResult]:
+def validate_web_config(config: dict, strict: bool = True) -> List[ConfigItemValidationResult]:
     """
     Validates the web configuration
     """
@@ -317,7 +338,7 @@ def _validate_web_config(config: dict, strict: bool = True) -> List[ConfigItemVa
     return validation_results
 
 
-def _validate_central_config(central_config: dict) -> List[ConfigItemValidationResult]:
+def validate_central_config(central_config: dict) -> List[ConfigItemValidationResult]:
     """
     Validates the central services' config items
     """
@@ -383,7 +404,7 @@ def _validate_central_config(central_config: dict) -> List[ConfigItemValidationR
     return validation_results
 
 
-def _validate_top_level_config(config: dict) -> List[ConfigItemValidationResult]:
+def validate_top_level_config(config: dict) -> List[ConfigItemValidationResult]:
     """
     Validates the top level config items
     """

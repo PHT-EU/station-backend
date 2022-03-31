@@ -1,7 +1,7 @@
 import os
 
 import click
-from config import load_config, find_config
+from station_ctl.config import load_config, find_config
 from install.command import install
 from station_ctl.constants import Icons
 

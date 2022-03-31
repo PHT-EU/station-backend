@@ -7,8 +7,8 @@ from rich.console import Console
 from rich.table import Column, Table
 
 from station.clients.central.central_client import CentralApiClient
-from station_ctl.config import StationConfig, ApplicationEnvironment, validate_config, ConfigItemValidationStatus, \
-    fix_config
+from station_ctl.config import validate_config, fix_config
+from station_ctl.config.validators import ConfigItemValidationStatus
 from station_ctl.constants import Icons, PHTImages, ServiceImages
 from station_ctl.install.fs import check_create_pht_dirs
 
