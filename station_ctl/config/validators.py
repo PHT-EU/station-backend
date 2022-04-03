@@ -69,7 +69,7 @@ def validate_db_config(db_config: dict) -> List[ConfigItemValidationResult]:
 def validate_api_config(api_config: dict) -> List[ConfigItemValidationResult]:
     validation_results = []
     # error if no api config is given at all
-    if api_config is None:
+    if not api_config:
         validation_results.append(ConfigItemValidationResult(
             status=ConfigItemValidationStatus.MISSING,
             level=ConfigIssueLevel.ERROR,
@@ -471,7 +471,7 @@ def _validate_config_value(
             status = ConfigItemValidationStatus.FORBIDDEN_DEFAULT
             message = f'{display_field} can not be set to default value "{default_value}"'
 
-    elif validator and field_value:
+    if validator and field_value:
         valid, message = validator(field_value)
         status = ConfigItemValidationStatus.VALID if valid else ConfigItemValidationStatus.INVALID
 

@@ -2,7 +2,8 @@ import os
 
 import click
 from station_ctl.config import load_config, find_config
-from install.command import install
+from station_ctl.install.command import install
+from station_ctl.config.command import config
 from station_ctl.constants import Icons
 
 
@@ -43,6 +44,7 @@ def services(ctx):
 
 
 cli.add_command(install)
+cli.add_command(config)
 
 if __name__ == '__main__':
     cli()

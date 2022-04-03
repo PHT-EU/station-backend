@@ -1,7 +1,7 @@
 import pytest
 from rich.console import Console
 
-from station_ctl.config import validate_config, StationConfig
+from station_ctl.config import validate_config
 from station_ctl.constants import DefaultValues
 
 
