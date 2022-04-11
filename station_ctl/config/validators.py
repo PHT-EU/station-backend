@@ -7,7 +7,7 @@ import click
 from cryptography.fernet import Fernet
 from pydantic import BaseModel
 
-from station_ctl.config.generators import _password_generator, _generate_private_key, _generate_fernet_key
+from station_ctl.config.generators import password_generator, generate_private_key, generate_fernet_key
 from station_ctl.constants import Icons, DefaultValues
 
 
@@ -26,6 +26,7 @@ class ConfigItemValidationStatus(str, Enum):
 class ConfigIssueLevel(str, Enum):
     WARN = "WARNING"
     ERROR = "ERROR"
+    NONE = "NONE"
 
 
 class ConfigItemValidationResult(BaseModel):
@@ -83,7 +84,7 @@ def validate_api_config(api_config: dict) -> List[ConfigItemValidationResult]:
         # validate fernet key
         fernet_result = _validate_config_value(api_config, "fernet_key",
                                                prefix="api",
-                                               generator=_generate_fernet_key,
+                                               generator=generate_fernet_key,
                                                default_value=DefaultValues.FERNET_KEY.value,
                                                validator=_validate_fernet_key)
 
@@ -362,11 +363,14 @@ def validate_central_config(central_config: dict) -> List[ConfigItemValidationRe
         prefix="central",
         validator=_validate_url,
         default_value=None)
+    api_url_result.level = ConfigIssueLevel.ERROR
     if api_url_result.status != ConfigItemValidationStatus.MISSING:
         api_url_result.fix_hint = "Add address for the central API ({central_domain}/api) to the station config file."
     elif api_url_result.status != ConfigItemValidationStatus.INVALID:
         api_url_result.fix_hint = f'Malformed central API URL: {api_url_result.value}'
-    api_url_result.level = ConfigIssueLevel.ERROR
+    else:
+        api_url_result.level = ConfigIssueLevel.NONE
+
     validation_results.append(api_url_result)
 
     # validate central credentials
@@ -440,7 +444,7 @@ def _validate_admin_password(service_dict: dict, prefix: str) -> ConfigItemValid
                                     field=field,
                                     prefix=prefix,
                                     default_value=DefaultValues.ADMIN.value,
-                                    generator=_password_generator
+                                    generator=password_generator
                                     )
     if result.status in (ConfigItemValidationStatus.INVALID, ConfigItemValidationStatus.FORBIDDEN_DEFAULT):
         result.fix_hint = f"Update {prefix}.{field} to a valid password."

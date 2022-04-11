@@ -27,16 +27,21 @@ class CentralApiClient:
     def get_trains(self, station_id: Any) -> list:
         pass
 
-    def update_public_key(self, station_id: Any, public_key: Any) -> None:
-        # todo
-        pass
-
     def get_registry_credentials(self, station_id: Any) -> dict:
         url = self.api_url + f"/stations/{station_id}?"
-        filters = "fields[station]=+secure_id,+registry_project_account_name,+registry_project_account_token"
+        filters = "fields[station]=+secure_id,+registry_project_account_name,+registry_project_account_token,+public_key"
         safe_filters = urllib.parse.quote(filters, safe="=")
         url = url + safe_filters
         r = requests.get(url, headers=self.headers)
+        r.raise_for_status()
+        return r.json()
+
+    def update_public_key(self, station_id: Any, public_key: str) -> None:
+        url = self.api_url + f"/stations/{station_id}"
+        payload = {
+            "public_key": public_key
+        }
+        r = requests.post(url, headers=self.headers, json=payload)
         r.raise_for_status()
         return r.json()
 

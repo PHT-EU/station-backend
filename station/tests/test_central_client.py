@@ -24,3 +24,10 @@ def test_get_registry_credentials(central_client):
     registry_credentials = central_client.get_registry_credentials(os.getenv("STATION_ID"))
     print(registry_credentials)
     assert registry_credentials
+
+
+def test_update_public_key(central_client):
+    public_key = "test_public_key".encode("utf-8").hex()
+    station_id = os.getenv("STATION_ID")
+    response = central_client.update_public_key(station_id, public_key)
+    print(response)
