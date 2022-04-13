@@ -36,7 +36,7 @@ class CentralApiClient:
         r.raise_for_status()
         return r.json()
 
-    def update_public_key(self, station_id: Any, public_key: str) -> None:
+    def update_public_key(self, station_id: Any, public_key: str) -> dict:
         url = self.api_url + f"/stations/{station_id}"
         payload = {
             "public_key": public_key
@@ -47,7 +47,13 @@ class CentralApiClient:
 
     def _get_token(self) -> str:
         if not self.token or self.token_expiration < pendulum.now():
-            r = requests.post(f"{self.api_url}/token", data={"id": self.robot_id, "secret": self.robot_secret}).json()
+            r = requests.post(f"{self.api_url}/token", data={"id": self.robot_id, "secret": self.robot_secret})
+            try:
+                r.raise_for_status()
+            except requests.exceptions.HTTPError as e:
+                print(r.text)
+                raise e
+            r = r.json()
             self.token = r["access_token"]
             self.token_expiration = pendulum.now().add(seconds=r["expires_in"])
 

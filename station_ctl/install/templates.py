@@ -1,15 +1,13 @@
 from typing import List, Tuple
 
-from jinja2 import Environment, PackageLoader
+from jinja2 import Environment
 
-
-def render_station_config():
-    pass
+from station_ctl.util import get_template_env
 
 
 def render_airflow_config(domain: str, sql_alchemy_conn: str, env: Environment = None) -> str:
     if not env:
-        env = _get_template_env()
+        env = get_template_env()
 
     template = env.get_template('airflow.cfg.tmpl')
     return template.render(domain=domain, sql_alchemy_conn=sql_alchemy_conn)
@@ -39,7 +37,7 @@ def render_traefik_configs(
 
     # initialize environment if it is not given
     if not env:
-        env = _get_template_env()
+        env = get_template_env()
 
     # render traefik config
     traefik_config = _make_traefik_config(
@@ -75,7 +73,7 @@ def render_init_sql(db_user: str, env: Environment = None) -> str:
 
     """
     if not env:
-        env = _get_template_env()
+        env = get_template_env()
     template = env.get_template('init.sql.tmpl')
     return template.render(db_user=db_user)
 
@@ -131,7 +129,3 @@ def _make_traefik_router_config(
         https_enabled=https_enabled,
         certs=certs
     )
-
-
-def _get_template_env():
-    return Environment(loader=PackageLoader('station_ctl', 'templates'))

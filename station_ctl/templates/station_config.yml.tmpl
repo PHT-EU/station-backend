@@ -57,13 +57,14 @@ airflow:
   # set admin user and password for airflow
   username: "{{ airflow.admin_user }}"
   password: "{{ airflow.admin_password }}"
-  # path to a custom airflow configuration file
+
   {% if airflow.config_file %}
+  # path to a custom airflow configuration file
   config_file: {{ airflow.config_file }}
   {% endif %}
+  {% if airflow.custom_dags_dir %}
   # if you want to load your own DAGs from a different location set the path here, only the libraries installed in the
   # airflow_dags folder will be available to code inside the DAGs
-  {% if airflow.custom_dags_dir %}
   extra_dags_dir: "{{ airflow.custom_dags_dir }}"
   {% endif %}
 
@@ -77,9 +78,7 @@ auth:
 
 # configure minio connection
 minio:
-  host: "minio"
-  port: 9000
-  access_key: "minio_access_key"
-  secret_key: "minio_secret_key"
+  admin_user: "{{ minio.admin_user }}"
+  admin_password: "{{ minio.admin_password }}"
 
 

@@ -18,7 +18,8 @@ def cli(ctx, config):
     else:
         click.echo('No config file given. Looking for config file in current directory... ', nl=False)
         try:
-            ctx.obj = find_config(os.getcwd())
+            config_dict, path = find_config(os.getcwd())
+            ctx.obj = config_dict
             click.echo(Icons.CHECKMARK.value)
         except FileNotFoundError:
             click.echo(Icons.CROSS.value)

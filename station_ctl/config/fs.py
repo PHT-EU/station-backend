@@ -1,5 +1,7 @@
 from enum import Enum
 import os
+from typing import Tuple
+
 import yaml
 
 
@@ -26,13 +28,13 @@ def load_config(file_name) -> dict:
             FileNotFoundError(f'Config file {file_name} not found')
 
 
-def find_config(directory) -> dict:
+def find_config(directory) -> Tuple[dict, str]:
     """
     Finds a config file in a directory and returns a dict with the content
     """
     for file_name in ConfigFiles:
         try:
-            return load_config(os.path.join(directory, file_name.value))
+            return load_config(os.path.join(directory, file_name.value)), file_name.value
         except FileNotFoundError:
             pass
     raise FileNotFoundError(f'No config file found in {directory}')
