@@ -20,6 +20,7 @@ def cli(ctx, config):
         try:
             config_dict, path = find_config(os.getcwd())
             ctx.obj = config_dict
+            ctx.obj['config_path'] = path
             click.echo(Icons.CHECKMARK.value)
         except FileNotFoundError:
             click.echo(Icons.CROSS.value)

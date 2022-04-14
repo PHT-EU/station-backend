@@ -25,14 +25,14 @@ def config(ctx, file):
         station_config = load_config(file)
 
     click.echo(f"Validating configuration file...")
-
+    print(station_config)
     results, table = validate_config(station_config)
     issues = [result for result in results if result.status != ConfigItemValidationStatus.VALID]
     if issues:
         _display_issues(issues, table)
         click.confirm('Fix issues now?', abort=True)
         fixed_config = fix_config(station_config, results)
-        _render_config(fixed_config, file)
+        render_config(fixed_config, file)
         click.echo(f"Fixed configuration file written to: {file}")
 
     else:
@@ -49,7 +49,7 @@ def _display_issues(issues: List[ConfigItemValidationResult], table: Table):
     click.echo(f"Found {warning_styled} warnings and {errors_styled} errors")
 
 
-def _render_config(config: dict, path: str):
+def render_config(config: dict, path: str):
     env = get_template_env()
     template = env.get_template('station_config.yml.tmpl')
 

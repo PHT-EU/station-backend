@@ -8,6 +8,7 @@ from rich.table import Column, Table
 
 from station.clients.central.central_client import CentralApiClient
 from station_ctl.config import validate_config, fix_config
+from station_ctl.config.command import render_config
 from station_ctl.config.validators import ConfigItemValidationStatus
 from station_ctl.constants import Icons, PHTImages, ServiceImages
 from station_ctl.install.fs import check_create_pht_dirs
@@ -21,6 +22,7 @@ from station_ctl.install.fs import check_create_pht_dirs
 def install(ctx, install_dir):
     # validate configuration before installing
     click.echo('Validating configuration... ', nl=False)
+    print(ctx.obj)
     validation_results, table = validate_config(ctx.obj)
 
     errors = [result for result in validation_results if result.status != ConfigItemValidationStatus.VALID]
@@ -33,8 +35,11 @@ def install(ctx, install_dir):
         click.confirm(f"{Icons.CROSS.value} Station configuration is invalid. Please fix the errors displayed above. \n"
                       f"Would you like to fix the configuration now?", abort=True)
 
-        config = fix_config(ctx.obj, validation_results)
-        ctx.obj = config
+        station_config = fix_config(ctx.obj, validation_results)
+        render_config(station_config, ctx.obj['config_path'])
+        # todo write the configuration into the install directory
+        ctx.obj = station_config
+
     else:
         click.echo(Icons.CHECKMARK.value)
 
