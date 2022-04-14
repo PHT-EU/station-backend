@@ -34,13 +34,6 @@ COPY ./airflow/requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt && \
     pip install git+https://github.com/PHT-Medic/train-container-library.git
 
-COPY ./airflow/entrypoint.sh /root/entrypoint.sh
-RUN chmod +x /root/entrypoint.sh
-ENTRYPOINT ["/root/entrypoint.sh"]
-CMD ["webserver"]
-
-
-
 COPY ./station /opt/station/station
 COPY ./station_worker /opt/station/station_worker
 COPY ./setup.py /opt/station/setup.py

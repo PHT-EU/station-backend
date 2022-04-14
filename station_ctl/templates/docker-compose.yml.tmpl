@@ -1,0 +1,80 @@
+version: "3.8"
+
+# external volume for persisting the station database
+volumes:
+  pg_pht_station:
+    external: True
+
+services:
+  postgres:
+    image: {{ service_images.db }}
+    restart: unless-stopped
+    container_name: pht-station-db
+    volumes:
+      - ./setup_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - pg_pht_station:/var/lib/postgresql/data
+    environment:
+      {% for key, value in db_config.env.items() %}
+        - {{ key }}={{ value }}
+      {% endfor %}
+
+  traefik:
+    image: {{ service_images.traefik }}
+    restart: unless-stopped
+    container_name: pht-station-traefik
+    ports:
+      # The HTTP port
+      - "{{ http_port }}:80"
+      - "{{ https_port }}:443"
+      - "8081:8080" # todo check if this is needed
+    volumes:
+      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./traefik/config.yml:/etc/traefik/config.yml:ro
+      - ./certs:/etc/certs:ro
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      {% for label in proxy_config.labels %}
+        - {{ label }}
+      {% endfor %}
+
+  station-auth:
+    image: {{ pht_images.auth }}:{{ pht_version }}
+    container_name: station-auth
+    volumes:
+      - {{ service_data_dir }}/auth:/usr/src/app/writable
+    ports:
+      - "3010:3010"
+    environment:
+      {% for key, value in auth_config.env.items() %}
+        - {{ key }}={{ value }}
+      {% endfor %}
+    command:
+      - server
+      - start
+
+  station-api:
+    image: {{ pht_images.api }}:{{ pht_version }}
+    restart: unless-stopped
+    container_name: pht-station-api
+    environment:
+      {% for key, value in api_config.env.items() %}
+        - {{ key }}={{ value }}
+      {% endfor %}
+    ports:
+      - "{{ station_port }}:8000"
+    labels:
+      {% for label in api_config.labels %}
+        - {{ label }}
+      {% endfor %}
+
+  redis:
+    image: {{ service_images.redis }}
+    restart: unless-stopped
+    container_name: pht-station-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+
+

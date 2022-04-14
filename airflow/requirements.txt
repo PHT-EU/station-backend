@@ -4,6 +4,7 @@ docker
 psycopg2-binary
 python-dotenv
 minio
+fastapi
 # TODO check versions
 # torch
 # torchvision

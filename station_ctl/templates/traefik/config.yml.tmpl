@@ -1,0 +1,19 @@
+http:
+  routers:
+    traefik:
+      rule: "Host(`traefik.{{ domain }}`)"
+      service: "api@internal"
+      tls:
+        domains:
+          - main: "{{ domain }}"
+            sans:
+              - "*.{{ domain }}"
+
+{% if https_enabled %}
+tls:
+  certificates:
+    {% for cert in certs %}
+    - certFile: "{{ cert.cert }}"
+      keyFile: "{{ cert.key }}"
+    {% endfor %}
+{% endif %}

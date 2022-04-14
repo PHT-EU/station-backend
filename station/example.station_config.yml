@@ -1,10 +1,33 @@
 # configure station variables
 station_id: "your_station_id"
-host: "127.0.0.1"
-port: "8001"
-db: "postgresql+psycopg2://admin:admin@pg_station/pht_station"
+# station runtime environment -> production requires https to be enabled
 environment: "production"
-fernet_key: 'your_fernet_key'
+
+
+# where station services will store their data, defaults to ./service_data
+service_data_dir: "./service_data"
+
+https:
+  enabled: true
+  domain: "example-station.com"
+  certs:
+    - cert: "cert.pem"
+      key: "key.pem"
+
+
+# Configure authentication for central services
+central:
+  api_url: "https://central-ui.example.com"
+  client_id: "central_ui_client_id"
+  client_secret: "central_ui_client_secret"
+
+
+api:
+  host: "127.0.0.1"
+  port: "8001"
+  db: "postgresql+psycopg2://admin:admin@pg_station/pht_station"
+  fernet_key: 'your_fernet_key'
+
 # Configure the connection to the authentication server
 auth:
   host: "127.0.0.1"
@@ -12,18 +35,14 @@ auth:
   robot_id: "your_robot_id"
   robot_secret: '**********'
 
-# Configure connection to central ui
-central_ui:
-  api_url: "https://central-ui.example.com"
-  client_id: "central_ui_client_id"
-  client_secret: "central_ui_client_secret"
-
 # configure airflow connection
 airflow:
   host: "airflow"
   port: 8080
   username: "admin"
   password: "admin"
+  db: "postgresql+psycopg2://admin:admin@pg_station/pht_station"
+
 # configure minio connection
 minio:
   host: "minio"
