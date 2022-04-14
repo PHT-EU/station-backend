@@ -12,6 +12,7 @@ central:
   robot_id: "{{ central.robot_id }}"
   robot_secret: "{{ central.robot_secret }}"
   private_key: "{{ central.private_key }}"
+  private_key_password: "{{ central.private_key_password }}"
 
 http:
   port: "{{ http.port }}"
@@ -25,12 +26,10 @@ https:
     - cert: "example-cert.pem"
       key: "example-key.pem"
     {% endfor %}
-
 {% endif %}
 traefik:
   dashboard:
     port: 8081
-
 
 # Configures the address and credentials for the central container registry
 registry:
@@ -55,9 +54,8 @@ api:
 # configure airflow connection
 airflow:
   # set admin user and password for airflow
-  username: "{{ airflow.admin_user }}"
-  password: "{{ airflow.admin_password }}"
-
+  admin_user: "{{ airflow.admin_user }}"
+  admin_password: "{{ airflow.admin_password }}"
   {% if airflow.config_file %}
   # path to a custom airflow configuration file
   config_file: {{ airflow.config_file }}
@@ -67,8 +65,6 @@ airflow:
   # airflow_dags folder will be available to code inside the DAGs
   extra_dags_dir: "{{ airflow.custom_dags_dir }}"
   {% endif %}
-
-
 # Configure the connection to the authentication server
 auth:
   host: "127.0.0.1"

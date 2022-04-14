@@ -1,6 +1,11 @@
+import click
 from rich.table import Table
+from rich.style import Style
 
 from station_ctl.config.validators import *
+
+YELLOW = Style(color="yellow")
+RED = Style(color="red")
 
 
 def validate_config(config: dict) -> Tuple[List[ConfigItemValidationResult], Table]:
@@ -51,6 +56,8 @@ def _generate_results_table(results: List[ConfigItemValidationResult]) -> Table:
 
     for result in results:
         if result.status != ConfigItemValidationStatus.VALID:
-            table.add_row(result.level.value, result.display_field, result.message, result.fix_hint)
+            level_val = result.level.value
+            # level = YELLOW.render(level_val) if result.level == ConfigIssueLevel.WARN else RED.render(level_val)
+            table.add_row(level_val, result.display_field, result.message, result.fix_hint)
 
     return table

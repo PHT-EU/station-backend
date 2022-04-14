@@ -32,7 +32,7 @@ def config(ctx, file):
         _display_issues(issues, table)
         click.confirm('Fix issues now?', abort=True)
         fixed_config = fix_config(station_config, results)
-        _render_config(fixed_config, "test-config.yml")
+        _render_config(fixed_config, file)
         click.echo(f"Fixed configuration file written to: {file}")
 
     else:
