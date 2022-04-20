@@ -5,6 +5,10 @@ from jinja2 import Environment
 from station_ctl.util import get_template_env
 
 
+def render_templates():
+    pass
+
+
 def render_airflow_config(domain: str, sql_alchemy_conn: str, env: Environment = None) -> str:
     if not env:
         env = get_template_env()

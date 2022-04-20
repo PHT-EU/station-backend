@@ -23,19 +23,17 @@ def install(ctx, install_dir):
     click.echo('Validating configuration... ', nl=False)
     validation_results, table = validate_config(ctx.obj)
 
-    errors = [result for result in validation_results if result.status != ConfigItemValidationStatus.VALID]
+    issues = [result for result in validation_results if result.status != ConfigItemValidationStatus.VALID]
 
-    if errors:
+    if issues:
         click.echo(Icons.CROSS.value)
         console = Console()
         console.print(table)
-        # todo optionally fix configuration via cli
         click.confirm(f"Station configuration is invalid. Please fix the errors displayed above. \n"
                       f"Would you like to fix the configuration now?", abort=True)
 
         station_config = fix_config(ctx.obj, validation_results)
         render_config(station_config, ctx.obj['config_path'])
-        # todo write the configuration into the install directory
         ctx.obj = station_config
 
     else:
@@ -48,8 +46,11 @@ def install(ctx, install_dir):
     click.echo('Installing station software to {}'.format(install_dir))
     # ensure file system is setup
     check_create_pht_dirs(install_dir)
+
     # get credentials for registry
     reg_credentials = _request_registry_credentials(ctx)
+    ctx.obj["registry"] = reg_credentials
+
     # setup docker
     # download_docker_images(ctx)
     setup_volumes()
@@ -65,4 +66,3 @@ def _request_registry_credentials(ctx):
     credentials = client.get_registry_credentials(ctx.obj["station_id"])
     click.echo(Icons.CHECKMARK.value)
     return credentials
-

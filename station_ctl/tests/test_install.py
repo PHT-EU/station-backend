@@ -10,7 +10,7 @@ from station_ctl.util import get_template_env
 from station_ctl.install import templates
 from station_ctl.install.fs import create_pht_dirs
 from station_ctl.constants import PHTDirectories
-from station_ctl.install import docker
+from station_ctl.install import docker, certs
 
 
 @pytest.fixture
@@ -76,3 +76,15 @@ def test_render_traefik_configs():
 
 def test_setup_volumes():
     docker.setup_volumes()
+
+
+def test_generate_certs(tmp_path):
+    key_path = tmp_path / "key.pem"
+    cert_path = tmp_path / "cert.pem"
+    certs.generate_certificates("test.com", str(key_path), str(cert_path))
+    assert key_path.exists()
+    assert key_path.read_bytes()
+    assert cert_path.exists()
+    assert cert_path.read_bytes()
+
+
