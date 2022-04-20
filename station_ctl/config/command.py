@@ -25,7 +25,6 @@ def config(ctx, file):
         station_config = load_config(file)
 
     click.echo(f"Validating configuration file...")
-    print(station_config)
     results, table = validate_config(station_config)
     issues = [result for result in results if result.status != ConfigItemValidationStatus.VALID]
     if issues:

@@ -6,9 +6,11 @@ import yaml
 
 from station.clients.central.central_client import CentralApiClient
 
+from station_ctl.util import get_template_env
 from station_ctl.install import templates
 from station_ctl.install.fs import create_pht_dirs
 from station_ctl.constants import PHTDirectories
+from station_ctl.install import docker
 
 
 @pytest.fixture
@@ -28,7 +30,7 @@ def test_ensure_directory_structure(tmp_path):
 
 
 def test_get_template_env():
-    env = templates._get_template_env()
+    env = get_template_env()
     assert env
 
     template = env.get_template("init.sql.tmpl")
@@ -71,3 +73,6 @@ def test_render_traefik_configs():
     assert router_dict["tls"]["certificates"][0]["certFile"] == "test"
     assert router_dict["tls"]["certificates"][0]["keyFile"] == "test"
 
+
+def test_setup_volumes():
+    docker.setup_volumes()

@@ -1,6 +1,10 @@
 from enum import Enum
 
 
+class DockerVolumes(Enum):
+    POSTGRES = "pg_pht_station"
+
+
 class PHTImages(Enum):
     API = "ghcr.io/pht-medic/station-api"
     UI = "ghcr.io/pht-medic/station-ui"
