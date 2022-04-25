@@ -33,8 +33,7 @@ def update_data_set(dataset_id: Any, update_msg: DataSetUpdate, db: Session = De
     db_dataset = datasets.get(db, id=dataset_id)
     if not db_dataset:
         raise HTTPException(status_code=404, detail="Dataset not found.")
-    print(type(update_msg))
-    new_db_dataset = datasets.update(db, db_dataset, update_msg)
+    new_db_dataset = datasets.update(db=db, db_obj=db_dataset, obj_in=update_msg)
     return new_db_dataset
 
 

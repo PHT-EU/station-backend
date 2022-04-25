@@ -39,6 +39,7 @@ def get_file(path):
     :return: File
     """
 
+    # access file on minio server
     if path.startswith("s3://"):
         fs = get_filesystem()
         # get file
@@ -49,6 +50,8 @@ def get_file(path):
             raise FileNotFoundError
     else:
         try:
+            # go to parent directory
+            path = os.path.join("../", path)
             file = open(path)
             return file
         except:
