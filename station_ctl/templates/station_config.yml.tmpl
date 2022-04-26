@@ -23,8 +23,8 @@ https:
   # list of path to certificate files (cert/key)
   certs:
     {% for cert in https.certs %}
-    - cert: "example-cert.pem"
-      key: "example-key.pem"
+    - cert: {{ cert.cert }}
+      key: {{ cert.key }}
     {% endfor %}
 {% endif %}
 traefik:
@@ -33,7 +33,7 @@ traefik:
 
 # Configures the address and credentials for the central container registry
 registry:
-  address: "{{ registry.domain }}"
+  address: "{{ registry.address }}"
   user: "{{ registry.user }}"
   password: "{{ registry.password }}"
   {% if registry.project %}

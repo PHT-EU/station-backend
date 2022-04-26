@@ -23,6 +23,10 @@ def validate_config(config: dict) -> Tuple[List[ConfigItemValidationResult], Tab
     central_results = validate_central_config(config.get("central"))
     validation_results.extend(central_results)
 
+    # validate registry config
+    registry_results = validate_registry_config(config.get("registry"))
+    validation_results.extend(registry_results)
+
     # validate http/https config
     web_results = validate_web_config(config, strict=strict)
     validation_results.extend(web_results)

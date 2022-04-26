@@ -1,4 +1,6 @@
 import os.path
+import re
+import sys
 from typing import List, Any
 
 import click
@@ -9,10 +11,11 @@ from station.clients.central.central_client import CentralApiClient
 
 from station_ctl.config.validate import ConfigItemValidationResult, ConfigItemValidationStatus
 from station_ctl.config.generators import generate_private_key
-from station_ctl.constants import Icons
+from station_ctl.constants import Icons, PHTDirectories, CERTS_REGEX
+from station_ctl.install.certs import generate_certificates
 
 
-def fix_config(config: dict, results: List[ConfigItemValidationResult]) -> dict:
+def fix_config(ctx: dict, config: dict, results: List[ConfigItemValidationResult]) -> dict:
     """
     Allows for interactive fixes of issues in the station configuration
     Args:
@@ -29,6 +32,17 @@ def fix_config(config: dict, results: List[ConfigItemValidationResult]) -> dict:
             if result.display_field == "central.private_key":
                 fixed_config["central"]["private_key"] = _fix_private_key(fixed_config)
 
+            # certs are missing completely
+            elif result.display_field == "https.certs":
+                install_dir = ctx.get("install_dir", os.getcwd())
+                _fix_certs(fixed_config, strict, install_dir)
+
+            # invalid certs
+            elif re.match(CERTS_REGEX, result.display_field):
+                index = int(re.match(CERTS_REGEX, result.display_field).group(1))
+                _fix_certs_path(fixed_config, index)
+
+
             else:
                 default = ""
                 if result.generator:
@@ -40,6 +54,52 @@ def fix_config(config: dict, results: List[ConfigItemValidationResult]) -> dict:
                 else:
                     _set_config_values(fixed_config, result.display_field, None)
     return fixed_config
+
+
+def _fix_certs(config: dict, strict: bool, install_dir: str):
+    if strict:
+        click.echo("Valid certificates are required when not in development mode", err=True)
+        sys.exit(1)
+
+    domain = config["https"]["domain"]
+    click.echo(f"Generating certificates for domain {domain}...")
+
+    cert_dir = os.path.join(install_dir, PHTDirectories.CERTS_DIR.value)
+    cert_path = os.path.join(cert_dir, "cert.pem")
+    key_path = os.path.join(cert_dir, "key.pem")
+    generate_certificates(domain, cert_path=str(cert_path), key_path=str(key_path))
+    click.echo(f"Certificates generated at {cert_dir}")
+
+    cert_list = config["https"].get("certs", [])
+    if not cert_list:
+        print(cert_list)
+        cert_list = []
+    cert_paths = {
+        "cert": str(cert_path),
+        "key": str(key_path)
+    }
+    cert_list.append(cert_paths)
+    config["https"]["certs"] = cert_list
+
+
+def _fix_certs_path(config: dict, index: int):
+    cert_path = config["https"]["certs"][index]["cert"]
+    key_path = config["https"]["certs"][index]["key"]
+    if not os.path.isfile(cert_path):
+        cert_path = click.prompt(f"Certificate at {cert_path} does not exist. "
+                                 f"Please enter the correct path to the certificate file")
+        if not os.path.isfile(cert_path):
+            click.echo("Certificate path is invalid", err=True)
+        cert_path = str(os.path.abspath(cert_path))
+    if not os.path.isfile(key_path):
+        key_path = click.prompt(f"Key at {key_path} does not exist. "
+                                f"Please enter the correct path to the key file")
+        if not os.path.isfile(key_path):
+            click.echo("Key path is invalid", err=True)
+        key_path = str(os.path.abspath(key_path))
+
+    config["https"]["certs"][index]["cert"] = cert_path
+    config["https"]["certs"][index]["key"] = key_path
 
 
 def _fix_private_key(config: dict) -> str:

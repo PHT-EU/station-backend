@@ -41,6 +41,32 @@ class ConfigItemValidationResult(BaseModel):
     validator: Optional[Callable[[Any], Tuple[bool, Union[None, str]]]] = None
 
 
+def validate_registry_config(registry_config: dict) -> List[ConfigItemValidationResult]:
+    validation_results = []
+    # error if no registry config is given at all
+    if registry_config is None:
+        validation_results.append(ConfigItemValidationResult(
+            status=ConfigItemValidationStatus.MISSING,
+            level=ConfigIssueLevel.ERROR,
+            field="registry",
+            display_field="registry",
+            message="Registry configuration missing",
+            fix_hint="Add registry configuration to the configuration file",
+        ))
+        return validation_results
+
+    # validate registry domain
+    validation_results.append(
+        _validate_config_value(registry_config, "address", prefix="registry", validator=_validate_domain))
+
+    user_result = _validate_config_value(registry_config, "user", prefix="registry")
+    password_result = _validate_config_value(registry_config, "password", prefix="registry")
+    # todo add fix hints for validation
+    validation_results.extend([user_result, password_result])
+
+    return validation_results
+
+
 def validate_db_config(db_config: dict) -> List[ConfigItemValidationResult]:
     validation_results = []
     # error if no db config is given at all
@@ -389,7 +415,6 @@ def validate_central_config(central_config: dict) -> List[ConfigItemValidationRe
         validation_results.append(robot_field_result)
 
     # validate central private key
-    # todo add generator function for private key and submit to central api
     private_key_result = _validate_config_value(central_config,
                                                 field="private_key",
                                                 default_value=DefaultValues.PRIVATE_KEY.value,

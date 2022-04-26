@@ -32,7 +32,7 @@ def install(ctx, install_dir):
         click.confirm(f"Station configuration is invalid. Please fix the errors displayed above. \n"
                       f"Would you like to fix the configuration now?", abort=True)
 
-        station_config = fix_config(ctx.obj, validation_results)
+        station_config = fix_config(ctx.obj, ctx.obj, validation_results)
         render_config(station_config, ctx.obj['config_path'])
         ctx.obj = station_config
 
@@ -54,6 +54,8 @@ def install(ctx, install_dir):
     # setup docker
     # download_docker_images(ctx)
     setup_volumes()
+
+
 
 
 def _request_registry_credentials(ctx):

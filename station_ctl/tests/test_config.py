@@ -1,8 +1,9 @@
 import pytest
 from rich.console import Console
+import re
 
 from station_ctl.config import validate_config
-from station_ctl.constants import DefaultValues
+from station_ctl.constants import DefaultValues, CERTS_REGEX
 
 
 def test_validate_config():
@@ -39,3 +40,17 @@ def test_validate_config():
     console = Console()
     print()
     console.print(table)
+
+
+
+def test_match_cert_index():
+    field_0 = "https.certs[0]"
+    field_1 = "https.certs[12]"
+    field_2 = "htps.certs[0]"
+    field_3 = "https.certs[a]"
+
+    assert re.match(CERTS_REGEX, field_0)
+    assert re.match(CERTS_REGEX, field_0).group(1) == "0"
+    assert re.match(CERTS_REGEX, field_1)
+    assert re.match(CERTS_REGEX, field_2) is None
+    assert re.match(CERTS_REGEX, field_3) is None

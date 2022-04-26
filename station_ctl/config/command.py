@@ -1,4 +1,5 @@
 import os
+import pprint
 from typing import List
 
 import click
@@ -30,7 +31,7 @@ def config(ctx, file):
     if issues:
         _display_issues(issues, table)
         click.confirm('Fix issues now?', abort=True)
-        fixed_config = fix_config(station_config, results)
+        fixed_config = fix_config(ctx.obj, station_config, results)
         render_config(fixed_config, file)
         click.echo(f"Fixed configuration file written to: {file}")
 
@@ -49,8 +50,11 @@ def _display_issues(issues: List[ConfigItemValidationResult], table: Table):
 
 
 def render_config(config: dict, path: str):
+
     env = get_template_env()
     template = env.get_template('station_config.yml.tmpl')
+
+    pprint.pp(config)
 
     out_config = template.render(
         station_id=config['station_id'],
@@ -64,7 +68,7 @@ def render_config(config: dict, path: str):
         api=config['api'],
         airflow=config['airflow'],
         minio=config['minio'],
-
     )
+
     with open(path, 'w') as f:
         f.write(out_config)
