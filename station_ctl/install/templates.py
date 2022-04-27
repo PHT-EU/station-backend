@@ -1,13 +1,10 @@
+import os
 from typing import List, Tuple
 
 from jinja2 import Environment
 
 from station_ctl.util import get_template_env
-from station_ctl.constants import PHTImages, ServiceImages
-
-
-def render_templates():
-    pass
+from station_ctl.constants import PHTImages, ServiceImages, PHTDirectories
 
 
 def render_compose(config: dict, env: Environment = None) -> str:
@@ -40,14 +37,21 @@ def render_compose(config: dict, env: Environment = None) -> str:
 
     }
 
-    service_data_dir = config["install_dir"] + "/data"
+    service_data_dir = os.path.join(config["install_dir"], PHTDirectories.SERVICE_DATA_DIR.value)
 
+    db_config = {
+        "env": {
+            "POSTGRES_USER": config["admin_user"],
+            "POSTGRES_PASSWORD": config["admin_password"],
+        }
+    }
 
     return template.render(
         service_images=service_images,
         pht_images=pht_images,
         version=config['version'],
         service_data_dir=service_data_dir,
+        db_config=db_config,
 
     )
 

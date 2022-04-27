@@ -75,7 +75,7 @@ def test_render_traefik_configs():
 
 
 def test_setup_volumes():
-    docker.setup_volumes()
+    docker.setup_docker()
 
 
 def test_generate_certs(tmp_path):

@@ -24,8 +24,8 @@ services:
     container_name: pht-station-traefik
     ports:
       # The HTTP port
-      - "{{ http_port }}:80"
-      - "{{ https_port }}:443"
+      - "{{ proxy_config.http_port }}:80"
+      - "{{ proxy_config.https_port }}:443"
       - "8081:8080" # todo check if this is needed
     volumes:
       - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
@@ -52,6 +52,10 @@ services:
     command:
       - server
       - start
+    labels:
+      {% for label in auth_config.labels %}
+        - {{ label }}
+      {% endfor %}
 
   station-api:
     image: {{ pht_images.api }}:{{ version }}

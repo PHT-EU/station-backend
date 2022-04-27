@@ -1,4 +1,5 @@
 import os
+import sys
 from typing import Any, Callable, Tuple
 
 import click
@@ -8,9 +9,10 @@ from station.clients.central.central_client import CentralApiClient
 from station_ctl.config import validate_config, fix_config
 from station_ctl.config.command import render_config
 from station_ctl.config.validators import ConfigItemValidationStatus
-from station_ctl.constants import Icons
-from station_ctl.install.docker import download_docker_images, setup_volumes
+from station_ctl.constants import Icons, PHTDirectories
+from station_ctl.install.docker import download_docker_images, setup_docker
 from station_ctl.install.fs import check_create_pht_dirs
+from station_ctl.install import templates
 
 
 @click.command(help="Install the station software based on the configuration file.")
@@ -52,10 +54,11 @@ def install(ctx, install_dir):
     ctx.obj["registry"] = reg_credentials
 
     # setup docker
+    setup_docker()
     # download_docker_images(ctx)
-    setup_volumes()
 
-
+    # render templates according to configuration
+    write_init_sql(ctx)
 
 
 def _request_registry_credentials(ctx):
@@ -68,3 +71,22 @@ def _request_registry_credentials(ctx):
     credentials = client.get_registry_credentials(ctx.obj["station_id"])
     click.echo(Icons.CHECKMARK.value)
     return credentials
+
+
+def write_init_sql(ctx):
+    click.echo('Setting up database... ', nl=False)
+    try:
+
+        db_config = ctx.obj['db']
+        init_sql_path = os.path.join(
+            ctx.obj['install_dir'],
+            PHTDirectories.SETUP_SCRIPT_DIR.value,
+            'init.sql'
+        )
+        with open(init_sql_path, 'w') as f:
+            f.write(templates.render_init_sql(db_user=db_config["admin_user"]))
+
+    except Exception as e:
+        click.echo(Icons.CROSS.value)
+        click.echo(f'Error: {e}', err=True)
+        sys.exit(1)

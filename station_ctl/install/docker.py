@@ -6,7 +6,7 @@ import click
 from station_ctl import constants
 
 
-def setup_volumes():
+def setup_docker():
     client = _get_docker_client()
     click.echo('Creating docker volumes... ', nl=False)
     for vol in constants.DockerVolumes:
@@ -25,6 +25,23 @@ def setup_volumes():
             click.echo(f"{constants.Icons.CROSS.value} Failed to create volume: \n {e}")
             raise e
 
+    click.echo(constants.Icons.CHECKMARK.value)
+
+    click.echo('Creating docker networks... ', nl=False)
+    for net in constants.DockerNetworks:
+        try:
+            network = client.networks.get(net.value)
+        except docker.errors.NotFound:
+            try:
+                client.networks.create(name=net.value)
+
+
+            except Exception as e:
+                click.echo(f"{constants.Icons.CROSS.value} Failed to create network: \n {e}")
+                raise e
+        except Exception as e:
+            click.echo(f"{constants.Icons.CROSS.value} Failed to create network: \n {e}")
+            raise e
     click.echo(constants.Icons.CHECKMARK.value)
 
 

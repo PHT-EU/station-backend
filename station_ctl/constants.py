@@ -1,10 +1,14 @@
 from enum import Enum
 
-
 CERTS_REGEX = r'https\.certs\[([0-9]*)\]'
+
 
 class DockerVolumes(Enum):
     POSTGRES = "pg_pht_station"
+
+
+class DockerNetworks(Enum):
+    STATION = "pht-station"
 
 
 class PHTImages(Enum):
