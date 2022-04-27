@@ -3,10 +3,53 @@ from typing import List, Tuple
 from jinja2 import Environment
 
 from station_ctl.util import get_template_env
+from station_ctl.constants import PHTImages, ServiceImages
 
 
 def render_templates():
     pass
+
+
+def render_compose(config: dict, env: Environment = None) -> str:
+    """
+    Render the docker-compose.yml file for the given config.
+
+    Args:
+        config: config dict
+        env: template Environment
+
+    Returns:
+
+    """
+    if not env:
+        env = get_template_env()
+    template = env.get_template('compose.yml.tmpl')
+
+    service_images = {
+        "db": ServiceImages.POSTGRES.value,
+        "traefik": ServiceImages.TRAEFIK.value,
+        "redis": ServiceImages.REDIS.value,
+        "minio": ServiceImages.MINIO.value,
+    }
+
+    pht_images = {
+        "airflow": PHTImages.AIRFLOW.value,
+        "api": PHTImages.API.value,
+        "ui": PHTImages.UI.value,
+        "auth": PHTImages.AUTH.value,
+
+    }
+
+    service_data_dir = config["install_dir"] + "/data"
+
+
+    return template.render(
+        service_images=service_images,
+        pht_images=pht_images,
+        version=config['version'],
+        service_data_dir=service_data_dir,
+
+    )
 
 
 def render_airflow_config(domain: str, sql_alchemy_conn: str, env: Environment = None) -> str:
