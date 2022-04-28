@@ -2,7 +2,6 @@ from typing import Any, Dict
 
 import requests
 from sqlalchemy.orm import Session
-from station_worker.testing.db import SessionLocal
 import os
 
 
@@ -46,10 +45,3 @@ class ConductorRESTClient:
         print(r.request.body)
         r.raise_for_status()
         return r.json()
-
-
-if __name__ == '__main__':
-    sess = SessionLocal()
-    cond_url = "http://localhost:8000"
-    client = ConductorRESTClient(conductor_url=cond_url, station_id=1)
-    client.get_model_for_train(1, db=sess)

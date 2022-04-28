@@ -69,7 +69,7 @@ class AirflowClient:
 
         @return: dict: Airflow Status
         """
-        url = self.airflow_url + "health"
+        url = self.airflow_url + "/health"
         r = requests.get(url=url)
         try:
             r.raise_for_status()

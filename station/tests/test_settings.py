@@ -15,7 +15,7 @@ def test_settings_init_env_vars():
     # Test runtime environment variables
     with patch.dict(os.environ,
                     {
-                        'ENVIRONMENT': 'production',
+                        'ENVIRONMENT': 'development',
                         StationEnvironmentVariables.AUTH_SERVER_HOST.value: 'http://auth.example.com',
                         StationEnvironmentVariables.AUTH_SERVER_PORT.value: '3010',
                         StationEnvironmentVariables.AUTH_ROBOT_ID.value: 'robot',
@@ -27,7 +27,7 @@ def test_settings_init_env_vars():
                     }):
         settings = Settings()
         settings.setup()
-        assert settings.config.environment == 'production'
+        assert settings.config.environment == 'development'
         assert settings.config.auth.host == 'http://auth.example.com'
         assert settings.config.auth.port == 3010
         assert settings.config.auth.robot_id == 'robot'
