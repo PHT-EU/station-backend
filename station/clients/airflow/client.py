@@ -31,11 +31,13 @@ class AirflowClient:
             config_msg["conf"] = config
 
         url = self.airflow_url + f"dags/{dag_id}/dagRuns"
-        print(self.auth, self.airflow_user, self.airflow_pw)
-        print(url)
         r = requests.post(url=url, auth=self.auth, json=config_msg)
-        print(r.json())
-        r.raise_for_status()
+        try:
+            r.raise_for_status()
+
+        except Exception as e:
+            logger.error(f"Error triggering dag: \n{e}")
+            raise e
         return r.json()["dag_run_id"]
 
     def get_dag_run(self, dag_id: str):
@@ -44,15 +46,12 @@ class AirflowClient:
     def get_all_dag_runs(self, dag_id: str):
         url = self.airflow_url + f"dags/{dag_id}/dagRuns"
         r = requests.get(url=url, auth=self.auth)
-        print(r.json())
         r.raise_for_status()
-
         return r.json()
 
     def get_dags(self):
         url = self.airflow_url + "dags"
         r = requests.get(url=url, auth=self.auth)
-        print(r.json())
         r.raise_for_status()
 
         return r.json()
@@ -61,7 +60,6 @@ class AirflowClient:
     def create_connection(self, connection_dict: dict):
         url = self.airflow_url + "connections"
         r = requests.post(url=url, json=connection_dict)
-        print(r.json())
         r.raise_for_status()
 
     def health_check(self) -> HealthStatus:
