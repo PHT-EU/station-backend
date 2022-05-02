@@ -1,5 +1,6 @@
 import os
 import sys
+from typing import Tuple
 
 import click
 from rich.console import Console
@@ -56,10 +57,15 @@ def install(ctx, install_dir):
     setup_docker()
     # download_docker_images(ctx)
 
-    # render templates according to configuration
-    write_init_sql(ctx)
-    write_traefik_configs(ctx)
-    write_airflow_config(ctx)
+    # render templates according to configuration and store output paths in configuration object
+    ctx.obj["init_sql_path"] = write_init_sql(ctx)
+    traefik_config_path, router_config_path = write_traefik_configs(ctx)
+    ctx.obj["traefik_config_path"] = traefik_config_path
+    ctx.obj["router_config_path"] = router_config_path
+    ctx.obj["airflow_config_path"] = write_airflow_config(ctx)
+
+    # render the final compose template
+    write_compose_file(ctx)
 
 
 def _request_registry_credentials(ctx):
@@ -74,7 +80,7 @@ def _request_registry_credentials(ctx):
     return credentials
 
 
-def write_init_sql(ctx):
+def write_init_sql(ctx) -> str:
     click.echo('Setting up database... ', nl=False)
     try:
 
@@ -88,6 +94,7 @@ def write_init_sql(ctx):
             f.write(templates.render_init_sql(db_user=db_config["admin_user"]))
 
         click.echo(Icons.CHECKMARK.value)
+        return str(init_sql_path)
 
     except Exception as e:
         click.echo(Icons.CROSS.value)
@@ -95,7 +102,7 @@ def write_init_sql(ctx):
         sys.exit(1)
 
 
-def write_traefik_configs(ctx):
+def write_traefik_configs(ctx) -> Tuple[str, str]:
     click.echo('Setting up traefik... ', nl=False)
     try:
         traefik_config, router_config = templates.render_traefik_configs(
@@ -124,6 +131,7 @@ def write_traefik_configs(ctx):
             f.write(router_config)
 
         click.echo(Icons.CHECKMARK.value)
+        return str(traefik_config_path), str(router_config_path)
 
     except Exception as e:
         click.echo(Icons.CROSS.value)
@@ -131,7 +139,7 @@ def write_traefik_configs(ctx):
         sys.exit(1)
 
 
-def write_airflow_config(ctx):
+def write_airflow_config(ctx) -> str:
     click.echo('Setting up airflow... ', nl=False)
     try:
 
@@ -152,8 +160,22 @@ def write_airflow_config(ctx):
             f.write(airflow_config)
 
         click.echo(Icons.CHECKMARK.value)
+        return str(airflow_config_path)
 
     except Exception as e:
         click.echo(Icons.CROSS.value)
         click.echo(f'Error: {e}', err=True)
         sys.exit(1)
+
+
+def write_compose_file(ctx):
+    compose_path = os.path.join(ctx.obj["install_dir"], "docker-compose-test.yml")
+    click.echo(f'Writing compose file to {compose_path}... ', nl=False)
+
+    content = templates.render_compose(config=ctx.obj)
+    with open(compose_path, 'w') as f:
+        f.write(content)
+
+    click.echo(Icons.CHECKMARK.value)
+
+

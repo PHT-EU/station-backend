@@ -20,7 +20,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
     """
     if not env:
         env = get_template_env()
-    template = env.get_template('compose.yml.tmpl')
+    template = env.get_template('docker-compose.yml.tmpl')
 
     service_images = {
         "db": ServiceImages.POSTGRES.value,
@@ -40,10 +40,77 @@ def render_compose(config: dict, env: Environment = None) -> str:
     service_data_dir = os.path.join(config["install_dir"], PHTDirectories.SERVICE_DATA_DIR.value)
 
     db_config = {
+        "init_sql_path": config["init_sql_path"],
         "env": {
-            "POSTGRES_USER": config["admin_user"],
-            "POSTGRES_PASSWORD": config["admin_password"],
+            "POSTGRES_USER": config["db"]["admin_user"],
+            "POSTGRES_PASSWORD": config["db"]["admin_password"],
         }
+    }
+
+    certs_dir = str(os.path.join(config["install_dir"], PHTDirectories.CERTS_DIR.value))
+
+    proxy_config = {
+        "http_port": config["http"]["port"],
+        "https_port": config["https"]["port"],
+        "labels": [
+            "traefik.enable=true",
+            "traefik.http.routers.traefik=true"
+        ],
+        "traefik_config": config["traefik_config_path"],
+        "router_config": config["router_config_path"],
+        "certs_dir": certs_dir,
+    }
+
+    # todo complete auth configuration
+    auth_config = {
+        "env": {
+            "ADMIN_USER": config["auth"]["admin_user"],
+            "ADMIN_PASSWORD": config["auth"]["admin_password"],
+        },
+        "labels": [
+            "traefik.enable=true",
+        ]
+    }
+
+    # todo complete api config
+    api_config = {
+        "env": {
+            "STATION_ID": config["station_id"],
+        },
+        "labels": [
+            "traefik.enable=true",
+        ]
+    }
+
+    minio_config = {
+        "env": {
+            "MINIO_ACCESS_KEY": config["minio"]["admin_user"],
+            "MINIO_SECRET_KEY": config["minio"]["admin_password"],
+        },
+        "labels": [
+            "traefik.enable=true",
+            "traefik.http.routers.minio.tls=true",
+            f'traefik.http.routers.minio.rule=Host("minio.{config["https"]["domain"]}")',
+            "traefik.http.routers.minio.service=minio",
+            "traefik.http.services.minio.loadbalancer.server.port=9000",
+            "traefik.http.routers.minio-console.tls=true",
+            f'traefik.http.routers.minio-console.rule=Host("minio-console.{config["https"]["domain"]}")',
+            "traefik.http.routers.minio-console.service=minio-console",
+            "traefik.http.services.minio-console.loadbalancer.server.port=9001"
+        ]
+    }
+    airflow_config = {
+        "private_key": config["central"]["private_key"],
+        "config_path": config["airflow_config_path"],
+        "env": {
+            "STATION_ID": config["station_id"],
+        },
+        "labels": [
+            "traefik.enable=true",
+            "traefik.http.routers.airflow.tls=true",
+            f'traefik.http.routers.airflow.rule=Host("airflow.{config["https"]["domain"]}")',
+            "traefik.http.services.airflow.loadbalancer.server.port=8080"
+        ]
     }
 
     return template.render(
@@ -52,7 +119,11 @@ def render_compose(config: dict, env: Environment = None) -> str:
         version=config['version'],
         service_data_dir=service_data_dir,
         db_config=db_config,
-
+        proxy_config=proxy_config,
+        auth_config=auth_config,
+        api_config=api_config,
+        minio_config=minio_config,
+        airflow_config=airflow_config
     )
 
 

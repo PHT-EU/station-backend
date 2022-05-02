@@ -3,8 +3,8 @@ from setuptools import setup, find_packages
 with open("README.md") as readme_file:
     readme = readme_file.read()
 
-# with open("CHANGELOG.md") as history_file:
-#     history = history_file.read()
+with open("CHANGELOG.md") as history_file:
+    history = history_file.read()
 
 setup(
     name="pht-station",
@@ -13,7 +13,7 @@ setup(
     author_email="michael.graf@uni-tuebingen.de",
     python_requires=">=3.7",
     classifiers=[
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Natural Language :: English",
@@ -24,7 +24,7 @@ setup(
     ],
     description="Package containing the python code for the PHT station. This includes packages containing the API, CLI"
                 "as well as as other utilities for interacting with the PHT station infrastructure.",
-    long_description=readme,
+    long_description=readme + history,
     long_description_content_type="text/markdown",
     packages=find_packages(),
     install_requires=[
@@ -52,5 +52,9 @@ setup(
             'station_ctl = station.ctl.cli:cli',
         ],
     },
+    package_data={
+        # If any package contains .tmpl files include them :
+        "": ["*.tmpl"],
+    }
 
 )

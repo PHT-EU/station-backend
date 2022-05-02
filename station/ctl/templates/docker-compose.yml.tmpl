@@ -11,12 +11,12 @@ services:
     restart: unless-stopped
     container_name: pht-station-db
     volumes:
-      - ./setup_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - {{ db_config.init_sql_path}}:/docker-entrypoint-initdb.d/init.sql
       - pg_pht_station:/var/lib/postgresql/data
     environment:
       {% for key, value in db_config.env.items() %}
         - {{ key }}={{ value }}
-      {% endfor %}
+      {%- endfor %}
 
   traefik:
     image: {{ service_images.traefik }}
@@ -28,15 +28,15 @@ services:
       - "{{ proxy_config.https_port }}:443"
       - "8081:8080" # todo check if this is needed
     volumes:
-      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
-      - ./traefik/config.yml:/etc/traefik/config.yml:ro
-      - ./certs:/etc/certs:ro
+      - {{ proxy_config.traefik_config }}:/etc/traefik/traefik.yml:ro
+      - {{ proxy_config.router_config }}:/etc/traefik/config.yml:ro
+      - {{ proxy_config.certs_dir }}:/etc/certs:ro
       # So that Traefik can listen to the Docker events
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
       {% for label in proxy_config.labels %}
         - {{ label }}
-      {% endfor %}
+      {%- endfor %}
 
   station-auth:
     image: {{ pht_images.auth }}:{{ version }}
@@ -48,14 +48,14 @@ services:
     environment:
       {% for key, value in auth_config.env.items() %}
         - {{ key }}={{ value }}
-      {% endfor %}
+      {%- endfor %}
     command:
       - server
       - start
     labels:
       {% for label in auth_config.labels %}
         - {{ label }}
-      {% endfor %}
+      {%- endfor %}
 
   station-api:
     image: {{ pht_images.api }}:{{ version }}
@@ -64,13 +64,13 @@ services:
     environment:
       {% for key, value in api_config.env.items() %}
         - {{ key }}={{ value }}
-      {% endfor %}
+      {%- endfor %}
     ports:
       - "{{ station_port }}:8000"
     labels:
       {% for label in api_config.labels %}
         - {{ label }}
-      {% endfor %}
+      {%- endfor %}
 
   redis:
     image: {{ service_images.redis }}
@@ -79,24 +79,27 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - ./data/redis:/data
+      - {{ service_data_dir }}/redis:/data
 
   minio:
     image: {{ service_images.minio }}
     restart: unless-stopped
     container_name: pht-station-minio
+    command: server /data --console-address ":9001"
     ports:
       - "9000:9000"
     volumes:
-      - ./data/minio:/data
+      - {{ service_data_dir }}/minio:/data
     environment:
+      - MINIO_SERVER_URL=http://127.0.0.1:9000
+      - MINIO_BROWSER_REDIRECT_URL=http://127.0.0.1:9001
       {% for key, value in minio_config.env.items() %}
-        - {{ key }}={{ value }}
-      {% endfor %}
+      - {{ key }}={{ value }}
+      {%- endfor %}
     labels:
       {% for label in minio_config.labels %}
         - {{ label }}
-      {% endfor %}
+      {%- endfor %}
 
   airflow:
     image: {{ pht_images.airflow }}:{{ version }}
@@ -104,20 +107,21 @@ services:
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - {{ private_key }}:/opt/private_key.pem
+      - {{ airflow_config.private_key }}:/opt/private_key.pem
+      - {{ airflow_config.config_path }}:/root/airflow/airflow.cfg
       - ./data/station:/opt/station_data
     depends_on:
       - postgres
     ports:
       - "8080:8080"
     environment:
-      {% for key, value in minio_config.env.items() %}
+      {% for key, value in airflow_config.env.items() %}
         - {{ key }}={{ value }}
-      {% endfor %}
+      {%- endfor %}
     labels:
-      {% for label in minio_config.labels %}
+      {% for label in airflow_config.labels %}
         - {{ label }}
-      {% endfor %}
+      {%- endfor %}
 
 networks:
   default:
