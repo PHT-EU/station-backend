@@ -1,11 +1,30 @@
 from setuptools import setup, find_packages
 
+with open("README.md") as readme_file:
+    readme = readme_file.read()
+
+with open("CHANGELOG.md") as history_file:
+    history = history_file.read()
+
 setup(
     name="pht-station",
     version="0.1",
+    author="Michael Graf",
+    author_email="michael.graf@uni-tuebingen.de",
+    python_requires=">=3.7",
+    classifiers=[
+        "Development Status :: 2 - Pre-Alpha",
+        "Intended Audience :: Developers",
+        "License :: OSI Approved :: MIT License",
+        "Natural Language :: English",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+    ],
     description="Package containing the python code for the PHT station. This includes packages containing the API, CLI"
                 "as well as as other utilities for interacting with the PHT station infrastructure.",
-    long_description=open("README.md").read(),
+    long_description=readme + history,
     packages=find_packages(),
     install_requires=[
         "fastapi[all]",
