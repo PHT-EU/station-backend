@@ -66,7 +66,7 @@ services:
         - {{ key }}={{ value }}
       {%- endfor %}
     ports:
-      - "{{ station_port }}:8000"
+      - "8000:8000"
     labels:
       {% for label in api_config.labels %}
         - {{ label }}
