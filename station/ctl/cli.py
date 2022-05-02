@@ -3,7 +3,7 @@ import os
 import click
 from station.ctl.config import load_config, find_config
 from station.ctl.install.command import install
-from station.ctl.config import config
+from station.ctl.config.command import config
 from station.ctl.constants import Icons
 
 

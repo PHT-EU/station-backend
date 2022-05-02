@@ -24,10 +24,10 @@ entryPoints:
     address: ":{{ http_port }}"
     {% if https_enabled %}
     http:
-    redirections:
-     entryPoint:
-        to: https
-        scheme: https
+      redirections:
+       entryPoint:
+         to: https
+         scheme: https
     {% endif %}
   {% if https_enabled %}
   https:

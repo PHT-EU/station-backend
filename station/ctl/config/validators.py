@@ -518,9 +518,6 @@ def _validate_config_value(
 def _environment_validator(environment: str) -> Tuple[bool, Union[str, None]]:
     try:
         env = ApplicationEnvironment(environment)
-        if env == ApplicationEnvironment.DEVELOPMENT:
-            click.echo(f'{Icons.WARNING} {env.value} is not a production environment')
-
         return True, None
     except ValueError:
         return False, f'Invalid environment "{environment}"'

@@ -58,6 +58,8 @@ def install(ctx, install_dir):
 
     # render templates according to configuration
     write_init_sql(ctx)
+    write_traefik_configs(ctx)
+    write_airflow_config(ctx)
 
 
 def _request_registry_credentials(ctx):
@@ -84,6 +86,72 @@ def write_init_sql(ctx):
         )
         with open(init_sql_path, 'w') as f:
             f.write(templates.render_init_sql(db_user=db_config["admin_user"]))
+
+        click.echo(Icons.CHECKMARK.value)
+
+    except Exception as e:
+        click.echo(Icons.CROSS.value)
+        click.echo(f'Error: {e}', err=True)
+        sys.exit(1)
+
+
+def write_traefik_configs(ctx):
+    click.echo('Setting up traefik... ', nl=False)
+    try:
+        traefik_config, router_config = templates.render_traefik_configs(
+            http_port=ctx.obj['http']['port'],
+            https_port=ctx.obj['https']['port'],
+            https_enabled=True,
+            domain=ctx.obj['https']['domain'],
+            certs=ctx.obj['https']['certs']
+        )
+
+        traefik_path = os.path.join(
+            ctx.obj['install_dir'],
+            PHTDirectories.CONFIG_DIR.value,
+            'traefik'
+        )
+
+        traefik_config_path = os.path.join(traefik_path, "traefik.yml")
+        router_config_path = os.path.join(traefik_path, "config.yml")
+
+        os.makedirs(traefik_path, exist_ok=True)
+
+        with open(traefik_config_path, 'w') as f:
+            f.write(traefik_config)
+
+        with open(router_config_path, 'w') as f:
+            f.write(router_config)
+
+        click.echo(Icons.CHECKMARK.value)
+
+    except Exception as e:
+        click.echo(Icons.CROSS.value)
+        click.echo(f'Error: {e}', err=True)
+        sys.exit(1)
+
+
+def write_airflow_config(ctx):
+    click.echo('Setting up airflow... ', nl=False)
+    try:
+
+        db_connection_string = f"postgresql+psycopg2://{ctx.obj['db']['admin_user']}:{ctx.obj['db']['admin_password']}" \
+                               f"@postgres/airflow"
+        airflow_config = templates.render_airflow_config(
+            sql_alchemy_conn=db_connection_string,
+            domain=ctx.obj['https']['domain']
+        )
+
+        airflow_config_path = os.path.join(
+            ctx.obj['install_dir'],
+            PHTDirectories.CONFIG_DIR.value,
+            'airflow.cfg'
+        )
+
+        with open(airflow_config_path, 'w') as f:
+            f.write(airflow_config)
+
+        click.echo(Icons.CHECKMARK.value)
 
     except Exception as e:
         click.echo(Icons.CROSS.value)
