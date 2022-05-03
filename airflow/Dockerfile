@@ -3,6 +3,8 @@ MAINTAINER michael.graf@uni-tuebingen.de
 
 EXPOSE 8080 5555 8793
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 # install python3.8 and os dependencies
 RUN apt -y update && apt-get -y install software-properties-common && \
     apt-get install -yqq --no-install-recommends --no-install-suggests \
@@ -34,9 +36,7 @@ COPY ./airflow/requirements.txt /tmp/requirements.txt
 RUN pip install -r /tmp/requirements.txt && \
     pip install git+https://github.com/PHT-Medic/train-container-library.git
 
-COPY ./station /opt/station/station
-COPY ./station_worker /opt/station/station_worker
-COPY ./setup.py /opt/station/setup.py
+COPY . /opt/station
 RUN pip install /opt/station
 
 
