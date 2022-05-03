@@ -19,6 +19,4 @@ RUN pip install /home
 
 WORKDIR /
 
-CMD ["python", "/home/station/run_station.py"]
-
-
+CMD ["python", "/home/station/app/run_station.py"]
