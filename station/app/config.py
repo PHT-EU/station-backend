@@ -588,7 +588,7 @@ class Settings:
         else:
             # raise error if no airflow is configured in production mode
             if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
-                raise ValueError(f"{Emojis.ERROR}   No airflow config specified in config or env vars")
+                raise ValueError(f"{Emojis.ERROR.value}   No airflow config specified in config or env vars")
             else:
                 logger.warning(f"No airflow config specified in config or env vars, generating defaults for "
                                f"development mode")
@@ -599,7 +599,7 @@ class Settings:
             self.create_station_db_connection()
         except Exception as e:
             if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
-                raise ValueError("{Emojis.ERROR}   Unable to add database connection to airflow")
+                raise ValueError(f"{Emojis.ERROR.value}   Unable to add database connection to airflow")
             else:
                 logger.warning(f"Unable to add database connection to airflow. Is airflow running?")
                 logger.error(e)

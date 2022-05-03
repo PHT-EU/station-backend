@@ -82,8 +82,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
             StationEnvironmentVariables.STATION_DB.value: db_connection_string,
             StationEnvironmentVariables.FERNET_KEY.value: config["api"]["fernet_key"],
             StationEnvironmentVariables.ENVIRONMENT.value: config["environment"],
-            StationEnvironmentVariables.AIRFLOW_HOST.value: "airflow",
-            StationEnvironmentVariables.AIRFLOW_PORT.value: "8080",
+            StationEnvironmentVariables.AIRFLOW_API_URL.value: f"http://airflow:8080/api/v1/",
             StationEnvironmentVariables.AIRFLOW_USER.value: config["airflow"]["admin_user"],
             StationEnvironmentVariables.AIRFLOW_PW.value: config["airflow"]["admin_password"],
             StationEnvironmentVariables.MINIO_HOST.value: "minio",
@@ -127,7 +126,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
         "labels": [
             "traefik.enable=true",
             "traefik.http.routers.airflow.tls=true",
-            f'traefik.http.routers.airflow.rule=Host("airflow.{config["https"]["domain"]}")',
+            f'traefik.http.routers.airflow.rule=Host("{config["https"]["domain"]}") && PathPrefix("/airflow")',
             "traefik.http.services.airflow.loadbalancer.server.port=8080"
         ]
     }

@@ -10,7 +10,6 @@ providers:
     endpoint: "unix:///var/run/docker.sock"
     watch: true
     exposedByDefault: false
-    network: pht-station
 
   file:
     filename: /etc/traefik/config.yml
