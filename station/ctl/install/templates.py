@@ -5,6 +5,7 @@ from jinja2 import Environment
 
 from station.ctl.util import get_template_env
 from station.ctl.constants import PHTImages, ServiceImages, PHTDirectories
+from station.app.config import StationEnvironmentVariables
 
 
 def render_compose(config: dict, env: Environment = None) -> str:
@@ -72,10 +73,26 @@ def render_compose(config: dict, env: Environment = None) -> str:
         ]
     }
 
+    db_connection_string = f"postgresql+psycopg2://{config['db']['admin_user']}:{config['db']['admin_password']}" \
+                           f"@postgres/pht_station"
     # todo complete api config
     api_config = {
         "env": {
             "STATION_ID": config["station_id"],
+            StationEnvironmentVariables.STATION_DB.value: db_connection_string,
+            StationEnvironmentVariables.FERNET_KEY.value: config["api"]["fernet_key"],
+            StationEnvironmentVariables.ENVIRONMENT.value: config["environment"],
+            StationEnvironmentVariables.AIRFLOW_HOST.value: "airflow",
+            StationEnvironmentVariables.AIRFLOW_PORT.value: "8080",
+            StationEnvironmentVariables.AIRFLOW_USER.value: config["airflow"]["admin_user"],
+            StationEnvironmentVariables.AIRFLOW_PW.value: config["airflow"]["admin_password"],
+            StationEnvironmentVariables.MINIO_HOST.value: "minio",
+            StationEnvironmentVariables.MINIO_PORT.value: "9000",
+            StationEnvironmentVariables.MINIO_ACCESS_KEY.value: config["minio"]["admin_user"],
+            StationEnvironmentVariables.MINIO_SECRET_KEY.value: config["minio"]["admin_password"],
+            StationEnvironmentVariables.REDIS_HOST.value: "redis",
+            #  todo auth
+
         },
         "labels": [
             "traefik.enable=true",
@@ -84,8 +101,8 @@ def render_compose(config: dict, env: Environment = None) -> str:
 
     minio_config = {
         "env": {
-            "MINIO_ACCESS_KEY": config["minio"]["admin_user"],
-            "MINIO_SECRET_KEY": config["minio"]["admin_password"],
+            "MINIO_ROOT_USER": config["minio"]["admin_user"],
+            "MINIO_ROOT_PASSWORD": config["minio"]["admin_password"],
         },
         "labels": [
             "traefik.enable=true",
@@ -104,6 +121,8 @@ def render_compose(config: dict, env: Environment = None) -> str:
         "config_path": config["airflow_config_path"],
         "env": {
             "STATION_ID": config["station_id"],
+            "AIRFLOW_USER": config["airflow"]["admin_user"],
+            "AIRFLOW_PW": config["airflow"]["admin_password"],
         },
         "labels": [
             "traefik.enable=true",

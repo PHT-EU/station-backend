@@ -15,7 +15,7 @@ services:
       - pg_pht_station:/var/lib/postgresql/data
     environment:
       {% for key, value in db_config.env.items() %}
-        - {{ key }}={{ value }}
+      - {{ key }}={{ value }}
       {%- endfor %}
 
   traefik:
@@ -35,7 +35,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
       {% for label in proxy_config.labels %}
-        - "{{ label }}"
+      - {{ label }}
       {%- endfor %}
 
   station-auth:
@@ -47,14 +47,14 @@ services:
       - "3010:3010"
     environment:
       {% for key, value in auth_config.env.items() %}
-        - {{ key }}={{ value }}
+      - {{ key }}={{ value }}
       {%- endfor %}
     command:
       - server
       - start
     labels:
       {% for label in auth_config.labels %}
-        - "{{ label }}"
+      - {{ label }}
       {%- endfor %}
 
   station-api:
@@ -63,13 +63,13 @@ services:
     container_name: pht-station-api
     environment:
       {% for key, value in api_config.env.items() %}
-        - {{ key }}={{ value }}
+      - {{ key }}={{ value }}
       {%- endfor %}
     ports:
       - "8000:8000"
     labels:
       {% for label in api_config.labels %}
-        - "{{ label }}"
+      - {{ label }}
       {%- endfor %}
 
   redis:
@@ -98,7 +98,7 @@ services:
       {%- endfor %}
     labels:
       {% for label in minio_config.labels %}
-        - "{{ label }}"
+      - {{ label }}
       {%- endfor %}
 
   airflow:
@@ -115,12 +115,13 @@ services:
     ports:
       - "8080:8080"
     environment:
+      - PRIVATE_KEY_PATH=/opt/private_key.pem
       {% for key, value in airflow_config.env.items() %}
-        - {{ key }}={{ value }}
+      - {{ key }}={{ value }}
       {%- endfor %}
     labels:
       {% for label in airflow_config.labels %}
-        - "{{ label }}"
+      - {{ label }}
       {%- endfor %}
 
 networks:

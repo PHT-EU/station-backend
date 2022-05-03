@@ -80,7 +80,7 @@ class AirflowSettings(BaseModel):
     station_db_conn_id: Optional[str] = "psql_station_db"
     station_db_conn_type: Optional[str] = "postgres"
     station_db_port: Optional[int] = 5432
-    station_db_host: Optional[str] = 'pg_station'
+    station_db_host: Optional[str] = 'postgres'
 
 
 class MinioSettings(BaseModel):
