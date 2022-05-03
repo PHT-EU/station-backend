@@ -35,7 +35,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     labels:
       {% for label in proxy_config.labels %}
-        - {{ label }}
+        - "{{ label }}"
       {%- endfor %}
 
   station-auth:
@@ -54,7 +54,7 @@ services:
       - start
     labels:
       {% for label in auth_config.labels %}
-        - {{ label }}
+        - "{{ label }}"
       {%- endfor %}
 
   station-api:
@@ -69,7 +69,7 @@ services:
       - "8000:8000"
     labels:
       {% for label in api_config.labels %}
-        - {{ label }}
+        - "{{ label }}"
       {%- endfor %}
 
   redis:
@@ -98,7 +98,7 @@ services:
       {%- endfor %}
     labels:
       {% for label in minio_config.labels %}
-        - {{ label }}
+        - "{{ label }}"
       {%- endfor %}
 
   airflow:
@@ -120,7 +120,7 @@ services:
       {%- endfor %}
     labels:
       {% for label in airflow_config.labels %}
-        - {{ label }}
+        - "{{ label }}"
       {%- endfor %}
 
 networks:
