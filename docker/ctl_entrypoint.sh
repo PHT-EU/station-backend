@@ -2,5 +2,4 @@
 
 set -e
 
-echo "$@"
 station_ctl "$@"
