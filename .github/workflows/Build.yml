@@ -32,7 +32,7 @@ jobs:
         run: docker build . --file ./docker/Dockerfile_api --tag $API_IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
 
       - name: Build CTL Image
-        run: docker build . --file ./docker/Dockerfile_ctl --tag CTL_IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
+        run: docker build . --file ./docker/Dockerfile_ctl --tag $CTL_IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
         
       - name: Build Airflow Image
         run: docker build . --file ./airflow/Dockerfile --tag $AIRFLOW_IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
