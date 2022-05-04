@@ -76,7 +76,10 @@ def render_compose(config: dict, env: Environment = None) -> str:
     db_connection_string = f"postgresql+psycopg2://{config['db']['admin_user']}:{config['db']['admin_password']}" \
                            f"@postgres/pht_station"
     # todo complete api config
-    print(config["registry"])
+    registry_user = config["registry"]["user"]
+    if "$" in registry_user:
+        registry_user = registry_user.replace("$", "$$")
+
     api_config = {
         "env": {
             "STATION_ID": config["station_id"],
@@ -96,13 +99,16 @@ def render_compose(config: dict, env: Environment = None) -> str:
             StationEnvironmentVariables.AUTH_ROBOT_ID.value: config["auth"]["robot_id"],
             StationEnvironmentVariables.AUTH_ROBOT_SECRET.value: config["auth"]["robot_secret"],
             StationEnvironmentVariables.REGISTRY_URL.value: config["registry"]["address"],
-            StationEnvironmentVariables.REGISTRY_USER.value: config["registry"]["user"],
+            StationEnvironmentVariables.REGISTRY_USER.value: registry_user,
             StationEnvironmentVariables.REGISTRY_PW.value: config["registry"]["password"],
             #  todo auth
 
         },
         "labels": [
             "traefik.enable=true",
+            "traefik.http.routers.api.tls=true",
+            f'traefik.http.routers.api.rule=Host("{config["https"]["domain"]}") && PathPrefix("/api")',
+            "traefik.http.services.api.loadbalancer.server.port=8001"
         ]
     }
 
@@ -130,6 +136,10 @@ def render_compose(config: dict, env: Environment = None) -> str:
             "STATION_ID": config["station_id"],
             "AIRFLOW_USER": config["airflow"]["admin_user"],
             "AIRFLOW_PW": config["airflow"]["admin_password"],
+            "HARBOR_URL": config["registry"]["address"],
+            "HARBOR_USER": registry_user,
+            "HARBOR_PW": config["registry"]["password"],
+
         },
         "labels": [
             "traefik.enable=true",
@@ -193,7 +203,8 @@ def render_traefik_configs(
         http_port=http_port,
         https_port=https_port,
         https_enabled=https_enabled,
-        dashboard=True
+        dashboard=True,
+        domain=domain,
     )
 
     # render traefik router config
@@ -231,6 +242,7 @@ def _make_traefik_config(
         http_port: int = 80,
         https_port: int = None,
         https_enabled: bool = True,
+        domain: str = None,
         dashboard: bool = False) -> str:
     """
     Render the general traefik config file.
@@ -250,7 +262,8 @@ def _make_traefik_config(
         dashboard=dashboard,
         http_port=http_port,
         https_port=https_port,
-        https_enabled=https_enabled
+        https_enabled=https_enabled,
+        domain=domain
     )
 
 

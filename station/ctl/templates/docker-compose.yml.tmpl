@@ -13,8 +13,7 @@ services:
     volumes:
       - {{ db_config.init_sql_path}}:/docker-entrypoint-initdb.d/init.sql
       - pg_pht_station:/var/lib/postgresql/data
-    environment:
-      {% for key, value in db_config.env.items() %}
+    environment: {% for key, value in db_config.env.items() %}
       - {{ key }}={{ value }}
       {%- endfor %}
 
@@ -33,42 +32,37 @@ services:
       - {{ proxy_config.certs_dir }}:/etc/certs:ro
       # So that Traefik can listen to the Docker events
       - /var/run/docker.sock:/var/run/docker.sock
-    labels:
-      {% for label in proxy_config.labels %}
+    labels:{% for label in proxy_config.labels %}
       - {{ label }}
       {%- endfor %}
 
-  station-auth:
+  auth:
     image: {{ pht_images.auth }}:{{ version }}
-    container_name: station-auth
+    container_name: pht-station-auth
     volumes:
       - {{ service_data_dir }}/auth:/usr/src/app/writable
     ports:
       - "3010:3010"
-    environment:
-      {% for key, value in auth_config.env.items() %}
+    environment:{% for key, value in auth_config.env.items() %}
       - {{ key }}={{ value }}
       {%- endfor %}
     command:
       - server
       - start
-    labels:
-      {% for label in auth_config.labels %}
+    labels:{% for label in auth_config.labels %}
       - {{ label }}
       {%- endfor %}
 
-  station-api:
+  api:
     image: {{ pht_images.api }}:{{ version }}
     restart: unless-stopped
     container_name: pht-station-api
-    environment:
-      {% for key, value in api_config.env.items() %}
+    environment:{% for key, value in api_config.env.items() %}
       - {{ key }}={{ value }}
       {%- endfor %}
     ports:
       - "8000:8000"
-    labels:
-      {% for label in api_config.labels %}
+    labels: {% for label in api_config.labels %}
       - {{ label }}
       {%- endfor %}
 
@@ -92,12 +86,10 @@ services:
       - {{ service_data_dir }}/minio:/data
     environment:
       - MINIO_SERVER_URL=http://127.0.0.1:9000
-      - MINIO_BROWSER_REDIRECT_URL=http://127.0.0.1:9001
-      {% for key, value in minio_config.env.items() %}
+      - MINIO_BROWSER_REDIRECT_URL=http://127.0.0.1:9001 {% for key, value in minio_config.env.items() %}
       - {{ key }}={{ value }}
       {%- endfor %}
-    labels:
-      {% for label in minio_config.labels %}
+    labels:{% for label in minio_config.labels %}
       - {{ label }}
       {%- endfor %}
 
@@ -115,12 +107,10 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - PRIVATE_KEY_PATH=/opt/private_key.pem
-      {% for key, value in airflow_config.env.items() %}
+      - PRIVATE_KEY_PATH=/opt/private_key.pem {% for key, value in airflow_config.env.items() %}
       - {{ key }}={{ value }}
       {%- endfor %}
-    labels:
-      {% for label in airflow_config.labels %}
+    labels: {% for label in airflow_config.labels %}
       - {{ label }}
       {%- endfor %}
 

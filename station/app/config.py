@@ -132,8 +132,8 @@ class StationConfig(BaseModel):
     Object containing the configuration of the station.
     """
     station_id: Union[int, str]
-    host: Optional[Union[AnyHttpUrl, str]] = os.getenv(StationEnvironmentVariables.STATION_API_HOST.value, "127.0.0.1")
-    port: Optional[int] = os.getenv(StationEnvironmentVariables.STATION_API_PORT.value, 8001)
+    host: Optional[Union[AnyHttpUrl, str]] = os.getenv(StationEnvironmentVariables.STATION_API_HOST.value, "0.0.0.0")
+    port: Optional[int] = os.getenv(StationEnvironmentVariables.STATION_API_PORT.value, 8000)
     db: Optional[SecretStr] = "sqlite:///./app.db"
     environment: Optional[StationRuntimeEnvironment] = StationRuntimeEnvironment.DEVELOPMENT
     fernet_key: Optional[SecretStr] = None
