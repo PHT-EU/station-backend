@@ -108,7 +108,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
             "traefik.enable=true",
             "traefik.http.routers.api.tls=true",
             f'traefik.http.routers.api.rule=Host("{config["https"]["domain"]}") && PathPrefix("/api")',
-            "traefik.http.services.api.loadbalancer.server.port=8001"
+            "traefik.http.services.api.loadbalancer.server.port=8000"
         ]
     }
 
