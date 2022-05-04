@@ -1,0 +1,21 @@
+FROM python:3.9
+MAINTAINER michael.graf@uni-tuebingen.de
+# update python version and replace python with python 3
+#RUN apt -y update && apt-get -y install software-properties-common && \
+#    add-apt-repository ppa:deadsnakes/ppa && apt -y update && apt -y install git && \
+#    apt-get install -y python3.9 && apt install python-is-python3 && apt install -y python3-pip && \
+#    rm -rf /var/lib/apt/lists && \
+RUN pip install pipenv
+
+
+# Install the packages from github
+RUN pip install git+https://github.com/PHT-Medic/train-container-library.git
+RUN pip install git+https://github.com/migraf/fhir-kindling.git
+
+# Install station package
+COPY . /home/station
+RUN pip install /home/station
+
+WORKDIR /
+
+CMD ["python", "/home/station/station/app/run_station.py"]

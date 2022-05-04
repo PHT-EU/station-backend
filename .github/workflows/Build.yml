@@ -13,6 +13,7 @@ on:
 
 env:
   API_IMAGE_NAME: station-api
+  CTL_IMAGE_NAME: station-ctl
   AIRFLOW_IMAGE_NAME: station-airflow
 
 jobs:
@@ -28,7 +29,10 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Build API Image
-        run: docker build . --file Dockerfile --tag $API_IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
+        run: docker build . --file ./docker/Dockerfile_api --tag $API_IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
+
+      - name: Build CTL Image
+        run: docker build . --file ./docker/Dockerfile_ctl --tag CTL_IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
         
       - name: Build Airflow Image
         run: docker build . --file ./airflow/Dockerfile --tag $AIRFLOW_IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
@@ -51,6 +55,21 @@ jobs:
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
           docker tag $API_IMAGE_NAME $IMAGE_ID:$VERSION
+          docker push $IMAGE_ID:$VERSION
+      - name: Push CTL Image
+        run: |
+          IMAGE_ID=ghcr.io/${{ github.repository_owner }}/CTL_IMAGE_NAME
+          # Change all uppercase to lowercase
+          IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
+          # Strip git ref prefix from version
+          VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+          # Strip "v" prefix from tag name
+          [[ "${{ github.ref }}" == "refs/tags/"* ]] && VERSION=$(echo $VERSION | sed -e 's/^v//')
+          # Use Docker `latest` tag convention
+          [ "$VERSION" == "master" ] && VERSION=latest
+          echo IMAGE_ID=$IMAGE_ID
+          echo VERSION=$VERSION
+          docker tag $CTL_IMAGE_NAME $IMAGE_ID:$VERSION
           docker push $IMAGE_ID:$VERSION
       - name: Push Airflow Image
         run: |

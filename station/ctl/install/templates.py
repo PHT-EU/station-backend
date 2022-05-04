@@ -75,7 +75,6 @@ def render_compose(config: dict, env: Environment = None) -> str:
 
     db_connection_string = f"postgresql+psycopg2://{config['db']['admin_user']}:{config['db']['admin_password']}" \
                            f"@postgres/pht_station"
-    # todo complete api config
     registry_user = config["registry"]["user"]
     if "$" in registry_user:
         registry_user = registry_user.replace("$", "$$")
@@ -101,7 +100,6 @@ def render_compose(config: dict, env: Environment = None) -> str:
             StationEnvironmentVariables.REGISTRY_URL.value: config["registry"]["address"],
             StationEnvironmentVariables.REGISTRY_USER.value: registry_user,
             StationEnvironmentVariables.REGISTRY_PW.value: config["registry"]["password"],
-            #  todo auth
 
         },
         "labels": [

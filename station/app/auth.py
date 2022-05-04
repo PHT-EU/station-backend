@@ -69,8 +69,6 @@ def validate_user_token(token: str, robot_token: str, token_url: str = None) -> 
     url = f"{token_url}/{token}"
     headers = {"Authorization": f"Bearer {robot_token}"}
     r = requests.get(url, headers=headers)
-    print(headers)
-    print(r.text)
     r.raise_for_status()
     response = r.json()
     if response.get("target").get("kind") == "user":
