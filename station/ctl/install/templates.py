@@ -76,6 +76,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
     db_connection_string = f"postgresql+psycopg2://{config['db']['admin_user']}:{config['db']['admin_password']}" \
                            f"@postgres/pht_station"
     # todo complete api config
+    print(config["registry"])
     api_config = {
         "env": {
             "STATION_ID": config["station_id"],
@@ -90,6 +91,13 @@ def render_compose(config: dict, env: Environment = None) -> str:
             StationEnvironmentVariables.MINIO_ACCESS_KEY.value: config["minio"]["admin_user"],
             StationEnvironmentVariables.MINIO_SECRET_KEY.value: config["minio"]["admin_password"],
             StationEnvironmentVariables.REDIS_HOST.value: "redis",
+            StationEnvironmentVariables.AUTH_SERVER_HOST.value: "station-auth",
+            StationEnvironmentVariables.AUTH_SERVER_PORT.value: 3010,
+            StationEnvironmentVariables.AUTH_ROBOT_ID.value: config["auth"]["robot_id"],
+            StationEnvironmentVariables.AUTH_ROBOT_SECRET.value: config["auth"]["robot_secret"],
+            StationEnvironmentVariables.REGISTRY_URL.value: config["registry"]["address"],
+            StationEnvironmentVariables.REGISTRY_USER.value: config["registry"]["user"],
+            StationEnvironmentVariables.REGISTRY_PW.value: config["registry"]["password"],
             #  todo auth
 
         },

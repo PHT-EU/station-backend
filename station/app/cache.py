@@ -13,7 +13,6 @@ class RedisJSONOps(str, Enum):
 class Cache:
 
     def __init__(self):
-        settings.setup()
         self.redis = redis.Redis(decode_responses=True, **settings.config.redis.dict())
 
     def set(self, key: str, value: str, ttl: int = 3600) -> None:
@@ -76,4 +75,4 @@ class Cache:
         return json_string
 
 
-redis_cache = Cache()
+redis_cache = None

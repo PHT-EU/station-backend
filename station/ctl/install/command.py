@@ -51,7 +51,7 @@ def install(ctx, install_dir):
 
     # get credentials for registry
     reg_credentials = _request_registry_credentials(ctx)
-    ctx.obj["registry"] = reg_credentials
+    ctx.obj["registry"]["central"] = reg_credentials
 
     # setup docker
     setup_docker()

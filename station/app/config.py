@@ -343,9 +343,8 @@ class Settings:
             # generate new key in development mode
             elif self.config.environment == StationRuntimeEnvironment.DEVELOPMENT:
                 logger.warning(f"\t{Emojis.WARNING}No fernet key specified in config or env vars")
-                logger.info(f"\t{Emojis.INFO}Generating new key for development environment...")
                 self.config.fernet_key = Fernet.generate_key().decode()
-                logger.info(Emojis.SUCCESS.value + f"New key generated.")
+                logger.info(f"\t{Emojis.INFO}Generated new key for development environment.")
         elif env_fernet_key and self.config.fernet_key:
             logger.debug(f"\t{Emojis.INFO}Overriding fernet key with env var specification.")
             self.config.fernet_key = env_fernet_key
@@ -596,7 +595,7 @@ class Settings:
 
         # Check whether connection to station database with connection_id already exists, if not create it
         try:
-            self.create_station_db_connection()
+            self._create_station_db_connection()
         except Exception as e:
             if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
                 raise ValueError(f"{Emojis.ERROR.value}   Unable to add database connection to airflow")
@@ -604,7 +603,7 @@ class Settings:
                 logger.warning(f"Unable to add database connection to airflow. Is airflow running?")
                 logger.error(e)
 
-    def create_station_db_connection(self):
+    def _create_station_db_connection(self):
 
         station_db_param = urlparse(self.config.db)
         station_db_schema = self.config.db.split('/')[-1]
@@ -625,14 +624,16 @@ class Settings:
         url_get = self.config.airflow.api_url + f"connections/{self.config.airflow.station_db_conn_id}"
         url_post = self.config.airflow.api_url + "connections"
         auth = HTTPBasicAuth(self.config.airflow.user, self.config.airflow.password.get_secret_value())
-        r = requests.get(url=url_get, auth=auth)
+        r = requests.get(url=url_get, auth=auth, verify=False)
+
+        print(r.content)
 
         if r.status_code != 200:
             logger.debug(
                 f"\t{Emojis.INFO}Database connection in airflow with connection id {self.config.airflow.station_db_conn_id} does not exist,"
                 f" creating new one from environment variables.")
             try:
-                r = requests.post(url=url_post, auth=auth, json=conn)
+                r = requests.post(url=url_post, auth=auth, json=conn, verify=False)
                 r.raise_for_status()
                 logger.info(
                     f"\t{Emojis.INFO} Database connection in airflow with id {self.config.airflow.station_db_conn_id} got created.")

@@ -38,6 +38,7 @@ setup(
         "pandas",
         "SQLAlchemy",
         "psycopg2-binary",
+        "redis",
         "jinja2",
         "pyyaml",
         "click",
