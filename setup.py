@@ -45,7 +45,8 @@ setup(
         "rich",
         "minio",
         "pht-train-container-library",
-        "loguru"
+        "loguru",
+        "psutil",
 
     ],
     entry_points={
