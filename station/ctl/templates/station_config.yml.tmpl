@@ -65,12 +65,13 @@ airflow:
   # airflow_dags folder will be available to code inside the DAGs
   extra_dags_dir: "{{ airflow.custom_dags_dir }}"
   {% endif %}
-# Configure the connection to the authentication server
+
+# Configure the connection to the authentication server as well as the admin accounts
 auth:
-  host: "127.0.0.1"
-  port: 3010
-  robot_id: "your_robot_id"
-  robot_secret: '**********'
+  robot_id: {{ auth.robot_id }}
+  robot_secret: {{ auth.robot_secret }}
+  admin_user: "{{ auth.admin_user }}"
+  admin_password: "{{ auth.admin_password }}"
 
 # configure minio connection
 minio:

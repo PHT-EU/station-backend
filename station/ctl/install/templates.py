@@ -62,7 +62,6 @@ def render_compose(config: dict, env: Environment = None) -> str:
         "certs_dir": certs_dir,
     }
 
-    # todo complete auth configuration
     auth_config = {
         "env": {
             "ADMIN_USER": config["auth"]["admin_user"],

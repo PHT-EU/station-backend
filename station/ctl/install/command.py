@@ -1,15 +1,20 @@
 import os
+import pprint
 import sys
+from collections import namedtuple
 from typing import Tuple
+import re
 
 import click
+import docker
 from rich.console import Console
 
 from station.clients.central.central_client import CentralApiClient
 from station.ctl.config import validate_config, fix_config
 from station.ctl.config.command import render_config
 from station.ctl.config.validators import ConfigItemValidationStatus
-from station.ctl.constants import Icons, PHTDirectories
+from station.ctl.config.generators import password_generator
+from station.ctl.constants import Icons, PHTDirectories, PHTImages
 from station.ctl.install.docker import setup_docker
 from station.ctl.install import templates
 from station.ctl.install.fs import check_create_pht_dirs
@@ -27,15 +32,14 @@ def install(ctx, install_dir):
 
     issues = [result for result in validation_results if result.status != ConfigItemValidationStatus.VALID]
 
+    station_config = ctx.obj
     if issues:
         click.echo(Icons.CROSS.value)
         console = Console()
         console.print(table)
         click.confirm(f"Station configuration is invalid. Please fix the errors displayed above. \n"
                       f"Would you like to fix the configuration now?", abort=True)
-
         station_config = fix_config(ctx.obj, ctx.obj, validation_results)
-        render_config(station_config, ctx.obj['config_path'])
         ctx.obj = station_config
 
     else:
@@ -56,6 +60,8 @@ def install(ctx, install_dir):
     # setup docker
     setup_docker()
     # download_docker_images(ctx)
+    _setup_auth_server(ctx)
+
 
     # render templates according to configuration and store output paths in configuration object
     ctx.obj["init_sql_path"] = write_init_sql(ctx)
@@ -63,6 +69,9 @@ def install(ctx, install_dir):
     ctx.obj["traefik_config_path"] = traefik_config_path
     ctx.obj["router_config_path"] = router_config_path
     ctx.obj["airflow_config_path"] = write_airflow_config(ctx)
+
+    # render the updated configuration file
+    render_config(ctx.obj, ctx.obj['config_path'])
 
     # render the final compose template
     write_compose_file(ctx)
@@ -78,6 +87,62 @@ def _request_registry_credentials(ctx):
     credentials = client.get_registry_credentials(ctx.obj["station_id"])
     click.echo(Icons.CHECKMARK.value)
     return credentials
+
+
+def _setup_auth_server(ctx):
+    click.echo('Setting up auth server... ', nl=False)
+    client = docker.from_env()
+
+    auth_image = f"{PHTImages.AUTH.value}:{ctx.obj['version']}"
+    command = "server setup"
+
+    writable_dir = os.path.join(ctx.obj['install_dir'], PHTDirectories.SERVICE_DATA_DIR.value, "auth")
+
+    auth_volumes = {
+        str(writable_dir): {
+            "bind": "/usr/src/project/packages/server/writable",
+            "mode": "rw"
+        }
+    }
+
+    container = client.containers.run(auth_image,
+                                      command,
+                                      remove=True,
+                                      detach=True,
+                                      # environment=environment,
+                                      volumes=auth_volumes)
+
+    output = container.attach(stdout=True, stream=True, logs=True, stderr=True)
+
+    robot_id = None
+    robot_secret = None
+
+    logs = []
+    for line in output:
+        decoded = line.decode("utf-8")
+        logs.append(decoded)
+        if "Robot ID" in decoded and "Robot Secret" in decoded:
+            robot_id_index = decoded.find("Robot ID")
+            robot_secret_index = decoded.find("Robot Secret")
+            robot_id = decoded[robot_id_index + len("Robot ID:"):robot_secret_index - 2].strip()
+            robot_secret = decoded[robot_secret_index + len("Robot Secret:"):].strip()
+
+    if not robot_id or not robot_secret:
+        click.echo(Icons.CROSS.value)
+        click.echo("Failed to setup auth server", err=True)
+        pprint.pp(logs)
+        raise Exception("Could not get robot credentials from auth server")
+
+    else:
+
+        auth = {
+            "robot_id": robot_id,
+            "robot_secret": robot_secret,
+            "admin_user": "admin",
+            "admin_password": password_generator()
+        }
+        ctx.obj["auth"] = auth
+        click.echo(Icons.CHECKMARK.value)
 
 
 def write_init_sql(ctx) -> str:
@@ -177,5 +242,3 @@ def write_compose_file(ctx):
         f.write(content)
 
     click.echo(Icons.CHECKMARK.value)
-
-

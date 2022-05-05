@@ -53,9 +53,6 @@ def render_config(config: dict, path: str):
 
     env = get_template_env()
     template = env.get_template('station_config.yml.tmpl')
-
-    pprint.pp(config)
-
     out_config = template.render(
         station_id=config['station_id'],
         version=config['version'],
@@ -68,6 +65,7 @@ def render_config(config: dict, path: str):
         api=config['api'],
         airflow=config['airflow'],
         minio=config['minio'],
+        auth=config['auth'],
     )
 
     with open(path, 'w') as f:

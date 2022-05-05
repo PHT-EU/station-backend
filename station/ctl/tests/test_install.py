@@ -1,8 +1,10 @@
 import os
+from collections import namedtuple
 
 import pytest
 from dotenv import load_dotenv, find_dotenv
 import yaml
+import re
 
 from station.clients.central.central_client import CentralApiClient
 from station.ctl.install.fs import create_pht_dirs
@@ -12,6 +14,7 @@ from station.ctl.install import templates
 from station.ctl.constants import PHTDirectories
 from station.ctl.install import docker
 from station.ctl.install import certs
+from station.ctl.install.command import _setup_auth_server
 
 
 @pytest.fixture
@@ -34,8 +37,16 @@ def test_get_template_env():
     env = get_template_env()
     assert env
 
-    template = env.get_template("init.sql.tmpl")
-    assert template
+
+def test_setup_auth():
+    ctx = {
+        "obj": {
+            "version": "latest",
+        }
+    }
+    ctx = namedtuple('Struct', ctx.keys())(*ctx.values())
+    _setup_auth_server(ctx)
+
 
 
 def test_render_init_sql():
