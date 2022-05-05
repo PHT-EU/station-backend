@@ -40,7 +40,7 @@ services:
     image: {{ pht_images.auth }}:{{ version }}
     container_name: pht-station-auth
     volumes:
-      - {{ service_data_dir }}/auth:/usr/src/app/writable
+      - {{ auth_config.data_dir }}:/usr/src/project/packages/server/writable
     ports:
       - "3010:3010"
     environment:{% for key, value in auth_config.env.items() %}

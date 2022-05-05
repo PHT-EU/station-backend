@@ -56,6 +56,7 @@ def render_config(config: dict, path: str):
     out_config = template.render(
         station_id=config['station_id'],
         version=config['version'],
+        admin_password=config['admin_password'],
         environment=config['environment'],
         central=config['central'],
         http=config['http'],

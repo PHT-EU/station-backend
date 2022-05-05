@@ -32,7 +32,6 @@ def install(ctx, install_dir):
 
     issues = [result for result in validation_results if result.status != ConfigItemValidationStatus.VALID]
 
-    station_config = ctx.obj
     if issues:
         click.echo(Icons.CROSS.value)
         console = Console()
@@ -105,11 +104,15 @@ def _setup_auth_server(ctx):
         }
     }
 
+    environment = {
+        "ADMIN_PASSWORD": ctx.obj['admin_password'],
+    }
+
     container = client.containers.run(auth_image,
                                       command,
                                       remove=True,
                                       detach=True,
-                                      # environment=environment,
+                                      environment=environment,
                                       volumes=auth_volumes)
 
     output = container.attach(stdout=True, stream=True, logs=True, stderr=True)
@@ -138,8 +141,6 @@ def _setup_auth_server(ctx):
         auth = {
             "robot_id": robot_id,
             "robot_secret": robot_secret,
-            "admin_user": "admin",
-            "admin_password": password_generator()
         }
         ctx.obj["auth"] = auth
         click.echo(Icons.CHECKMARK.value)

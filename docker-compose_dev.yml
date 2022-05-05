@@ -54,7 +54,7 @@ services:
       ADMIN_PASSWORD: start123
     command:
       - server
-      - stasrt
+      - start
 
   redis:
     image: redislabs/rejson:latest

@@ -3,7 +3,6 @@ from enum import Enum
 from typing import Any, Callable, Tuple, Union, List, Optional
 import os
 
-import click
 from cryptography.fernet import Fernet
 from pydantic import BaseModel
 
@@ -456,6 +455,14 @@ def validate_top_level_config(config: dict) -> List[ConfigItemValidationResult]:
         environment_result.level = ConfigIssueLevel.WARN
         validation_issues.append(environment_result)
     # todo validate pht version
+
+    admin_password_result = _validate_config_value(config, "admin_password", default_value=DefaultValues.ADMIN.value,
+                                                   generator=password_generator)
+
+    if admin_password_result.status != ConfigItemValidationStatus.VALID:
+        admin_password_result.fix_hint = "Set admin password to a strong password"
+        admin_password_result.level = ConfigIssueLevel.ERROR
+
     return validation_issues
 
 

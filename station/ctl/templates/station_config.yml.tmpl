@@ -6,6 +6,9 @@ version: "{{ version }}"
 # if no value is given or any value other than 'development' is given it defaults to a production environment
 environment: "{{ environment }}"
 
+# configure the admin password for the station (username: admin)
+admin_password: "{{ admin_password }}"
+
 # Configure authentication for central services
 central:
   api_url: "{{ central.api_url }}"
@@ -70,8 +73,6 @@ airflow:
 auth:
   robot_id: {{ auth.robot_id }}
   robot_secret: {{ auth.robot_secret }}
-  admin_user: "{{ auth.admin_user }}"
-  admin_password: "{{ auth.admin_password }}"
 
 # configure minio connection
 minio:

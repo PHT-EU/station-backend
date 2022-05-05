@@ -64,12 +64,12 @@ def render_compose(config: dict, env: Environment = None) -> str:
 
     auth_config = {
         "env": {
-            "ADMIN_USER": config["auth"]["admin_user"],
-            "ADMIN_PASSWORD": config["auth"]["admin_password"],
+            "ADMIN_PASSWORD": config["admin_password"],
         },
         "labels": [
             "traefik.enable=true",
-        ]
+        ],
+        "data_dir": str(os.path.join(service_data_dir, "auth")),
     }
 
     db_connection_string = f"postgresql+psycopg2://{config['db']['admin_user']}:{config['db']['admin_password']}" \
