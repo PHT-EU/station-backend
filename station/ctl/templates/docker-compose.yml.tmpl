@@ -83,7 +83,7 @@ services:
     ports:
       - "9000:9000"
     volumes:
-      - {{ service_data_dir }}/minio:/data
+      - {{ station_data_dir }}:/data
     environment:
       - MINIO_SERVER_URL=http://127.0.0.1:9000
       - MINIO_BROWSER_REDIRECT_URL=http://127.0.0.1:9001 {% for key, value in minio_config.env.items() %}

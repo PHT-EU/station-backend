@@ -2,7 +2,7 @@ import os
 from enum import Enum
 import click
 
-from station.ctl.constants import PHTDirectories, ServiceDirectories
+from station.ctl.constants import PHTDirectories, ServiceDirectories, DataDirectories
 
 
 def check_create_pht_dirs(path):
@@ -14,6 +14,10 @@ def check_create_pht_dirs(path):
     service_dir_check = _check_dirs_from_enum(
         os.path.join(path, PHTDirectories.SERVICE_DATA_DIR.value),
         ServiceDirectories
+    )
+    data_dir_check = _check_dirs_from_enum(
+        os.path.join(path, PHTDirectories.STATION_DATA_DIR.value),
+        DataDirectories
     )
 
     if pht_dir_check and service_dir_check:
@@ -35,6 +39,8 @@ def create_pht_dirs(path):
     # create subdirectories for storing service data
     service_path = os.path.join(path, PHTDirectories.SERVICE_DATA_DIR.value)
     _make_dirs_from_enum(service_path, ServiceDirectories)
+    data_path = os.path.join(path, PHTDirectories.STATION_DATA_DIR.value)
+    _make_dirs_from_enum(data_path, DataDirectories)
 
 
 def _make_dirs_from_enum(path, dir_enum: Enum):

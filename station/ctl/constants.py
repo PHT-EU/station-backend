@@ -47,13 +47,19 @@ class PHTDirectories(Enum):
     SERVICE_LOG_DIR = "logs"
     CONFIG_DIR = "configs"
     CERTS_DIR = "certs"
-    STATION_DATA_DIR = "data"
+    STATION_DATA_DIR = "station_data"
     SETUP_SCRIPT_DIR = "setup_scripts"
+
+
+class DataDirectories(Enum):
+    MODELS = "models"
+    TRAINS = "trains"
+    DATASETS = "datasets"
+    LOCAL_TRAINS = "local_trains"
 
 
 class ServiceDirectories(Enum):
     AUTH = "auth"
-    MINIO = "minio"
     POSTGRES = "postgres"
     REDIS = "redis"
 

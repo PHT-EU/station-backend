@@ -146,11 +146,14 @@ def render_compose(config: dict, env: Environment = None) -> str:
         ]
     }
 
+    station_data_dir = str(os.path.join(config["install_dir"], PHTDirectories.STATION_DATA_DIR.value))
+
     return template.render(
         service_images=service_images,
         pht_images=pht_images,
         version=config['version'],
         service_data_dir=service_data_dir,
+        station_data_dir=station_data_dir,
         db_config=db_config,
         proxy_config=proxy_config,
         auth_config=auth_config,
