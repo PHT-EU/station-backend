@@ -1,7 +1,7 @@
 from typing import Any, List
 import pandas as pd
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from station.app.api import dependencies
 
 from station.app.schemas.datasets import DataSet, DataSetCreate, DataSetUpdate
@@ -10,11 +10,22 @@ from station.clients.minio import MinioClient
 
 router = APIRouter()
 
-#TODO Response models
-#TODO Error masanges
-@router.post("")
+
+@router.post("", response_model=DataSet)
 def create_new_data_set(create_msg: DataSetCreate, db: Session = Depends(dependencies.get_db)) -> DataSet:
     db_dataset = datasets.create(db, obj_in=create_msg)
+    return db_dataset
+
+
+@router.get("")
+def read_all_data_sets(db: Session = Depends(dependencies.get_db)) -> List[DataSet]:
+    all_datasets = datasets.get_multi(db=db, limit=None)
+    return all_datasets
+
+
+@router.get("/{data_set_id}")
+def get_data_set(data_set_id: Any, db: Session = Depends(dependencies.get_db)) -> DataSet:
+    db_dataset = datasets.get(db, data_set_id)
     return db_dataset
 
 
@@ -34,16 +45,15 @@ def delete_data_set(dataset_id: Any, db: Session = Depends(dependencies.get_db))
     return db_data_set
 
 
-@router.get("")
-def read_all_data_sets(db: Session = Depends(dependencies.get_db)) -> List[DataSet]:
-    all_datasets = datasets.get_multi(db=db, limit=None)
-    return all_datasets
+@router.post("/{data_set_id}/files")
+async def upload_data_set_file(data_set_id: str, file: UploadFile = File(...),
+                               db: Session = Depends(dependencies.get_db)):
+    pass
 
 
-@router.get("/{data_set_id}")
-def get_data_set(data_set_id: Any, db: Session = Depends(dependencies.get_db)) -> DataSet:
-    db_dataset = datasets.get(db, data_set_id)
-    return db_dataset
+@router.get("/{data_set_id}/files")
+def get_data_set_files(data_set_id: str, file_name: str, db: Session = Depends(dependencies.get_db)):
+    pass
 
 
 @router.get("/{data_set_id}/download")

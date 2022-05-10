@@ -18,6 +18,10 @@ class LocalTrainRun(BaseModel):
     run_id: str
 
 
+class LocalTrainCreate(BaseModel):
+    train_name: str
+
+
 class LocalTrain(DBSchema):
     created_at: datetime
     updated_at: Optional[datetime] = None
@@ -25,9 +29,6 @@ class LocalTrain(DBSchema):
     train_id: Optional[str] = None
     config_id: Optional[int] = None
 
-
-class LocalTrainCreate(BaseModel):
-    train_name: str
 
 
 class LocalTrainAddMasterImage(BaseModel):

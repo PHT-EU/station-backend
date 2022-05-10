@@ -15,10 +15,20 @@ class LocalTrainState(Base):
 class LocalTrainExecution(Base):
     __tablename__ = "local_train_executions"
     id = Column(Integer, primary_key=True, index=True)
-    train_id = Column(String, ForeignKey('local_trains.train_id'))
+    train_id = Column(Integer, ForeignKey('local_trains.id'))
     airflow_dag_run = Column(String, nullable=True, unique=True)
     start = Column(DateTime, default=datetime.now())
     end = Column(DateTime, nullable=True)
+
+
+class LocalTrainFile(Base):
+    __tablename__ = "local_train_files"
+    id = Column(Integer, primary_key=True, index=True)
+    train_id = Column(Integer, ForeignKey('local_trains.id'))
+    access_path = Column(String)
+    file_name = Column(String)
+    file_size = Column(Integer, nullable=True)
+    file_type = Column(String, nullable=True)
 
 
 class LocalTrain(Base):

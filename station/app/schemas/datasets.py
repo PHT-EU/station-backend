@@ -11,15 +11,12 @@ class DataSetBase(BaseModel):
     proposal_id: Optional[int] = None
     # proposal_id: Optional[Any]
     # TODO improve clarity of access definition
-    access_path: Optional[str]
-    n_items: Optional[int]
+    access_path: Optional[str] = None
+    n_items: Optional[int] = None
 
 
 class DataSetCreate(DataSetBase):
-    target_field: Optional[str]
-    fhir_user: Optional[str]
-    fhir_password: Optional[str]
-    fhir_server_type: Optional[str]
+    pass
 
 
 class DataSetUpdate(DataSetBase):

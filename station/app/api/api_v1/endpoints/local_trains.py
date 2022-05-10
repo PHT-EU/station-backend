@@ -17,8 +17,22 @@ from station.clients.harbor_client import harbor_client
 router = APIRouter()
 
 
+@router.post("", response_model=LocalTrain)
+def create_local_train(create_msg: LocalTrainCreate, db: Session = Depends(dependencies.get_db)):
+    """
+    creae a database entry for a new train with preset names from the create_msg
+
+    @param create_msg: information about the new train
+    @param db: reference to the postgres database
+    @return:
+    """
+    train = local_train.create(db, obj_in=create_msg)
+    return train
+
+
+
 @router.post("/{train_id}/run")
-def run_docker_train(train_id: str, db: Session = Depends(dependencies.get_db)):
+def run_local_train(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
     sends a command to the the airflow client to trigger a run with the trains configurations
 
@@ -34,6 +48,28 @@ def run_docker_train(train_id: str, db: Session = Depends(dependencies.get_db)):
     return run_id
 
 
+@router.post("/{train_id}/files")
+async def add_file_for_train(train_id: str, file: UploadFile = File(...), db: Session = Depends(dependencies.get_db)):
+    await local_train.add_file_minio(file, train_id)
+    return {"filename": file.filename}
+
+
+@router.get("/{train_id}/files/{file_id}")
+async def read_train_file(train_id: str, file_id: str, db: Session = Depends(dependencies.get_db)):
+
+    file = await local_train.get_file(train_id, file_id)
+
+    pass
+
+
+@router.get("/{train_id}/files/{file_id}")
+def get_file(train_id: str, file_id: str, db: Session = Depends(dependencies.get_db)):
+    """
+    get a file from the minio storage
+    """
+    pass
+
+
 @router.post("/{train_id}/uploadTrainFile")
 async def upload_train_file(train_id: str, upload_file: UploadFile = File(...)):
     """
@@ -46,19 +82,6 @@ async def upload_train_file(train_id: str, upload_file: UploadFile = File(...)):
     """
     await local_train.add_file_minio(upload_file, train_id)
     return {"filename": upload_file.filename}
-
-
-@router.post("/create", response_model=LocalTrain)
-def create_local_train(create_msg: LocalTrainCreate, db: Session = Depends(dependencies.get_db)):
-    """
-    creae a database entry for a new train with preset names from the create_msg
-
-    @param create_msg: information about the new train
-    @param db: reference to the postgres database
-    @return:
-    """
-    train = local_train.create(db, obj_in=create_msg)
-    return train
 
 
 @router.post("/createWithUuid", response_model=LocalTrain)

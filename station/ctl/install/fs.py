@@ -15,10 +15,6 @@ def check_create_pht_dirs(path):
         os.path.join(path, PHTDirectories.SERVICE_DATA_DIR.value),
         ServiceDirectories
     )
-    data_dir_check = _check_dirs_from_enum(
-        os.path.join(path, PHTDirectories.STATION_DATA_DIR.value),
-        DataDirectories
-    )
 
     if pht_dir_check and service_dir_check:
         click.confirm('The previous installation found, do you want to overwrite it?', abort=True)
@@ -29,7 +25,7 @@ def check_create_pht_dirs(path):
 
 def create_pht_dirs(path):
     """
-    Ensure the directory structure exists.
+    Create the pht directory structure in the given directory.
     """
     if not os.path.exists(path):
         os.makedirs(path)
@@ -39,6 +35,7 @@ def create_pht_dirs(path):
     # create subdirectories for storing service data
     service_path = os.path.join(path, PHTDirectories.SERVICE_DATA_DIR.value)
     _make_dirs_from_enum(service_path, ServiceDirectories)
+    # create subdirectories for storing station data (mount point for minio data)
     data_path = os.path.join(path, PHTDirectories.STATION_DATA_DIR.value)
     _make_dirs_from_enum(data_path, DataDirectories)
 
