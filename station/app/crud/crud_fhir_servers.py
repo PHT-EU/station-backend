@@ -28,6 +28,9 @@ class CRUDFHIRServers(CRUDBase[FHIRServer, FHIRServerCreate, FHIRServerUpdate]):
         Returns:
             the same object with encrypted sensitive values
         """
+
+        from station.app.config import settings
+        print(settings)
         fernet = settings.get_fernet()
 
         if obj_in.client_secret:

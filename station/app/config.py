@@ -164,14 +164,18 @@ class Settings:
     config: StationConfig
     config_path: Optional[str]
 
-    def __init__(self, config_path: str = None):
+    def __init__(self, config_path: str = None, config: StationConfig = None):
         load_dotenv(find_dotenv())
-        if config_path:
+        self._config_file = False
+        self.config = None
+        if config:
+            self.config = config
+        elif config_path:
             self.config_path = config_path
+            self._config_file = True
         else:
             self.config_path = os.getenv(StationEnvironmentVariables.CONFIG_PATH.value, "station_config.yaml")
-
-        self._config_file = False
+            self._config_file = True
         # todo create/update config file
 
     def setup(self) -> StationConfig:
@@ -644,6 +648,9 @@ class Settings:
             logger.info(
                 f"\t{Emojis.INFO} Database connection in airflow with id {self.config.airflow.station_db_conn_id} exists.")
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(config={self.config})"
+
     @staticmethod
     def _get_external_service_env_vars(url: StationEnvironmentVariables,
                                        client_id: StationEnvironmentVariables,
@@ -690,4 +697,4 @@ class Settings:
 
 
 settings = Settings()
-# settings.setup()
+settings.setup()

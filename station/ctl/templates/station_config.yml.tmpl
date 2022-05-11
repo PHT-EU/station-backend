@@ -17,22 +17,27 @@ central:
   private_key: {{ central.private_key }}
   private_key_password: "{{ central.private_key_password }}"
 
+# Configure which port the proxy should use to listen for http requests
 http:
   port: "{{ http.port }}"
 {% if https %}
+# Configure which port the proxy should use to listen for https requests
 https:
   port: "{{ https.port }}"
+  # Set the domain name for tls certificate either based on the existing certificate or to be used for self-signed certs
   domain: "{{ https.domain }}"
-  # list of path to certificate files (cert/key)
-  certs:
-    {% for cert in https.certs %}
+  # list of paths to certificate files (cert/key)
+  certs:{% for cert in https.certs %}
     - cert: {{ cert.cert }}
       key: {{ cert.key }}
-    {% endfor %}
+    {% endfor -%}
 {% endif %}
+
+# Configure the port for the traefik dashboard, can be disabled by settings disabled: true for the dashboard
 traefik:
   dashboard:
     port: 8081
+#   disabled: True
 
 # Configures the address and credentials for the central container registry
 registry:
