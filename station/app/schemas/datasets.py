@@ -1,6 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional, Any, List, Union
+from typing import Optional, Any, List, Union, Dict, Literal
 
 
 class DataSetBase(BaseModel):
@@ -29,17 +29,28 @@ class DataSetUpdate(DataSetBase):
 
 class DataSetColumn(BaseModel):
     title: Optional[str]
-    type: Optional[str]
     number_of_elements: Optional[int]
 
 
+class DataSetUniqueColumn(DataSetColumn):
+    type: Literal['unique']
+    number_of_duplicates: Optional[int]
+
+
+class DataSetEqualColumn(DataSetColumn):
+    type: Literal['equal']
+    value: Optional[str]
+
+
 class DataSetCategoricalColumn(DataSetColumn):
+    type: Literal['categorical']
     number_categories: Optional[int]
     most_frequent_element: Optional[Union[int, str]]
     frequency: Optional[int]
 
 
 class DataSetNumericalColumn(DataSetColumn):
+    type: Literal['numeric']
     mean: Optional[float]
     std: Optional[float]
     min: Optional[float]
@@ -49,10 +60,19 @@ class DataSetNumericalColumn(DataSetColumn):
 class DataSetStatistics(BaseModel):
     n_items: Optional[int] = 0
     n_features: Optional[int] = 0
-    column_information: Optional[List[Union[DataSetCategoricalColumn, DataSetNumericalColumn]]]
+    column_information: Optional[List[Union[DataSetCategoricalColumn, DataSetNumericalColumn, DataSetEqualColumn, DataSetUniqueColumn]]] = Field(..., discriminator='type')
 
     class Config:
         orm_mode = True
+
+
+class FigureData(BaseModel):
+    layout: dict
+    data: list
+
+
+class DataSetFigure(BaseModel):
+    fig_data: Optional[FigureData]
 
 
 class DataSet(DataSetBase):

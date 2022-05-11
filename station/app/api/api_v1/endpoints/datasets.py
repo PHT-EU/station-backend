@@ -83,7 +83,7 @@ def get_data_sets_from_bucket():
 @router.get("/{data_set_id}/stats", response_model=DataSetStatistics)
 def get_data_set_statistics(data_set_id: Any, db: Session = Depends(dependencies.get_db)):
     dataframe = datasets.get_data(db, data_set_id)
-    if dataframe.empty:
+    if dataframe is None or dataframe.empty:
         raise HTTPException(status_code=404, detail="Dataset not found.")
     try:
         stats = statistics.get_dataset_statistics(dataframe)
