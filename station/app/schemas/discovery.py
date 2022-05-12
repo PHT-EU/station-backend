@@ -17,6 +17,9 @@ class CategoricalCount(BaseModel):
 class CategoricalData(BaseModel):
     attribute_name: Optional[str]
     value_counts: Optional[List[CategoricalCount]]
+
+
+class CategoricalDataLocal(CategoricalData):
     most_frequent_element: Optional[Union[str, int]]
     frequency: Optional[int]
 
@@ -26,6 +29,7 @@ class StructuredData(BaseModel):
 
 
 class UnstructuredData(BaseModel):
+    target_counts: Optional[CategoricalCount]
     mean_size: Optional[float]
 
 
