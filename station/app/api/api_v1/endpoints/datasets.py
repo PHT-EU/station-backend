@@ -103,5 +103,7 @@ def get_class_distribution(data_set_id: Any, target_field: str, db: Session = De
             return distribution
         except TypeError:
             raise HTTPException(status_code=400, detail="Dataset has to be given as a dataframe.")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Class counts are not computed for numerical data columns.")
     else:
         raise HTTPException(status_code=404, detail="Targetfield not found in dataset.")

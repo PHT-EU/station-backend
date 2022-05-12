@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
 from typing import Optional, Any, List, Union, Dict, Literal
+from typing_extensions import Annotated
 
 
 class DataSetBase(BaseModel):
@@ -60,7 +61,11 @@ class DataSetNumericalColumn(DataSetColumn):
 class DataSetStatistics(BaseModel):
     n_items: Optional[int] = 0
     n_features: Optional[int] = 0
-    column_information: Optional[List[Union[DataSetCategoricalColumn, DataSetNumericalColumn, DataSetEqualColumn, DataSetUniqueColumn]]] = Field(..., discriminator='type')
+    column_information: Optional[List[Annotated[Union[DataSetCategoricalColumn,
+                                                      DataSetNumericalColumn,
+                                                      DataSetEqualColumn,
+                                                      DataSetUniqueColumn],
+                                                Field(discriminator='type')]]]
 
     class Config:
         orm_mode = True

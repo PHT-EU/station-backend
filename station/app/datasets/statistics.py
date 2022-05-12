@@ -4,13 +4,14 @@ from pandas.api.types import is_numeric_dtype
 from pandas import Series
 import plotly.express as px
 import plotly.io
+from plotly.graph_objects import Figure
 import json
 
 from station.app.schemas.datasets import DataSetStatistics, DataSetFigure
 from station.app.cache import redis_cache
 
 
-def get_dataset_statistics(dataframe) -> Optional[DataSetStatistics]:
+def get_dataset_statistics(dataframe: pd.DataFrame) -> Optional[DataSetStatistics]:
     """
     Computes statistical information of a dataset
     :param dataframe: Dataset as dataframe object
@@ -35,7 +36,13 @@ def get_dataset_statistics(dataframe) -> Optional[DataSetStatistics]:
     return statistics
 
 
-def get_column_information(dataframe, description):
+def get_column_information(dataframe: pd.DataFrame, description: pd.DataFrame) -> dict:
+    """
+    Extract information out of dataframe and summarize it in a dictionary
+    :param dataframe: Dataframe to summarize
+    :param description: Dataframe description as dataframe object
+    :return: Dictionary with column information
+    """
     columns_inf = []
     columns = dataframe.columns.values.tolist()
     for i in range(len(columns)):
@@ -53,7 +60,9 @@ def get_column_information(dataframe, description):
             columns_inf, chart_key, chart_json = process_numerical_column(dataframe, columns_inf, i, description, title)
 
         if chart_json is not None:
-            save_to_cache(chart_key, chart_json)
+            # save figure to cache
+            save_json = json.loads(json.dumps(chart_json.fig_data.json()))
+            redis_cache.set(chart_key, str(save_json))
             # get chart for test
             # chart_get = redis_cache.get(chart_key)
             # fig = plotly.io.from_json(chart_get)
@@ -61,7 +70,7 @@ def get_column_information(dataframe, description):
     return columns_inf
 
 
-def process_numerical_column(dataframe, columns_inf, i, description, title):
+def process_numerical_column(dataframe: pd.DataFrame, columns_inf: dict, i: int, description: pd.DataFrame, title: str) -> tuple[dict, str, DataSetFigure]:
     """
     Extract information from numerical column and create plot of column data
     :param dataframe: dataset as dataframe object
@@ -77,11 +86,12 @@ def process_numerical_column(dataframe, columns_inf, i, description, title):
     columns_inf[i]['min'] = description[title]["min"]
     columns_inf[i]['max'] = description[title]["max"]
     chart_key = title + "_boxplot"
-    chart_json = create_boxplot(dataframe, title)
+    fig = px.box(dataframe, y=title)
+    chart_json = create_figure(fig)
     return columns_inf, chart_key, chart_json
 
 
-def process_categorical_column(dataframe, columns_inf, i, description, title):
+def process_categorical_column(dataframe: pd.DataFrame, columns_inf:dict, i: int, description: pd.DataFrame, title: str) -> tuple[dict, str, DataSetFigure]:
     """
     Extract information from categorical column and create plot of column data
     :param dataframe: dataset as dataframe object
@@ -120,30 +130,36 @@ def process_categorical_column(dataframe, columns_inf, i, description, title):
             # pie chart if number of classes is below 10
             if unique < 10:
                 chart_key = title + "_pie"
-                chart_json = create_pie_chart(dataframe, title)
+                fig = px.pie(dataframe, names=title, title=title)
+
 
             # histogram if number of classes is greater than 10
             elif unique >= 10:
                 chart_key = title + "_histogram"
-                chart_json = create_histogram(dataframe, title)
+                fig = px.histogram(dataframe, x=title, title=title)
+                fig.update_layout(yaxis_title="Anzahl")
+
+            if fig is not None:
+                chart_json = create_figure(fig)
 
         columns_inf[i]['type'] = column_type
 
     return columns_inf, chart_key, chart_json
 
 
-def save_to_cache(chart_key: str, chart_json: DataSetFigure):
+def create_figure(fig: Figure) -> DataSetFigure:
     """
-    Save json of plot to the redis cache
-    :param chart_key: key for saving the plot json
-    :param chart_json: plot data in json format
-    :return:
+    Create DataSetFigure-Object of a plotly figure
+    :param fig: Plotly figure
+    :return: DataSetFigure-Object with JSON-representation of plotly figure
     """
-    save_json = json.loads(json.dumps(chart_json.fig_data.json()))
-    redis_cache.set(chart_key, str(save_json))
+    fig_json = plotly.io.to_json(fig)
+    obj = json.loads(fig_json)
+    figure = DataSetFigure(fig_data=obj)
+    return figure
 
 
-def get_class_distribution(dataframe, target_field) -> Series:
+def get_class_distribution(dataframe: pd.DataFrame, target_field: str) -> Series:
     """
     Get class distribution of specific column in dataframe
     :param dataframe: Dataset as dataframe object
@@ -153,30 +169,9 @@ def get_class_distribution(dataframe, target_field) -> Series:
     if not isinstance(dataframe, pd.DataFrame):
         raise TypeError
     n_items = dataframe.shape[0]
-    class_distribution = (dataframe[target_field].value_counts() / n_items)
+    column = dataframe[target_field]
+    if not(is_numeric_dtype(column)):
+        class_distribution = (dataframe[target_field].value_counts() / n_items)
+    else:
+        raise ValueError
     return class_distribution
-
-
-def create_histogram(df, title) -> DataSetFigure:
-    fig = px.histogram(df, x=title, title=title)
-    fig.update_layout(yaxis_title="Anzahl")
-    fig_json = plotly.io.to_json(fig)
-    obj = json.loads(fig_json)
-    figure = DataSetFigure(fig_data=obj)
-    return figure
-
-
-def create_pie_chart(df, title) -> DataSetFigure:
-    fig = px.pie(df, names=title, title=title)
-    fig_json = plotly.io.to_json(fig)
-    obj = json.loads(fig_json)
-    figure = DataSetFigure(fig_data=obj)
-    return figure
-
-
-def create_boxplot(df, title) -> DataSetFigure:
-    fig = px.box(df, y=title)
-    fig_json = plotly.io.to_json(fig)
-    obj = json.loads(fig_json)
-    figure = DataSetFigure(fig_data=obj)
-    return figure
