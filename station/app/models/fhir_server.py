@@ -19,3 +19,4 @@ class FHIRServer(Base):
     token = Column(String)
     active = Column(Boolean, default=True)
     type = Column(String, nullable=True)
+    proposal_id = Column(String, nullable=True)
