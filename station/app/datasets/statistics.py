@@ -49,14 +49,18 @@ def get_column_information(dataframe: pd.DataFrame, description: pd.DataFrame) -
         title = columns[i]
         count = description[title]["count"]
         columns_inf.append({
-            'title': title,
-            'number_of_elements': count
+            'title': title
         })
+        nan_count = dataframe[title].isna().sum()
         if not(is_numeric_dtype(dataframe[title])):
             # extract information from categorical column
+            columns_inf[i]['number_of_defined_elements'] = count - nan_count
             columns_inf, chart_key, chart_json = process_categorical_column(dataframe, columns_inf, i, description, title)
         else:
             # extract information from numerical column
+            zero_count = dataframe[title][dataframe[title]==0].count()
+            undefined_count = nan_count + zero_count
+            columns_inf[i]['number_of_defined_elements'] = count - undefined_count
             columns_inf, chart_key, chart_json = process_numerical_column(dataframe, columns_inf, i, description, title)
 
         if chart_json is not None:
@@ -101,7 +105,7 @@ def process_categorical_column(dataframe: pd.DataFrame, columns_inf:dict, i: int
     :param title: title of column with index i
     :return: array with column information, key and json to save chart in cache
     """
-    count = columns_inf[i]['number_of_elements']
+    count = columns_inf[i]['number_of_defined_elements']
     unique = description[title]["unique"]
     top = description[title]["top"]
     freq = description[title]["freq"]
@@ -128,7 +132,9 @@ def process_categorical_column(dataframe: pd.DataFrame, columns_inf:dict, i: int
             columns_inf[i]['frequency'] = freq
 
             # pie chart if number of classes is below 10
+            # value counts are provided if there are less then 10 classes
             if unique < 10:
+                columns_inf[i]['value_counts'] = dict(dataframe[title].value_counts())
                 chart_key = title + "_pie"
                 fig = px.pie(dataframe, names=title, title=title)
 

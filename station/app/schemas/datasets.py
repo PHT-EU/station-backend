@@ -30,7 +30,7 @@ class DataSetUpdate(DataSetBase):
 
 class DataSetColumn(BaseModel):
     title: Optional[str]
-    number_of_elements: Optional[int]
+    number_of_defined_elements: Optional[int]
 
 
 class DataSetUniqueColumn(DataSetColumn):
@@ -46,6 +46,7 @@ class DataSetEqualColumn(DataSetColumn):
 class DataSetCategoricalColumn(DataSetColumn):
     type: Literal['categorical']
     number_categories: Optional[int]
+    value_counts: Optional[Dict[str, int]]
     most_frequent_element: Optional[Union[int, str]]
     frequency: Optional[int]
 

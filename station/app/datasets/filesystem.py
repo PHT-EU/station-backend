@@ -27,7 +27,7 @@ def get_filesystem(minio_url: str = None, access_key: str = None, secret_key: st
                            key=access_key,
                            secret=secret_key,
                            use_ssl=True,
-                           client_kwargs={'endpoint_url': f'http://{minio_url}'})
+                           client_kwargs={'endpoint_url': f'http://{minio_url}/'})
 
     return fs
 
