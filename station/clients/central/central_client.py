@@ -25,12 +25,18 @@ class CentralApiClient:
         return {"Authorization": f"Bearer {token}"}
 
     def get_trains(self, station_id: Any) -> list:
-        pass
+        url = self.api_url + "/train-stations?"
+        filters = f"filter[station_id]={station_id}&include=train"
+        safe_filters = self._make_url_safe(filters)
+        url = url + safe_filters
+        response = requests.get(url, headers=self.headers)
+        response.raise_for_status()
+        return response.json()
 
     def get_registry_credentials(self, station_id: Any) -> dict:
         url = self.api_url + f"/stations/{station_id}?"
         filters = "fields[station]=+secure_id,+registry_project_account_name,+registry_project_account_token,+public_key"
-        safe_filters = urllib.parse.quote(filters, safe="=")
+        safe_filters = self._make_url_safe(filters)
         url = url + safe_filters
         r = requests.get(url, headers=self.headers)
         r.raise_for_status()
@@ -58,3 +64,7 @@ class CentralApiClient:
             self.token_expiration = pendulum.now().add(seconds=r["expires_in"])
 
         return self.token
+
+    @staticmethod
+    def _make_url_safe(url: str) -> str:
+        return urllib.parse.quote(url, safe="=")

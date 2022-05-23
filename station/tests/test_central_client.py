@@ -31,3 +31,9 @@ def test_update_public_key(central_client):
     station_id = os.getenv("STATION_ID")
     response = central_client.update_public_key(station_id, public_key)
     print(response)
+
+def test_get_trains_for_station(central_client):
+    station_id = os.getenv("STATION_ID")
+    response = central_client.get_trains(station_id)
+    assert response
+    print(response)
