@@ -12,9 +12,12 @@ from .base import CRUDBase, ModelType
 from station.app.models.docker_trains import DockerTrain, DockerTrainConfig, DockerTrainState, DockerTrainExecution
 from station.app.schemas.docker_trains import DockerTrainCreate, DockerTrainUpdate, DockerTrainConfigCreate
 from station.app.schemas.docker_trains import DockerTrainState as DockerTrainStateSchema
+from station.app.config import settings
 
 
 # TODO improve handling of proposals
+from ...clients.central.central_client import CentralApiClient
+
 
 class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate]):
 
@@ -108,6 +111,15 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             raise HTTPException(status_code=404, detail=f"Train {train_id} not found")
         executions = db_train.executions
         return executions
+
+    def synchronize_central(self, db: Session) -> List[DockerTrain]:
+        print(settings)
+        client = CentralApiClient(
+            api_url=settings.config.central_ui.api_url,
+            robot_id=settings.config.central_ui.robot_id,
+            robot_secret=settings.config.central_ui.robot_secret
+        )
+        central_trains = self.get_trains_by_active_status(db, active=True)
 
 
 docker_trains = CRUDDockerTrain(DockerTrain)

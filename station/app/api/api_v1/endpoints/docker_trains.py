@@ -13,30 +13,10 @@ from station.clients.harbor_client import harbor_client
 
 router = APIRouter()
 
-@router.get("/sync", response_model=List[DockerTrain])
-def synchronize_database(station_id: int = None, db: Session = Depends(dependencies.get_db)):
-    artifacts = harbor_client.get_artifacts_for_station(station_id=station_id)
-    if isinstance(artifacts, dict):
-        error = artifacts.get("errors")
-        if error:
-            raise HTTPException(status_code=404, detail=f"Station {station_id} not found.")
-    elif isinstance(artifacts, list):
-        train_list = []
-        if len(artifacts) == 0:
-            print(f"No train registered at station {station_id}.")
-        else:
-            for train in artifacts:
-                id = train["name"].split("/")[1]
-                created_at = train["creation_time"][:-1]
-                updated_at = train["update_time"][:-1]
-                if created_at == updated_at:
-                    updated_at = None
-                new_train = docker_trains.add_if_not_exists(db, train_id=id, created_at=created_at, updated_at=updated_at)
-                if new_train:
-                    train_list.append(new_train)
-        return train_list
-    else:
-        raise HTTPException(status_code=500, detail="Invalid response.")
+
+@router.post("/sync", response_model=List[DockerTrain])
+def synchronize_database(db: Session = Depends(dependencies.get_db)):
+    return docker_trains.synchronize_central(db)
 
 
 @router.get("", response_model=List[DockerTrain])
@@ -65,7 +45,8 @@ def get_train_by_train_id(train_id: str, db: Session = Depends(dependencies.get_
 
 
 @router.post("/{train_id}/run", response_model=DockerTrainSavedExecution)
-def run_docker_train(train_id: str, run_config: DockerTrainExecution = None, db: Session = Depends(dependencies.get_db)):
+def run_docker_train(train_id: str, run_config: DockerTrainExecution = None,
+                     db: Session = Depends(dependencies.get_db)):
     execution = airflow_docker_train.run_train(db, train_id, run_config)
     return execution
 

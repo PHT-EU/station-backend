@@ -1,10 +1,12 @@
 import json
 import os
-import requests
+import functools
 from typing import Union, Optional, Tuple
+from enum import Enum
+
+import requests
 from cryptography.fernet import Fernet
 from pydantic import BaseModel, AnyHttpUrl, SecretStr, AnyUrl
-from enum import Enum
 from loguru import logger
 from requests.auth import HTTPBasicAuth
 from yaml import safe_dump, safe_load
@@ -33,6 +35,11 @@ class StationEnvironmentVariables(Enum):
     FERNET_KEY = "FERNET_KEY"
     STATION_DATA_DIR = "STATION_DATA_DIR"
     CONFIG_PATH = "STATION_CONFIG_PATH"
+
+    # central api configuration variables
+    CENTRAL_API_URL = "CENTRAL_API_URL"
+    STATION_ROBOT_ID = "STATION_ROBOT_ID"
+    STATION_ROBOT_SECRET = "STATION_ROBOT_SECRET"
 
     # airflow environment variables
     AIRFLOW_HOST = "AIRFLOW_HOST"
@@ -91,9 +98,9 @@ class MinioSettings(BaseModel):
 
 
 class CentralUISettings(BaseModel):
-    api_url: AnyHttpUrl
-    client_id: Optional[str] = "admin"
-    client_secret: Optional[SecretStr] = "admin"
+    api_url: Optional[AnyHttpUrl] = None
+    robot_id: Optional[str] = None
+    robot_secret: Optional[SecretStr] = None
 
 
 class RedisSettings(BaseModel):
@@ -141,7 +148,7 @@ class StationConfig(BaseModel):
     auth: Optional[AuthConfig] = None
     airflow: Optional[AirflowSettings] = None
     minio: Optional[MinioSettings] = None
-    central_ui: Optional[CentralUISettings] = None
+    central_ui: Optional[CentralUISettings] = CentralUISettings()
     redis: Optional[RedisSettings] = RedisSettings()
 
     @classmethod
@@ -153,6 +160,19 @@ class StationConfig(BaseModel):
         # todo get secret values recursively
         with open(path, "w") as f:
             safe_dump(json.loads(self.json(indent=2)), f)
+
+
+# https://stackoverflow.com/a/31174427/3838313
+def rsetattr(obj, attr, val):
+    pre, _, post = attr.rpartition('.')
+    return setattr(rgetattr(obj, pre) if pre else obj, post, val)
+
+
+def rgetattr(obj, attr, *args):
+    def _getattr(obj, attr):
+        return getattr(obj, attr, *args)
+
+    return functools.reduce(_getattr, [obj] + attr.split('.'))
 
 
 # Evaluation for initialization of values file < environment
@@ -292,6 +312,7 @@ class Settings:
 
         # parse environment variables
         self._setup_station_api()
+        self._setup_central_api_connection()
         self._setup_airflow()
         self._setup_fernet()
         self._setup_station_auth()
@@ -329,6 +350,85 @@ class Settings:
                 raise ValueError(f"{Emojis.ERROR}   SQLite database not supported for production mode.")
             else:
                 logger.warning(f"{Emojis.WARNING}   SQLite database only supported in development mode.")
+
+    def _setup_central_api_connection(self):
+        # validate that api url is present
+        # central_api_url = os.getenv(StationEnvironmentVariables.CENTRAL_API_URL.value)
+        # if central_api_url:
+        #     logger.debug(f"\t{Emojis.INFO}Overriding central api url with env var specification.")
+        #     self.config.central_ui.api_url = central_api_url
+        #
+        # elif self.config.central_ui.api_url:
+        #     logger.debug(f"\t{Emojis.INFO}Central API url: {self.config.central_ui.api_url}")
+        # else:
+        #     if self.config.environment == "production":
+        #         raise ValueError(f"{Emojis.ERROR} Central api url be specified in environment variables.")
+        #     else:
+        #         logger.warning(f"{Emojis.WARNING} Central api url is not specified.")
+        #
+        # # validate that the station's robot id is set
+        # central_robot_id = os.getenv(StationEnvironmentVariables.STATION_ROBOT_ID.value)
+        # if central_robot_id:
+        #     logger.debug(f"\t{Emojis.INFO}Overriding station robot id with env var specification.")
+        #     self.config.central_ui.robot_id = central_robot_id
+        # elif self.config.central_ui.robot_id:
+        #     logger.debug(f"\t{Emojis.INFO}Station robot id: {self.config.central_ui.robot_id}")
+        # else:
+        #     if self.config.environment == "production":
+        #         raise ValueError(f"{Emojis.ERROR} Station robot id needs to be specified.")
+        #     else:
+        #         logger.warning(f"{Emojis.WARNING} Station robot id is not specified.")
+
+        self._validate_config_item(
+            env_var=StationEnvironmentVariables.CENTRAL_API_URL,
+            config_item="central_ui.api_url",
+        )
+        self._validate_config_item(
+            env_var=StationEnvironmentVariables.STATION_ROBOT_ID,
+            config_item="central_ui.robot_id",
+        )
+        self._validate_config_item(
+            env_var=StationEnvironmentVariables.STATION_ROBOT_SECRET,
+            config_item="central_ui.robot_secret",
+        )
+
+        logger.info(
+            f"{Emojis.INFO} Central API url: {self.config.central_ui.api_url}, "
+            f"Robot ID: {self.config.central_ui.robot_id} Robot Secret: ******")
+
+    def _validate_config_item(self, env_var: StationEnvironmentVariables, config_item: str, error_message: str = None,
+                              warning_message: str = None, item_name: str = None):
+        """
+        Validates that a config item is present in the environment variables. If not, a warning or error is raised.
+        Args:
+            env_var: the environment variable the item can be found in
+            config_item: attr path of the station configuration of the item
+            error_message: optional custom error message
+            warning_message: optional custom warning message
+            item_name: optional display name of the item in the error messages
+
+        Returns:
+
+        """
+        env_var = os.getenv(env_var.value)
+        if env_var:
+            logger.debug(
+                f"\t{Emojis.INFO}Overriding {item_name if item_name else config_item} with env var specification.")
+            rsetattr(self.config, config_item, env_var)
+        elif rgetattr(self.config, config_item):
+            logger.debug(
+                f"\t{Emojis.INFO}{item_name if item_name else config_item}: {rgetattr(self.config, config_item)}")
+        else:
+            if self.config.environment == "production":
+                if error_message:
+                    raise ValueError(f"{Emojis.ERROR}{error_message}")
+                else:
+                    raise ValueError(f"{Emojis.ERROR} {item_name if item_name else config_item} needs to be specified.")
+            else:
+                if warning_message:
+                    logger.warning(f"{Emojis.WARNING}{warning_message}")
+                else:
+                    logger.warning(f"{Emojis.WARNING} {item_name if item_name else config_item} is not specified.")
 
     def _setup_fernet(self):
         """
