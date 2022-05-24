@@ -1,7 +1,8 @@
+import pprint
 from builtins import str
 
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Tuple, Union
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
 from dateutil import parser
@@ -13,7 +14,6 @@ from station.app.models.docker_trains import DockerTrain, DockerTrainConfig, Doc
 from station.app.schemas.docker_trains import DockerTrainCreate, DockerTrainUpdate, DockerTrainConfigCreate
 from station.app.schemas.docker_trains import DockerTrainState as DockerTrainStateSchema
 from station.app.config import settings
-
 
 # TODO improve handling of proposals
 from ...clients.central.central_client import CentralApiClient
@@ -74,7 +74,8 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
         db_train = self.get_by_train_id(db, train_id)
         if not db_train:
             if updated_at:
-                db_train = DockerTrain(train_id=train_id, created_at=parser.parse(created_at), updated_at=parser.parse(updated_at))
+                db_train = DockerTrain(train_id=train_id, created_at=parser.parse(created_at),
+                                       updated_at=parser.parse(updated_at))
             else:
                 db_train = DockerTrain(train_id=train_id, created_at=parser.parse(created_at))
             db.add(db_train)
@@ -113,13 +114,51 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
         return executions
 
     def synchronize_central(self, db: Session) -> List[DockerTrain]:
-        print(settings)
         client = CentralApiClient(
             api_url=settings.config.central_ui.api_url,
             robot_id=settings.config.central_ui.robot_id,
             robot_secret=settings.config.central_ui.robot_secret
         )
-        central_trains = self.get_trains_by_active_status(db, active=True)
+        central_trains = client.get_trains(settings.config.station_id)
+
+        train_objects = []
+        for train in central_trains["data"]:
+            if train["approval_status"] == "approved":
+                db_train = self._parse_central_api_train(db, train_dict=train)
+                if db_train:
+                    train_objects.append(db_train)
+
+        trains, train_states = zip(*train_objects)
+
+        return trains
+
+    def _parse_central_api_train(self, db: Session, train_dict: dict) -> Union[
+        None, Tuple[DockerTrain, DockerTrainState]]:
+        db_train = self.get_by_train_id(db, train_dict["id"])
+        if db_train:
+            # todo update existing train
+            return None
+        else:
+            db_train = self._db_train_from_central_api(train_dict)
+            db.add(db_train)
+            db.commit()
+            db.refresh(db_train)
+
+            state = DockerTrainState(train_id=db_train.id)
+            return db_train, state
+
+    @staticmethod
+    def _db_train_from_central_api(train_dict: dict) -> DockerTrain:
+        db_train = DockerTrain(
+            train_id=train_dict["train_id"],
+            created_at=parser.parse(train_dict["created_at"]),
+            updated_at=parser.parse(train_dict["updated_at"]),
+            proposal_id=train_dict["train"]["proposal_id"],
+            type=train_dict["train"]["type"],
+            name=train_dict["train"]["name"],
+
+        )
+        return db_train
 
 
 docker_trains = CRUDDockerTrain(DockerTrain)

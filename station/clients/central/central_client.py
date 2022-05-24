@@ -24,7 +24,7 @@ class CentralApiClient:
 
         return {"Authorization": f"Bearer {token}"}
 
-    def get_trains(self, station_id: Any) -> list:
+    def get_trains(self, station_id: Any) -> dict:
         url = self.api_url + "/train-stations?"
         filters = f"filter[station_id]={station_id}&include=train"
         safe_filters = self._make_url_safe(filters)

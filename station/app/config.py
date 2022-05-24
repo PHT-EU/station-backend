@@ -352,33 +352,6 @@ class Settings:
                 logger.warning(f"{Emojis.WARNING}   SQLite database only supported in development mode.")
 
     def _setup_central_api_connection(self):
-        # validate that api url is present
-        # central_api_url = os.getenv(StationEnvironmentVariables.CENTRAL_API_URL.value)
-        # if central_api_url:
-        #     logger.debug(f"\t{Emojis.INFO}Overriding central api url with env var specification.")
-        #     self.config.central_ui.api_url = central_api_url
-        #
-        # elif self.config.central_ui.api_url:
-        #     logger.debug(f"\t{Emojis.INFO}Central API url: {self.config.central_ui.api_url}")
-        # else:
-        #     if self.config.environment == "production":
-        #         raise ValueError(f"{Emojis.ERROR} Central api url be specified in environment variables.")
-        #     else:
-        #         logger.warning(f"{Emojis.WARNING} Central api url is not specified.")
-        #
-        # # validate that the station's robot id is set
-        # central_robot_id = os.getenv(StationEnvironmentVariables.STATION_ROBOT_ID.value)
-        # if central_robot_id:
-        #     logger.debug(f"\t{Emojis.INFO}Overriding station robot id with env var specification.")
-        #     self.config.central_ui.robot_id = central_robot_id
-        # elif self.config.central_ui.robot_id:
-        #     logger.debug(f"\t{Emojis.INFO}Station robot id: {self.config.central_ui.robot_id}")
-        # else:
-        #     if self.config.environment == "production":
-        #         raise ValueError(f"{Emojis.ERROR} Station robot id needs to be specified.")
-        #     else:
-        #         logger.warning(f"{Emojis.WARNING} Station robot id is not specified.")
-
         self._validate_config_item(
             env_var=StationEnvironmentVariables.CENTRAL_API_URL,
             config_item="central_ui.api_url",
