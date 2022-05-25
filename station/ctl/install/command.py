@@ -54,7 +54,8 @@ def install(ctx, install_dir):
 
     # get credentials for registry
     reg_credentials = _request_registry_credentials(ctx)
-    ctx.obj["registry"]["central"] = reg_credentials
+
+    ctx.obj["registry"]["project"] = reg_credentials["external_name"]
 
     # setup docker
     setup_docker()
@@ -85,6 +86,8 @@ def _request_registry_credentials(ctx):
 
     credentials = client.get_registry_credentials(ctx.obj["station_id"])
     click.echo(Icons.CHECKMARK.value)
+
+
     return credentials
 
 

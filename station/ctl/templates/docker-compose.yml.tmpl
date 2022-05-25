@@ -39,6 +39,7 @@ services:
   auth:
     image: {{ pht_images.auth }}:{{ version }}
     container_name: pht-station-auth
+    restart: unless-stopped
     volumes:
       - {{ auth_config.data_dir }}:/usr/src/project/packages/server/writable
     ports:
