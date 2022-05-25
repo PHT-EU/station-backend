@@ -151,8 +151,10 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
 
             return db_train, db_state
 
-    @staticmethod
-    def _db_train_from_central_api(train_dict: dict) -> DockerTrain:
+    def _db_train_from_central_api(self, train_dict: dict) -> DockerTrain:
+
+        image_name = self._make_train_image_name(train_dict)
+
         db_train = DockerTrain(
             train_id=train_dict["train_id"],
             created_at=parser.parse(train_dict["created_at"]),
@@ -161,16 +163,32 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             type=train_dict["train"]["type"],
             name=train_dict["train"]["name"],
             num_participants=train_dict["train"]["stations"],
+            image_name=image_name,
 
         )
         return db_train
+
+    @staticmethod
+    def _make_train_image_name(train_dict: dict) -> str:
+
+        tag = train_dict["artifact_tag"]
+        if not tag:
+            tag = "latest"
+        image_name = '{}/{}/{}:{}'.format(
+            settings.config.registry.address,
+            settings.config.registry.project,
+            train_dict["train_id"],
+            tag
+        )
+        return image_name
+
+
 
     @staticmethod
     def _train_state_from_central(train_id: int, train_dict: dict) -> DockerTrainState:
         state = DockerTrainState(
             train_id=train_id,
             central_status=train_dict["run_status"],
-
         )
         return state
 
