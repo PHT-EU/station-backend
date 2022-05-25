@@ -120,21 +120,21 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             robot_secret=settings.config.central_ui.robot_secret
         )
         central_trains = client.get_trains(settings.config.station_id)
-
         train_objects = []
         for train in central_trains["data"]:
             if train["approval_status"] == "approved":
                 db_train = self._parse_central_api_train(db, train_dict=train)
                 if db_train:
                     train_objects.append(db_train)
-
-        trains, train_states = zip(*train_objects)
-
+        if train_objects:
+            trains, train_states = zip(*train_objects)
+        else:
+            return []
         return trains
 
     def _parse_central_api_train(self, db: Session, train_dict: dict) -> Union[
         None, Tuple[DockerTrain, DockerTrainState]]:
-        db_train = self.get_by_train_id(db, train_dict["id"])
+        db_train = self.get_by_train_id(db, train_dict["train_id"])
         if db_train:
             # todo update existing train
             return None
@@ -144,8 +144,12 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             db.commit()
             db.refresh(db_train)
 
-            state = DockerTrainState(train_id=db_train.id)
-            return db_train, state
+            db_state = self._train_state_from_central(db_train.id, train_dict)
+            db.add(db_state)
+            db.commit()
+            db.refresh(db_state)
+
+            return db_train, db_state
 
     @staticmethod
     def _db_train_from_central_api(train_dict: dict) -> DockerTrain:
@@ -156,9 +160,18 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             proposal_id=train_dict["train"]["proposal_id"],
             type=train_dict["train"]["type"],
             name=train_dict["train"]["name"],
+            num_participants=train_dict["train"]["stations"],
 
         )
         return db_train
 
+    @staticmethod
+    def _train_state_from_central(train_id: int, train_dict: dict) -> DockerTrainState:
+        state = DockerTrainState(
+            train_id=train_id,
+            central_status=train_dict["run_status"],
+
+        )
+        return state
 
 docker_trains = CRUDDockerTrain(DockerTrain)

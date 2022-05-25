@@ -64,6 +64,7 @@ class StationEnvironmentVariables(Enum):
     REGISTRY_URL = "HARBOR_URL"
     REGISTRY_USER = "HARBOR_USER"
     REGISTRY_PW = "HARBOR_PW"
+    REGISTRY_PROJECT = "HARBOR_PROJECT"
 
     # minio environment variables
     MINIO_HOST = "MINIO_HOST"
@@ -76,6 +77,7 @@ class RegistrySettings(BaseModel):
     address: Union[AnyHttpUrl, str]
     user: str
     password: SecretStr
+    project: Optional[str] = None
 
 
 class AirflowSettings(BaseModel):
@@ -501,7 +503,7 @@ class Settings:
         Returns:
 
         """
-        logger.info(f"Setting up registry connection...")
+        logger.info(f"{Emojis.INFO.value}Setting up registry connection...")
         env_registry, env_registry_user, env_registry_password = self._get_external_service_env_vars(
             url=StationEnvironmentVariables.REGISTRY_URL,
             client_id=StationEnvironmentVariables.REGISTRY_USER,
@@ -536,9 +538,15 @@ class Settings:
                 password=env_registry_password
             )
             self.config.registry = registry_config
+            self._validate_config_item(
+                StationEnvironmentVariables.REGISTRY_PROJECT,
+                "registry.project",
+            )
         # log registry config and status
         if registry_config:
-            logger.info(f"Registry: url - {self.config.registry.address}, user - {self.config.registry.user}")
+            logger.info(
+                f"Registry: url - {self.config.registry.address}, user - {self.config.registry.user}, "
+                f"project - {self.config.registry.project}")
         else:
             # raise error if no registry is configured in production mode
             if self.config.environment == StationRuntimeEnvironment.PRODUCTION:

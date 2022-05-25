@@ -99,6 +99,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
             StationEnvironmentVariables.REGISTRY_URL.value: config["registry"]["address"],
             StationEnvironmentVariables.REGISTRY_USER.value: registry_user,
             StationEnvironmentVariables.REGISTRY_PW.value: config["registry"]["password"],
+            StationEnvironmentVariables.REGISTRY_PROJECT.value: config["registry"]["project"],
 
         },
         "labels": [
