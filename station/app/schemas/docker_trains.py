@@ -12,6 +12,7 @@ class DockerTrainState(DBSchema):
     num_executions: Optional[int] = 0
     status: Optional[str] = "inactive"
     last_execution: Optional[datetime] = None
+    central_status: Optional[str] = None
 
 
 class AirflowEnvironmentVariable(BaseModel):
@@ -81,9 +82,12 @@ class DockerTrain(DBSchema):
     created_at: datetime
     updated_at: Optional[datetime] = None
     proposal_id: Any = None
+    type: Optional[str] = None
     is_active: bool = False
     train_id: Optional[str] = None
     config_id: Optional[int] = None
+    image_name: Optional[str] = None
+    num_participants: Optional[int] = None
     state: Optional[DockerTrainState] = None
     executions: Optional[List[DockerTrainSavedExecution]] = None
 
