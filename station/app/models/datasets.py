@@ -13,22 +13,22 @@ class StorageType(Enum):
     """
     Enum for storage types
     """
-    LOCAL = 1
-    MINIO = 2
-    DB = 3
+    LOCAL = "local"
+    MINIO = "minio"
+    DB = "db"
 
 
 class DataType(Enum):
     """
     Enum for data types
     """
-    IMAGE = 1
-    GENOME = 2
-    FHIR = 3
-    CSV = 4
-    STRUCTURED = 5
-    UNSTRUCTURED = 6
-    HYBRID = 7
+    IMAGE = "image"
+    GENOME = "genome"
+    FHIR = "fhir"
+    CSV = "csv"
+    STRUCTURED = "structured"
+    UNSTRUCTURED = "unstructured"
+    HYBRID = "hybrid"
 
 
 class DataSet(Base):
@@ -38,8 +38,8 @@ class DataSet(Base):
     updated_at = Column(DateTime, nullable=True)
     proposal_id = Column(Integer, nullable=True)
     name = Column(String)
-    data_type = Column(SQLAEnum(DataType), default=DataType.IMAGE)
-    storage_type = Column(SQLAEnum(StorageType), default=StorageType.MINIO)
+    data_type = Column(String, default=DataType.FHIR.value)
+    storage_type = Column(String, default=StorageType.MINIO.value)
     access_path = Column(String, nullable=True)
     fhir_server = Column(Integer, ForeignKey('fhir_servers.id'), nullable=True)
     summary = Column(JSON, nullable=True)

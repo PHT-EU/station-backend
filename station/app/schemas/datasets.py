@@ -7,12 +7,8 @@ class DataSetBase(BaseModel):
     name: str
     data_type: str
     storage_type: str
-    # TODO in models DataSet proposal_id is a integer -> desiding if what it has to be at the ende
-    proposal_id: Optional[int] = None
-    # proposal_id: Optional[Any]
-    # TODO improve clarity of access definition
+    proposal_id: Optional[str] = None
     access_path: Optional[str] = None
-    n_items: Optional[int] = None
 
 
 class DataSetCreate(DataSetBase):
