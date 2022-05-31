@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import Optional
-from pandas.api.types import is_numeric_dtype
+from pandas.api.types import is_numeric_dtype, is_bool_dtype
 from pandas import Series
 import plotly.express as px
 import plotly.io
@@ -52,29 +52,24 @@ def get_column_information(dataframe: pd.DataFrame, description: pd.DataFrame) -
             'title': title
         })
         nan_count = dataframe[title].isna().sum()
-        if not(is_numeric_dtype(dataframe[title])):
+        if not(is_numeric_dtype(dataframe[title])) or is_bool_dtype(dataframe[title]):
             # extract information from categorical column
-            columns_inf[i]['number_of_defined_elements'] = count - nan_count
-            columns_inf, chart_key, chart_json = process_categorical_column(dataframe, columns_inf, i, description, title)
+            columns_inf[i]['not_na_elements'] = count - nan_count
+            columns_inf, chart_json = process_categorical_column(dataframe, columns_inf, i, description, title)
         else:
             # extract information from numerical column
             zero_count = dataframe[title][dataframe[title]==0].count()
             undefined_count = nan_count + zero_count
-            columns_inf[i]['number_of_defined_elements'] = count - undefined_count
-            columns_inf, chart_key, chart_json = process_numerical_column(dataframe, columns_inf, i, description, title)
+            columns_inf[i]['not_na_elements'] = count - undefined_count
+            columns_inf, chart_json = process_numerical_column(dataframe, columns_inf, i, description, title)
 
         if chart_json is not None:
-            # save figure to cache
-            save_json = json.loads(json.dumps(chart_json.fig_data.json()))
-            redis_cache.set(chart_key, str(save_json))
-            # get chart for test
-            # chart_get = redis_cache.get(chart_key)
-            # fig = plotly.io.from_json(chart_get)
-            # fig.show()
+            columns_inf[i]['figure'] = chart_json
+
     return columns_inf
 
 
-def process_numerical_column(dataframe: pd.DataFrame, columns_inf: dict, i: int, description: pd.DataFrame, title: str) -> tuple[dict, str, DataSetFigure]:
+def process_numerical_column(dataframe: pd.DataFrame, columns_inf: dict, i: int, description: pd.DataFrame, title: str) -> tuple[dict, DataSetFigure]:
     """
     Extract information from numerical column and create plot of column data
     :param dataframe: dataset as dataframe object
@@ -89,13 +84,13 @@ def process_numerical_column(dataframe: pd.DataFrame, columns_inf: dict, i: int,
     columns_inf[i]['std'] = description[title]["std"]
     columns_inf[i]['min'] = description[title]["min"]
     columns_inf[i]['max'] = description[title]["max"]
-    chart_key = title + "_boxplot"
+    # create boxplot for numerical data
     fig = px.box(dataframe, y=title)
     chart_json = create_figure(fig)
-    return columns_inf, chart_key, chart_json
+    return columns_inf, chart_json
 
 
-def process_categorical_column(dataframe: pd.DataFrame, columns_inf:dict, i: int, description: pd.DataFrame, title: str) -> tuple[dict, str, DataSetFigure]:
+def process_categorical_column(dataframe: pd.DataFrame, columns_inf:dict, i: int, description: pd.DataFrame, title: str) -> tuple[dict, DataSetFigure]:
     """
     Extract information from categorical column and create plot of column data
     :param dataframe: dataset as dataframe object
@@ -105,11 +100,10 @@ def process_categorical_column(dataframe: pd.DataFrame, columns_inf:dict, i: int
     :param title: title of column with index i
     :return: array with column information, key and json to save chart in cache
     """
-    count = columns_inf[i]['number_of_defined_elements']
+    count = columns_inf[i]['not_na_elements']
     unique = description[title]["unique"]
     top = description[title]["top"]
     freq = description[title]["freq"]
-    chart_key = None
     chart_json = None
 
     # if every entry has an unique value (or at most 50 values are given multiple times)
@@ -131,17 +125,15 @@ def process_categorical_column(dataframe: pd.DataFrame, columns_inf:dict, i: int
             columns_inf[i]['most_frequent_element'] = top
             columns_inf[i]['frequency'] = freq
 
-            # pie chart if number of classes is below 10
-            # value counts are provided if there are less then 10 classes
-            if unique < 10:
+            # pie chart if number of classes is below 6
+            # value counts are provided if there are less then 6 classes
+            if unique < 6:
                 columns_inf[i]['value_counts'] = dict(dataframe[title].value_counts())
-                chart_key = title + "_pie"
                 fig = px.pie(dataframe, names=title, title=title)
 
 
             # histogram if number of classes is greater than 10
-            elif unique >= 10:
-                chart_key = title + "_histogram"
+            elif unique >= 6:
                 fig = px.histogram(dataframe, x=title, title=title)
                 fig.update_layout(yaxis_title="Anzahl")
 
@@ -150,7 +142,7 @@ def process_categorical_column(dataframe: pd.DataFrame, columns_inf:dict, i: int
 
         columns_inf[i]['type'] = column_type
 
-    return columns_inf, chart_key, chart_json
+    return columns_inf, chart_json
 
 
 def create_figure(fig: Figure) -> DataSetFigure:
@@ -163,21 +155,3 @@ def create_figure(fig: Figure) -> DataSetFigure:
     obj = json.loads(fig_json)
     figure = DataSetFigure(fig_data=obj)
     return figure
-
-
-def get_class_distribution(dataframe: pd.DataFrame, target_field: str) -> Series:
-    """
-    Get class distribution of specific column in dataframe
-    :param dataframe: Dataset as dataframe object
-    :param target_field: Column which should be analyzed
-    :return: Class distribution of specific column
-    """
-    if not isinstance(dataframe, pd.DataFrame):
-        raise TypeError
-    n_items = dataframe.shape[0]
-    column = dataframe[target_field]
-    if not(is_numeric_dtype(column)):
-        class_distribution = (dataframe[target_field].value_counts() / n_items)
-    else:
-        raise ValueError
-    return class_distribution

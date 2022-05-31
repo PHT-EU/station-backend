@@ -28,9 +28,19 @@ class DataSetUpdate(DataSetBase):
     pass
 
 
+class FigureData(BaseModel):
+    layout: dict
+    data: list
+
+
+class DataSetFigure(BaseModel):
+    fig_data: Optional[FigureData]
+
+
 class DataSetColumn(BaseModel):
     title: Optional[str]
-    number_of_defined_elements: Optional[int]
+    not_na_elements: Optional[int]
+    figure: Optional[DataSetFigure]
 
 
 class DataSetUniqueColumn(DataSetColumn):
@@ -70,15 +80,6 @@ class DataSetStatistics(BaseModel):
 
     class Config:
         orm_mode = True
-
-
-class FigureData(BaseModel):
-    layout: dict
-    data: list
-
-
-class DataSetFigure(BaseModel):
-    fig_data: Optional[FigureData]
 
 
 class DataSet(DataSetBase):

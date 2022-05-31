@@ -25,7 +25,7 @@ def create_new_data_set(create_msg: DataSetCreate, db: Session = Depends(depende
             raise HTTPException(status_code=404, detail="Error while creating new dataset.")
         return db_dataset
     except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="Dataset file not found.")
+        raise HTTPException(status_code=404, detail=f"Dataset file not found at {create_msg.access_path}.")
 
 
 @router.put("/{dataset_id}", response_model=DataSet)
@@ -68,21 +68,12 @@ def download(data_set_id: Any, db: Session = Depends(dependencies.get_db)):
     # TODO download as file
 
 
-@router.get("/minio/")
-def get_data_sets_from_bucket():
-    # TODO outsource minio functionality into separate endpoint file
-    client = MinioClient()
-    folders = client.list_data_sets()
-    items = client.get_data_set_items("cifar10/batch_1/")
-    if not items:
-        raise HTTPException(status_code=404, detail="Dataset-Items not found.")
-    print(len(list(items)))
-    print(folders)
-
-
 @router.get("/{data_set_id}/stats", response_model=DataSetStatistics)
 def get_data_set_statistics(data_set_id: Any, db: Session = Depends(dependencies.get_db)):
-    dataframe = datasets.get_data(db, data_set_id)
+    try:
+        dataframe = datasets.get_data(db, data_set_id)
+    except NotImplementedError:
+        raise HTTPException(status_code=422, detail="Method just specified for CSV-Data.")
     if dataframe is None or dataframe.empty:
         raise HTTPException(status_code=404, detail="Dataset not found.")
     try:
@@ -92,18 +83,3 @@ def get_data_set_statistics(data_set_id: Any, db: Session = Depends(dependencies
         raise HTTPException(status_code=400, detail="Dataset has to be given as a dataframe.")
 
 
-@router.get("/{data_set_id}/stats/{target_field}")
-def get_class_distribution(data_set_id: Any, target_field: str, db: Session = Depends(dependencies.get_db)):
-    dataframe = datasets.get_data(db, data_set_id)
-    if dataframe.empty:
-        raise HTTPException(status_code=404, detail="Dataset not found.")
-    if target_field in dataframe.columns:
-        try:
-            distribution = statistics.get_class_distribution(dataframe, target_field)
-            return distribution
-        except TypeError:
-            raise HTTPException(status_code=400, detail="Dataset has to be given as a dataframe.")
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Class counts are not computed for numerical data columns.")
-    else:
-        raise HTTPException(status_code=404, detail="Targetfield not found in dataset.")

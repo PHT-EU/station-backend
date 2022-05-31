@@ -13,6 +13,7 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
     def create(self, db: Session, *, obj_in: CreateSchemaType) -> Optional[ModelType]:
         obj_in_data = jsonable_encoder(obj_in)
         db_obj = self.model(**obj_in_data)
+        # TODO check for multiple files
         try:
             file = get_file(db_obj.access_path)
         except:
@@ -26,7 +27,7 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
     def get_data(self, db: Session, data_set_id):
         dataset = self.get(db, data_set_id)
         if dataset.data_type == "image":
-            pass
+            raise NotImplementedError
         elif dataset.data_type == "csv":
             path = dataset.access_path
             file = get_file(path)
@@ -34,9 +35,9 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
                 csv_df = pd.read_csv(f)
                 return csv_df
         elif dataset.data_type == "directory":
-            pass
+            raise NotImplementedError
         elif dataset.data_type == "fhir":
-            pass
+            raise NotImplementedError
         return dataset
 
     def get_by_name(self, db: Session, name: str):

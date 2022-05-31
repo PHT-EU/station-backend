@@ -77,8 +77,8 @@ class AirflowSettings(BaseModel):
 class MinioSettings(BaseModel):
     host: Union[AnyHttpUrl, AnyUrl, str]
     port: Optional[int] = None
-    access_key: Optional[str] = "admin"
-    secret_key: Optional[SecretStr] = "admin"
+    access_key: Optional[str] = "minio_admin"
+    secret_key: Optional[SecretStr] = "minio_admin"
 
 
 class CentralUISettings(BaseModel):
@@ -123,6 +123,7 @@ class StationConfig(BaseModel):
     Object containing the configuration of the station.
     """
     station_id: Union[int, str]
+    station_data_dir: Optional[str]
     host: Optional[Union[AnyHttpUrl, str]] = os.getenv(StationEnvironmentVariables.STATION_API_HOST.value, "127.0.0.1")
     port: Optional[int] = os.getenv(StationEnvironmentVariables.STATION_API_PORT.value, 8001)
     db: Optional[SecretStr] = "sqlite:///./app.db"
@@ -304,6 +305,10 @@ class Settings:
         if station_db:
             logger.debug(f"\t{Emojis.INFO}Overriding station db with env var specification.")
             self.config.db = station_db
+
+        station_data_dir = os.getenv(StationEnvironmentVariables.STATION_DATA_DIR.value)
+        if station_data_dir:
+            self.config.station_data_dir = station_data_dir
 
         if "sqlite" in self.config.db.lower():
             if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
