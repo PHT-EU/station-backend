@@ -1,11 +1,11 @@
 from sqlalchemy.orm import Session
 import pandas as pd
 
-from .base import CRUDBase, CreateSchemaType, ModelType
+from .base import CRUDBase, CreateSchemaType, ModelType, Optional, Any
 from fastapi.encoders import jsonable_encoder
 from station.app.models.datasets import DataSet
-from station.app.schemas.datasets import DataSetCreate, DataSetUpdate
-from station.clients.minio import MinioClient
+from station.app.schemas.datasets import DataSetCreate, DataSetUpdate, DataSetStatistics
+from station.app.datasets.filesystem import get_file
 
 
 class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
@@ -15,30 +15,36 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
     def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
         obj_in_data = jsonable_encoder(obj_in)
         db_obj = self.model(**obj_in_data)
-        # if obj_in_data["storage_type"] == "minio":
-        #     self._extract_mino_information(db_obj, obj_in_data)
-        # elif obj_in_data["storage_type"] == "csv":
-        #     self._extract_csv_information(db_obj, obj_in_data)
+        # TODO check for multiple files
+        try:
+            file = get_file(db_obj.access_path)
+        except:
+            raise FileNotFoundError
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
 
         return db_obj
 
-    def _extract_mino_information(self, db_obj, obj_in_data):
-        client = MinioClient()
-        n_items = len(list(client.get_data_set_items(obj_in_data["access_path"])))
-        db_obj.n_items = n_items
-        return db_obj
+    def get_data(self, db: Session, data_set_id):
+        dataset = self.get(db, data_set_id)
+        if dataset.data_type == "image":
+            raise NotImplementedError
+        elif dataset.data_type == "csv":
+            path = dataset.access_path
+            file = get_file(path)
+            with file as f:
+                csv_df = pd.read_csv(f)
+                return csv_df
+        elif dataset.data_type == "directory":
+            raise NotImplementedError
+        elif dataset.data_type == "fhir":
+            raise NotImplementedError
+        return dataset
 
-    def _extract_csv_information(self, db_obj, obj_in_data):
-        csv_df = pd.read_csv(db_obj.access_path)
-        n_items = len(csv_df.index)
-        db_obj.n_items = n_items
-        if obj_in_data["target_field"] is not None and obj_in_data["target_field"] != "":
-            class_distribution = (csv_df[obj_in_data["target_field"]].value_counts() / n_items).to_json()
-            db_obj.class_distribution = class_distribution
-        return db_obj
+    def get_by_name(self, db: Session, name: str):
+        dataset = db.query(self.model).filter(self.model.name == name).first()
+        return dataset
 
 
 datasets = CRUDDatasets(DataSet)
