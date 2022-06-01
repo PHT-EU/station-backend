@@ -12,7 +12,6 @@ app = FastAPI(
     title="PHT Station", docs_url="/api/docs", redoc_url="/api/redoc", openapi_url="/api/v1/openapi.json"
 )
 
-
 # Setup logging
 # init_logging()
 # TODO remove full wildcard for production

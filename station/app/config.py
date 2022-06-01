@@ -95,8 +95,8 @@ class AirflowSettings(BaseModel):
 class MinioSettings(BaseModel):
     host: Union[AnyHttpUrl, AnyUrl, str]
     port: Optional[int] = None
-    access_key: Optional[str] = "admin"
-    secret_key: Optional[SecretStr] = "admin"
+    access_key: Optional[str] = "minio_admin"
+    secret_key: Optional[SecretStr] = "minio_admin"
 
 
 class CentralUISettings(BaseModel):
@@ -141,6 +141,7 @@ class StationConfig(BaseModel):
     Object containing the configuration of the station.
     """
     station_id: Union[int, str]
+    station_data_dir: Optional[str]
     host: Optional[Union[AnyHttpUrl, str]] = os.getenv(StationEnvironmentVariables.STATION_API_HOST.value, "0.0.0.0")
     port: Optional[int] = os.getenv(StationEnvironmentVariables.STATION_API_PORT.value, 8000)
     db: Optional[SecretStr] = "sqlite:///./app.db"
@@ -347,6 +348,10 @@ class Settings:
             else:
                 logger.warning(f"{Emojis.WARNING} Connection string to station database is not specified in"
                                f" environment variables. Default database is used.")
+        station_data_dir = os.getenv(StationEnvironmentVariables.STATION_DATA_DIR.value)
+        if station_data_dir:
+            self.config.station_data_dir = station_data_dir
+
         if "sqlite" in self.config.db.lower():
             if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
                 raise ValueError(f"{Emojis.ERROR}   SQLite database not supported for production mode.")
