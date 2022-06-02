@@ -22,6 +22,8 @@ loguru = "*"
 jinja2 = "*"
 click = "*"
 rich = "*"
+plotly = "*"
+s3fs = "*"
 
 [dev-packages]
 pytest = "*"
