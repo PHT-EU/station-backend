@@ -33,25 +33,27 @@ def get_s3_filesystem(minio_url: str = None, access_key: str = None, secret_key:
     return fs
 
 
-def get_file(path):
+def get_file(path, storage_type):
     """
     Returns file independent of saved location (local or on minio server)
     :param path: Path to file
     :return: File
     """
     # access file on minio server
-    if path.startswith("s3://"):
+    if storage_type == "minio":
         fs = get_s3_filesystem()
         # get file
         try:
-            file = fs.open(path[5:])
+            file = fs.open(path)
             return file
         except:
             raise FileNotFoundError
-    else:
+    elif storage_type == "local":
         try:
             path = os.path.join(settings.config.station_data_dir, path)
             file = open(path)
             return file
         except:
             raise FileNotFoundError
+    else:
+        raise NotImplementedError

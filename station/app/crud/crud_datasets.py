@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 import pandas as pd
+import json
 
 from .base import CRUDBase, CreateSchemaType, ModelType, Optional, Any
 from fastapi.encoders import jsonable_encoder
@@ -17,9 +18,11 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
         db_obj = self.model(**obj_in_data)
         # TODO check for multiple files
         try:
-            file = get_file(db_obj.access_path)
-        except:
+            file = get_file(db_obj.access_path, db_obj.storage_type)
+        except FileNotFoundError:
             raise FileNotFoundError
+        except NotImplementedError:
+            raise NotImplementedError
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
@@ -32,7 +35,7 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
             raise NotImplementedError
         elif dataset.data_type == "csv":
             path = dataset.access_path
-            file = get_file(path)
+            file = get_file(path, dataset.storage_type)
             with file as f:
                 csv_df = pd.read_csv(f)
                 return csv_df
@@ -44,6 +47,15 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
 
     def get_by_name(self, db: Session, name: str):
         dataset = db.query(self.model).filter(self.model.name == name).first()
+        return dataset
+
+    def add_stats(self, db:Session, data_set_id, stats):
+        dataset = self.get(db, data_set_id)
+        stats = jsonable_encoder(stats)
+        stats_json = json.dumps(stats)
+        dataset.summary = stats_json
+        db.commit()
+        db.refresh(dataset)
         return dataset
 
 

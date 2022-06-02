@@ -24,6 +24,8 @@ def create_new_data_set(create_msg: DataSetCreate, db: Session = Depends(depende
         return db_dataset
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail=f"Dataset file not found at {create_msg.access_path}.")
+    except NotImplementedError:
+        raise HTTPException(status_code=422, detail=f"Storage type {create_msg.storage_type} not possible yet.")
 
 
 @router.get("", response_model=List[DataSet])
@@ -87,6 +89,10 @@ def get_data_set_statistics(data_set_id: Any, db: Session = Depends(dependencies
         raise HTTPException(status_code=404, detail="Dataset not found.")
     try:
         stats = statistics.get_dataset_statistics(dataframe)
+        try:
+            dataset = datasets.add_stats(db, data_set_id, stats)
+        except:
+            raise HTTPException(status_code=500, detail="Upload to database did not work.")
         return stats
     except TypeError:
         raise HTTPException(status_code=400, detail="Dataset has to be given as a dataframe.")
