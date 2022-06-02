@@ -132,8 +132,9 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             return []
         return trains
 
-    def _parse_central_api_train(self, db: Session, train_dict: dict) -> Union[
-        None, Tuple[DockerTrain, DockerTrainState]]:
+    def _parse_central_api_train(self,
+                                 db: Session,
+                                 train_dict: dict) -> Union[None, Tuple[DockerTrain, DockerTrainState]]:
         db_train = self.get_by_train_id(db, train_dict["train_id"])
         if db_train:
             # todo update existing train
@@ -154,12 +155,12 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
     def _db_train_from_central_api(self, train_dict: dict) -> DockerTrain:
 
         image_name = self._make_train_image_name(train_dict)
-
+        proposal_link = self._make_train_proposal_link(train_dict)
         db_train = DockerTrain(
             train_id=train_dict["train_id"],
             created_at=parser.parse(train_dict["created_at"]),
             updated_at=parser.parse(train_dict["updated_at"]),
-            proposal_id=train_dict["train"]["proposal_id"],
+            proposal=proposal_link,
             type=train_dict["train"]["type"],
             name=train_dict["train"]["name"],
             num_participants=train_dict["train"]["stations"],
@@ -182,8 +183,6 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
         )
         return image_name
 
-
-
     @staticmethod
     def _train_state_from_central(train_id: int, train_dict: dict) -> DockerTrainState:
         state = DockerTrainState(
@@ -191,5 +190,17 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             central_status=train_dict["run_status"],
         )
         return state
+
+    @staticmethod
+    def _make_train_proposal_link(train_dict: dict):
+        proposal_id = train_dict["train"]["proposal_id"]
+
+        central_path = settings.config.central_ui.api_url
+        if central_path.endswith("/api"):
+            central_path = central_path[:-4]
+        proposal_link = f"{central_path}/proposals/{proposal_id}"
+        return proposal_link
+
+
 
 docker_trains = CRUDDockerTrain(DockerTrain)

@@ -46,7 +46,7 @@ class DockerTrain(Base):
     id = Column(Integer, primary_key=True, index=True)
     train_id = Column(String, unique=True, index=True)
     name = Column(String, nullable=True)
-    proposal_id = Column(String, default="")
+    proposal = Column(String, nullable=True)
     is_active = Column(Boolean, default=False)
     image_name = Column(String, nullable=True)
     type = Column(String, nullable=True)
