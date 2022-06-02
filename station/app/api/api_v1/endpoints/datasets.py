@@ -87,6 +87,10 @@ def get_data_set_statistics(data_set_id: Any, db: Session = Depends(dependencies
         raise HTTPException(status_code=404, detail="Dataset not found.")
     try:
         stats = statistics.get_dataset_statistics(dataframe)
+        try:
+            dataset = datasets.add_stats(db, data_set_id, stats)
+        except:
+            raise HTTPException(status_code=500, detail="Upload to database did not work.")
         return stats
     except TypeError:
         raise HTTPException(status_code=400, detail="Dataset has to be given as a dataframe.")
