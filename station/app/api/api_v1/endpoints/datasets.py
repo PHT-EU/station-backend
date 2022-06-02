@@ -24,6 +24,8 @@ def create_new_data_set(create_msg: DataSetCreate, db: Session = Depends(depende
         return db_dataset
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail=f"Dataset file not found at {create_msg.access_path}.")
+    except NotImplementedError:
+        raise HTTPException(status_code=422, detail=f"Storage type {create_msg.storage_type} not possible yet.")
 
 
 @router.get("", response_model=List[DataSet])

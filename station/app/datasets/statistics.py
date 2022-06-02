@@ -1,14 +1,12 @@
 import pandas as pd
 from typing import Optional
 from pandas.api.types import is_numeric_dtype, is_bool_dtype
-from pandas import Series
 import plotly.express as px
 import plotly.io
 from plotly.graph_objects import Figure
 import json
 
 from station.app.schemas.datasets import DataSetStatistics, DataSetFigure
-from station.app.cache import redis_cache
 
 
 def get_dataset_statistics(dataframe: pd.DataFrame) -> Optional[DataSetStatistics]:

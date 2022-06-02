@@ -18,9 +18,11 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
         db_obj = self.model(**obj_in_data)
         # TODO check for multiple files
         try:
-            file = get_file(db_obj.access_path)
-        except:
+            file = get_file(db_obj.access_path, db_obj.storage_type)
+        except FileNotFoundError:
             raise FileNotFoundError
+        except NotImplementedError:
+            raise NotImplementedError
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
@@ -33,7 +35,7 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
             raise NotImplementedError
         elif dataset.data_type == "csv":
             path = dataset.access_path
-            file = get_file(path)
+            file = get_file(path, dataset.storage_type)
             with file as f:
                 csv_df = pd.read_csv(f)
                 return csv_df
