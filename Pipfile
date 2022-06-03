@@ -24,6 +24,7 @@ click = "*"
 rich = "*"
 plotly = "*"
 s3fs = "*"
+python-multipart = "*"
 
 [dev-packages]
 pytest = "*"

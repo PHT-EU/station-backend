@@ -29,7 +29,6 @@ class CentralApiClient:
         filters = f"filter[station_id]={station_id}&include=train"
         safe_filters = self._make_url_safe(filters)
         url = url + safe_filters
-        print(url)
         response = requests.get(url, headers=self.headers)
         response.raise_for_status()
         return response.json()

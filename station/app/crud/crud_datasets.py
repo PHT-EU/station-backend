@@ -17,12 +17,9 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
         obj_in_data = jsonable_encoder(obj_in)
         db_obj = self.model(**obj_in_data)
         # TODO check for multiple files
-        try:
-            file = get_file(db_obj.access_path, db_obj.storage_type)
-        except FileNotFoundError:
-            raise FileNotFoundError
-        except NotImplementedError:
-            raise NotImplementedError
+        # try:
+        #     file = get_file(db_obj.access_path, db_obj.storage_type)
+
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)

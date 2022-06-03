@@ -60,10 +60,22 @@ def delete_data_set(dataset_id: Any, db: Session = Depends(dependencies.get_db))
     return db_data_set
 
 
-@router.post("/{data_set_id}/files")
-async def upload_data_set_file(data_set_id: str, file: UploadFile = File(...),
+@router.post("/{dataset_id}/files")
+async def upload_data_set_file(dataset_id: int,
+                               files: List[UploadFile] = File(description="Multiple files as UploadFile"),
                                db: Session = Depends(dependencies.get_db)):
-    pass
+    db_dataset = datasets.get(db, dataset_id)
+    if not db_dataset:
+        raise HTTPException(status_code=404, detail=f"Dataset {dataset_id} not found.")
+    if not files:
+        raise HTTPException(status_code=400, detail="No files provided.")
+    for file in files:
+        if not file.filename:
+            raise HTTPException(status_code=400, detail="No filename provided.")
+
+    minio_client = MinioClient()
+    res = await minio_client.save_dataset_files(db_dataset.id, files)
+    print(res)
 
 
 @router.get("/{data_set_id}/files")

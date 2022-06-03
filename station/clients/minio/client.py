@@ -93,6 +93,21 @@ class MinioClient:
         res = self.client.put_object(bucket, object_name=name, data=file, length=len(file.getbuffer()))
         return res
 
+    async def save_dataset_files(self, dataset_id: str, files: List[Union[File, UploadFile]]):
+        """
+        store files into minio
+        """
+        resp = []
+        for file in files:
+            res = await self.client.put_object(
+                bucket_name="datasets",
+                object_name=f"{dataset_id}/{file.filename}",
+                data=file.read(),
+                length=len(file.getbuffer())
+            )
+            resp.append(res)
+        return resp
+
     def get_file(self, bucket: str, name: str) -> bytes:
         response = self.client.get_object(bucket_name=bucket, object_name=name)
         data = response.read()
@@ -198,7 +213,3 @@ class MinioClient:
             logger.error(f"Error while checking minio health: {e}")
             return HealthStatus.error
 
-
-if __name__ == '__main__':
-    load_dotenv(find_dotenv())
-    minio_client = MinioClient()
