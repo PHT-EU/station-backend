@@ -10,8 +10,8 @@ from station.app.cache import redis_cache, Cache
 if __name__ == '__main__':
     load_dotenv(find_dotenv())
     # todo remove reset in production
-    reset_db(dev=os.getenv("ENVIRONMENT") != "production")
-    # setup_db(dev=os.getenv("ENVIRONMENT") != "production")
+    # reset_db(dev=os.getenv("ENVIRONMENT") != "production")
+    setup_db(dev=os.getenv("ENVIRONMENT") != "production")
 
     # Configure logging behaviour
     log_config = uvicorn.config.LOGGING_CONFIG

@@ -99,11 +99,13 @@ class MinioClient:
         """
         resp = []
         for file in files:
-            res = await self.client.put_object(
+            data = await file.read()
+            data_file = BytesIO(data)
+            res = self.client.put_object(
                 bucket_name="datasets",
                 object_name=f"{dataset_id}/{file.filename}",
-                data=file.read(),
-                length=len(file.getbuffer())
+                data=data_file,
+                length=len(data)
             )
             resp.append(res)
         return resp
@@ -212,4 +214,3 @@ class MinioClient:
         except Exception as e:
             logger.error(f"Error while checking minio health: {e}")
             return HealthStatus.error
-
