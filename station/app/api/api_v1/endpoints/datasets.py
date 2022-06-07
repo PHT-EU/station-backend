@@ -79,7 +79,6 @@ async def upload_data_set_file(dataset_id: str,
 
 @router.get("/{data_set_id}/files", response_model=List[DataSetFile])
 async def get_data_set_files(data_set_id: str, file_name: str = None, db: Session = Depends(dependencies.get_db)):
-
     db_dataset = datasets.get(db, data_set_id)
     if not db_dataset:
         raise HTTPException(status_code=404, detail=f"Dataset {data_set_id} not found.")
@@ -89,6 +88,17 @@ async def get_data_set_files(data_set_id: str, file_name: str = None, db: Sessio
     if file_name:
         pass
     return items
+
+
+@router.delete("/{data_set_id}/files")
+async def delete_file_from_dataset(data_set_id: str, file_name: str, db: Session = Depends(dependencies.get_db)):
+    print(data_set_id, file_name)
+    db_dataset = datasets.get(db, data_set_id)
+    if not db_dataset:
+        raise HTTPException(status_code=404, detail=f"Dataset {data_set_id} not found.")
+
+    minio_client = MinioClient()
+    minio_client.delete_file("datasets", file_name)
 
 
 @router.get("/{data_set_id}/download")
@@ -116,5 +126,3 @@ def get_data_set_statistics(data_set_id: Any, db: Session = Depends(dependencies
         return stats
     except TypeError:
         raise HTTPException(status_code=400, detail="Dataset has to be given as a dataframe.")
-
-

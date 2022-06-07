@@ -110,7 +110,6 @@ class MinioClient:
                 length=len(data)
             )
             resp.append(res)
-
         return resp
 
     def get_file(self, bucket: str, name: str) -> bytes:
