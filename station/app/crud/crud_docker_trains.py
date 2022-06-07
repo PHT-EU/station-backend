@@ -122,7 +122,6 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
         central_trains = client.get_trains(settings.config.station_id)
         train_objects = []
         for train in central_trains["data"]:
-            print(train)
             if train["approval_status"] == "approved":
                 db_train = self._parse_central_api_train(db, train_dict=train)
                 if db_train:

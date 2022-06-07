@@ -92,7 +92,6 @@ async def get_data_set_files(data_set_id: str, file_name: str = None, db: Sessio
 
 @router.delete("/{data_set_id}/files")
 async def delete_file_from_dataset(data_set_id: str, file_name: str, db: Session = Depends(dependencies.get_db)):
-    print(data_set_id, file_name)
     db_dataset = datasets.get(db, data_set_id)
     if not db_dataset:
         raise HTTPException(status_code=404, detail=f"Dataset {data_set_id} not found.")
@@ -107,6 +106,7 @@ def download(data_set_id: Any, db: Session = Depends(dependencies.get_db)):
     if not db_dataset:
         raise HTTPException(status_code=404, detail="Dataset not found.")
     # TODO download as file
+
 
 
 @router.get("/{data_set_id}/stats", response_model=DataSetStatistics)

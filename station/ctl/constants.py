@@ -15,7 +15,7 @@ class PHTImages(Enum):
     API = "ghcr.io/pht-medic/station-api"
     UI = "ghcr.io/pht-medic/station-ui"
     AUTH = "ghcr.io/pht-medic/station-ui"
-    AIRFLOW = "ghcr.io/pht-medic/station-airflow"
+    AIRFLOW = "ghcr.io/pht-medic/airflow"
 
 
 class ServiceImages(Enum):
