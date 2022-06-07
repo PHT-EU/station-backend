@@ -46,6 +46,13 @@ class DataSetUpdate(DataSetBase):
     pass
 
 
+class DataSetFile(BaseModel):
+    file_name: str
+    full_path: Optional[str] = None
+    size: Optional[int] = None
+    updated_at: Optional[datetime] = None
+
+
 class FigureData(BaseModel):
     layout: dict
     data: list

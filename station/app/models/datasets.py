@@ -1,9 +1,8 @@
-from enum import Enum
-
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, JSON
+from sqlalchemy.dialects.postgresql import UUID
 
-from sqlalchemy import Enum as SQLAEnum
-from sqlalchemy.orm import relationship
+import uuid
+
 from datetime import datetime
 
 from station.app.db.base_class import Base
@@ -12,7 +11,7 @@ from station.app.db.base_class import Base
 
 class DataSet(Base):
     __tablename__ = "datasets"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
     created_at = Column(DateTime, default=datetime.now())
     updated_at = Column(DateTime, nullable=True)
     proposal_id = Column(String, nullable=True)

@@ -12,6 +12,7 @@ from loguru import logger
 from dotenv import load_dotenv, find_dotenv
 
 from station.app.config import settings
+from station.app.schemas.datasets import DataSetFile
 from station.app.schemas.station_status import HealthStatus
 
 
@@ -98,6 +99,7 @@ class MinioClient:
         store files into minio
         """
         resp = []
+
         for file in files:
             data = await file.read()
             data_file = BytesIO(data)
@@ -108,6 +110,7 @@ class MinioClient:
                 length=len(data)
             )
             resp.append(res)
+
         return resp
 
     def get_file(self, bucket: str, name: str) -> bytes:
@@ -163,7 +166,7 @@ class MinioClient:
     def load_data_set(self):
         pass
 
-    def get_data_set_items(self, data_set_id: str):
+    def get_data_set_items(self, data_set_id: str) -> List[DataSetFile]:
         """
         Get all objects in the data set specified by data_set_id and return them as a generator
 
@@ -171,7 +174,17 @@ class MinioClient:
         :return:
         """
         items = self.client.list_objects("datasets", prefix=data_set_id, recursive=True)
-        return items
+
+        return [
+            DataSetFile(
+                file_name=item.object_name.split("/")[-1],
+                full_path=item.object_name,
+                size=item.size,
+                updated_at=item.last_modified
+            )
+            for item in items
+        ]
+
 
     def get_classes_by_folders(self, data_set_id: str) -> List[str]:
         """

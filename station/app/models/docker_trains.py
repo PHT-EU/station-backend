@@ -1,5 +1,6 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, JSON
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 
 from station.app.db.base_class import Base
@@ -38,7 +39,7 @@ class DockerTrainConfig(Base):
     cpu_requirements = Column(JSON, nullable=True)
     gpu_requirements = Column(JSON, nullable=True)
     auto_execute = Column(Boolean, default=False)
-    dataset_id = Column(Integer, ForeignKey('datasets.id'), nullable=True)
+    dataset_id = Column(UUID(as_uuid=True), ForeignKey('datasets.id'), nullable=True)
 
 
 class DockerTrain(Base):

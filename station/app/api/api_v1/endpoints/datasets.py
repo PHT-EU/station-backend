@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from station.app.api import dependencies
 
-from station.app.schemas.datasets import DataSet, DataSetCreate, DataSetUpdate, DataSetStatistics
+from station.app.schemas.datasets import DataSet, DataSetCreate, DataSetUpdate, DataSetStatistics, DataSetFile
 from station.app.datasets import statistics
 from station.app.crud import datasets
 from station.clients.minio import MinioClient
@@ -61,7 +61,7 @@ def delete_data_set(dataset_id: Any, db: Session = Depends(dependencies.get_db))
 
 
 @router.post("/{dataset_id}/files")
-async def upload_data_set_file(dataset_id: int,
+async def upload_data_set_file(dataset_id: str,
                                files: List[UploadFile] = File(description="Multiple files as UploadFile"),
                                db: Session = Depends(dependencies.get_db)):
     db_dataset = datasets.get(db, dataset_id)
@@ -74,13 +74,21 @@ async def upload_data_set_file(dataset_id: int,
             raise HTTPException(status_code=400, detail="No filename provided.")
 
     minio_client = MinioClient()
-    res = await minio_client.save_dataset_files(db_dataset.id, files)
-    print(res)
+    await minio_client.save_dataset_files(db_dataset.id, files)
 
 
-@router.get("/{data_set_id}/files")
-def get_data_set_files(data_set_id: str, file_name: str, db: Session = Depends(dependencies.get_db)):
-    pass
+@router.get("/{data_set_id}/files", response_model=List[DataSetFile])
+async def get_data_set_files(data_set_id: str, file_name: str = None, db: Session = Depends(dependencies.get_db)):
+
+    db_dataset = datasets.get(db, data_set_id)
+    if not db_dataset:
+        raise HTTPException(status_code=404, detail=f"Dataset {data_set_id} not found.")
+
+    minio_client = MinioClient()
+    items = minio_client.get_data_set_items(data_set_id)
+    if file_name:
+        pass
+    return items
 
 
 @router.get("/{data_set_id}/download")
