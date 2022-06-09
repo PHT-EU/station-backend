@@ -47,6 +47,7 @@ def get_train_by_train_id(train_id: str, db: Session = Depends(dependencies.get_
 @router.post("/{train_id}/run", response_model=DockerTrainSavedExecution)
 def run_docker_train(train_id: str, run_config: DockerTrainExecution = None,
                      db: Session = Depends(dependencies.get_db)):
+
     execution = airflow_docker_train.run_train(db, train_id, run_config)
     return execution
 
@@ -94,6 +95,7 @@ def get_all_docker_train_configs(db: Session = Depends(dependencies.get_db), ski
 
 @router.post("/config", response_model=DockerTrainConfig)
 def add_docker_train_configuration(config_in: DockerTrainConfigCreate, db: Session = Depends(dependencies.get_db)):
+    print(config_in)
     if docker_train_config.get_by_name(db, name=config_in.name):
         raise HTTPException(status_code=400, detail="A config with the given name already exists.")
     config = docker_train_config.create(db, obj_in=config_in)
