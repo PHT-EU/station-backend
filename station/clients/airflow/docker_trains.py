@@ -9,6 +9,9 @@ from station.app.crud.crud_docker_trains import docker_trains
 from station.app.crud.crud_train_configs import docker_train_config
 from station.app.schemas.docker_trains import DockerTrainExecution, DockerTrainSavedExecution, DockerTrainState, DockerTrain
 from station.app.models.docker_trains import DockerTrainState as dts_model, DockerTrainExecution as dte_model
+from loguru import logger
+
+from station.app.config import settings
 
 
 def update_state(db: Session, db_train, run_time) -> DockerTrainState:
@@ -55,8 +58,11 @@ def validate_run_config(db: Session, train_id: str, execution_params: DockerTrai
     else:
         print(f"Starting train {train_id} using default config")
         # Default config specifies only the identifier of the the train image and uses the latest tag
+        harbor_url = settings.config.registry.address
+        project = settings.config.registry.project
+        print(harbor_url, project)
         config = {
-            "repository": f"{os.getenv('HARBOR_BASE_URL')}/station_{os.getenv('STATION_ID')}/{train_id}",
+            "repository": f"{harbor_url}/{project}/{train_id}",
             "tag": "latest"
         }
         config_id = None
@@ -124,6 +130,7 @@ def run_train(db: Session, train_id: Any, execution_params: DockerTrainExecution
         db_train = update_train(db, db_train, run_id, config_dict["config_id"])
         last_execution = db_train.executions[-1]
         return last_execution
-    except:
+    except Exception as e:
+        logger.error(f"Error while running train {train_id} with config {config_dict['config']} \n {e}")
         raise HTTPException(status_code=503, detail="No connection to the airflow client could be established.")
 

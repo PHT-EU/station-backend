@@ -74,6 +74,7 @@ class AuthSettings(ExtendedServiceSettings):
 class StationConfig(BaseSettings):
     station_id: str
     environment: ApplicationEnvironment
+    station_data_dir: str
     version: str
     central: CentralSettings
     http: HttpSettings

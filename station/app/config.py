@@ -85,7 +85,7 @@ class AirflowSettings(BaseModel):
     api_url: Optional[str] = "http://localhost:8080/api/v1/"
     port: Optional[int] = 8080
     user: Optional[str] = "admin"
-    password: Optional[SecretStr] = SecretStr("admin")
+    password: Union[SecretStr, str]
     station_db_conn_id: Optional[str] = "psql_station_db"
     station_db_conn_type: Optional[str] = "postgres"
     station_db_port: Optional[int] = 5432
@@ -94,9 +94,9 @@ class AirflowSettings(BaseModel):
 
 class MinioSettings(BaseModel):
     host: Union[AnyHttpUrl, AnyUrl, str]
-    port: Optional[int] = None
-    access_key: Optional[str] = "minio_admin"
-    secret_key: Optional[SecretStr] = "minio_admin"
+    port: Optional[int] = 9000
+    access_key: str
+    secret_key: Union[SecretStr, str]
 
 
 class CentralUISettings(BaseModel):
@@ -106,7 +106,7 @@ class CentralUISettings(BaseModel):
 
 
 class RedisSettings(BaseModel):
-    host: Optional[str] = "localhost"
+    host: Optional[str] = "redis"
     port: Optional[int] = 6379
     password: Optional[SecretStr] = None
     db: Optional[int] = 0
@@ -156,8 +156,82 @@ class StationConfig(BaseModel):
 
     @classmethod
     def from_file(cls, path: str) -> "StationConfig":
+        """
+        Parse the application configuration file (station_config.yml) for the settings required to run the station api.
+        Args:
+            path: location of the configuration file
+
+        Returns:
+            StationConfig object containing the configuration of the station api.
+        """
+
+        return cls._parse_config_file(path)
+
+    @staticmethod
+    def _parse_config_file(path: str) -> "StationConfig":
         with open(path, "r") as f:
-            return cls(**safe_load(f))
+            config_dict = safe_load(f)
+
+        db_conn = "postgresql+psycopg2://{}:{}@{}:{}/{}".format(
+            config_dict["db"]["admin_user"],
+            config_dict["db"]["admin_password"],
+            config_dict["db"].get("host", "postgres"),
+            config_dict["db"].get("port", 5432),
+            config_dict["db"].get("name", "pht_station"),
+
+        )
+
+        registry_settings = RegistrySettings(
+            address=config_dict["registry"]["address"],
+            user=config_dict["registry"]["user"],
+            password=config_dict["registry"]["password"],
+            project=config_dict["registry"].get("project", None),
+        )
+
+        auth_settings = AuthConfig(
+            robot_id=config_dict["auth"]["robot_id"],
+            robot_secret=config_dict["auth"]["robot_secret"],
+            host=config_dict["auth"].get("host", "station-auth"),
+            port=config_dict["auth"].get("port", 3010),
+        )
+
+        airflow_settings = AirflowSettings(
+            host=config_dict.get("airflow").get("host", "airflow"),
+            port=config_dict.get("airflow").get("port", 8080),
+            user=config_dict.get("airflow").get("admin_user", "admin"),
+            password=config_dict.get("airflow").get("admin_password"),
+
+        )
+        airflow_settings.api_url = f"http://{airflow_settings.host}:{airflow_settings.port}/api/v1/"
+
+        minio_settings = MinioSettings(
+            host=config_dict.get("minio").get("host", "minio"),
+            port=config_dict.get("minio").get("port", 9000),
+            access_key=config_dict.get("minio").get("admin_user", "minio_admin"),
+            secret_key=config_dict.get("minio").get("admin_password"),
+        )
+
+        central_settings = CentralUISettings(
+            api_url=config_dict.get("central").get("api_url"),
+            robot_id=config_dict.get("central").get("robot_id"),
+            robot_secret=config_dict.get("central").get("robot_secret"),
+        )
+
+        return StationConfig(
+            station_id=config_dict["station_id"],
+            station_data_dir=config_dict["station_data_dir"],
+            host=os.getenv(StationEnvironmentVariables.STATION_API_HOST.value, "0.0.0.0"),
+            port=os.getenv(StationEnvironmentVariables.STATION_API_PORT.value, 8000),
+            db=db_conn,
+            environment=StationRuntimeEnvironment(config_dict["environment"]),
+            fernet_key=config_dict["api"]["fernet_key"],
+            registry=registry_settings,
+            auth=auth_settings,
+            airflow=airflow_settings,
+            minio=minio_settings,
+            central_ui=central_settings,
+            redis=RedisSettings()
+        )
 
     def to_file(self, path: str) -> None:
         # todo get secret values recursively
@@ -197,7 +271,7 @@ class Settings:
             self.config_path = config_path
             self._config_file = True
         else:
-            self.config_path = os.getenv(StationEnvironmentVariables.CONFIG_PATH.value, "station_config.yaml")
+            self.config_path = os.getenv(StationEnvironmentVariables.CONFIG_PATH.value, "station_config.yml")
             self._config_file = True
         # todo create/update config file
 
@@ -242,8 +316,9 @@ class Settings:
 
         """
         logger.info(f"{Emojis.INFO}Looking for config file...")
+        print("Config path", self.config_path)
         if not os.path.isfile(self.config_path):
-            if self.config_path == "station_config.yaml":
+            if self.config_path == "station_config.yml":
                 logger.warning(
                     f"\t{Emojis.WARNING}No config file found. Attempting configuration via environment variables...")
             else:
