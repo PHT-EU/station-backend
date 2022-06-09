@@ -102,7 +102,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - {{ airflow_config.private_key }}:/opt/private_key.pem
       - {{ airflow_config.config_path }}:/root/airflow/airflow.cfg
-      - ./data/station:/opt/station_data
     depends_on:
       - postgres
     ports:

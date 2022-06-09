@@ -131,7 +131,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
         "private_key": config["central"]["private_key"],
         "config_path": config["airflow_config_path"],
         "env": {
-            "STATION_ID": config["station_id"],
+            "STATION_ID": config["registry"]["project"],
             "AIRFLOW_USER": config["airflow"]["admin_user"],
             "AIRFLOW_PW": config["airflow"]["admin_password"],
             "HARBOR_URL": config["registry"]["address"],
