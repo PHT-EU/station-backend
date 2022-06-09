@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from typing import Any, Dict
+from typing import Any, Dict, Union, Tuple
 import os
 from datetime import datetime
 
@@ -35,54 +35,57 @@ def run_train(db: Session, train_id: Any, execution_params: dts.DockerTrainExecu
         config_id = db_train.config_id
         if not config_id:
             config_id = "default"
-            logger.info("No config defined. Default config is used.")
         execution_params = dts.DockerTrainExecution(config_id=config_id)
 
-    config_dict = validate_run_config(db, train_id, execution_params)
+    config_id, config_dict = validate_run_config(db, train_id, execution_params)
+    # process assigned data sets
+    if execution_params.dataset_id:
+        dataset = datasets.get(db, execution_params.dataset_id)
+        _process_dataset(config_dict, dataset)
 
     # Execute the train using the airflow rest api
     try:
-        run_id = airflow_client.trigger_dag("run_pht_train", config=config_dict["config"])
-        db_train = update_train(db, db_train, run_id, config_dict["config_id"])
+        run_id = airflow_client.trigger_dag("run_pht_train", config=config_dict)
+        db_train = update_train(db, db_train, run_id, config_id)
         last_execution = db_train.executions[-1]
         return last_execution
     except Exception as e:
-        logger.error(f"Error while running train {train_id} with config {config_dict['config']} \n {e}")
+        logger.error(f"Error while running train {train_id} with config {config_dict} \n {e}")
         raise HTTPException(status_code=503, detail="No connection to the airflow client could be established.")
 
 
 def validate_run_config(
         db: Session,
         train_id: str,
-        execution_params: dts.DockerTrainExecution) -> dts.DockerTrainAirflowConfig:
+        execution_params: dts.DockerTrainExecution,
+        tag: str = None) -> Tuple[Union[int, str], dict]:
     """
     Validate the config used for the triggered run
     :param db: database session
     :param train_id: train id of the train to run
     :param execution_params: includes the config_id of the config to use or the specified config
+    :param tag: optional tag of the image
     :return:
+
     """
+
+    harbor_url = settings.config.registry.address
+    project = settings.config.registry.project
+    config = {
+        "repository": f"{harbor_url}/{project}/{train_id}",
+        "tag": "latest" if not tag else tag
+    }
+
     # Extract config by id if given
     if execution_params.config_id != "default":
-        config_general = docker_train_config.get(db, execution_params.config_id)
-        print(dts.DockerTrainConfig.from_orm(config_general))
-
+        db_config = docker_train_config.get(db, execution_params.config_id)
+        _process_db_config(config, db_config)
+        return db_config.id, config
     # Using the default config
     else:
         logger.info(f"Starting train {train_id} using default config")
         # Default config specifies only the identifier of the the train image and uses the latest tag
-        harbor_url = settings.config.registry.address
-        project = settings.config.registry.project
-        config = {
-            "repository": f"{harbor_url}/{project}/{train_id}",
-            "tag": "latest"
-        }
-        config_id = None
-
-    if config["repository"] is None or config["tag"] is None:
-        raise HTTPException(status_code=400, detail="Train run parameters are missing.")
-
-    return {"config": config, "config_id": config_id}
+        return "default", config
 
 
 def update_state(db: Session, db_train, run_time) -> dts.DockerTrainState:
@@ -132,3 +135,48 @@ def update_train(db: Session, db_train, run_id: str, config_id: int) -> dts.Dock
     db.commit()
 
     return db_train
+
+
+def _process_db_config(config_dict: dict, db_config: dtm.DockerTrainConfig) -> dict:
+    """
+    Update the config dictionary and with the values from db configuration
+    :param config_dict: config dictionary
+    :param db_config: db_config object
+    :return:
+    """
+
+    if db_config.airflow_config:
+        db_config = dts.DockerTrainConfig.from_orm(db_config)
+        env_dict = {}
+        for env in db_config.airflow_config.env:
+            env_dict[env.key] = env.value
+        config_dict["env"] = env_dict
+
+        volume_dict = {}
+        for volume in db_config.airflow_config.volumes:
+            volume_dict[volume.host_path] = {
+                "bind": volume.container_path,
+                "mode": volume.mode
+            }
+        config_dict["volumes"] = volume_dict
+        return config_dict
+
+
+def _process_dataset(config_dict, dataset):
+    """
+    Update the config dictionary with the values from the dataset
+    Args:
+        config_dict:
+        dataset:
+
+    Returns:
+
+    """
+
+    mount_path = os.path.join(settings.config.station_data_dir, "datasets", str(dataset.id))
+    volumes = config_dict.get("volumes", {})
+    volumes[mount_path] = {
+        "bind": "/opt/train_data/",
+        "mode": "ro"
+    }
+    config_dict["volumes"] = volumes
