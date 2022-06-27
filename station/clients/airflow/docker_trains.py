@@ -172,7 +172,6 @@ def _process_dataset(config_dict, dataset):
     Returns:
 
     """
-
     mount_path = os.path.join(settings.config.station_data_dir, "datasets", str(dataset.id))
     volumes = config_dict.get("volumes", {})
     volumes[mount_path] = {

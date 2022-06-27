@@ -9,6 +9,9 @@ environment: "{{ environment }}"
 # configure the admin password for the station (username: admin)
 admin_password: "{{ admin_password }}"
 
+# set the station data directory where the station will store the data used for local analysis
+station_data_dir: "{{ station_data_dir }}"
+
 # Configure authentication for central services
 central:
   api_url: "{{ central.api_url }}"
