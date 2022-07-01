@@ -8,7 +8,6 @@ from datetime import datetime
 from station.app.db.base_class import Base
 
 
-
 class DataSet(Base):
     __tablename__ = "datasets"
     id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)

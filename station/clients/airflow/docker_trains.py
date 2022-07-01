@@ -46,7 +46,7 @@ def run_train(db: Session, train_id: Any, execution_params: dts.DockerTrainExecu
     # Execute the train using the airflow rest api
     try:
         run_id = airflow_client.trigger_dag("run_pht_train", config=config_dict)
-        db_train = update_train(db, db_train, run_id, config_id)
+        db_train = update_train_after_run(db, db_train, run_id, config_id, dataset_id=execution_params.dataset_id)
         last_execution = db_train.executions[-1]
         return last_execution
     except Exception as e:
@@ -88,13 +88,17 @@ def validate_run_config(
         return "default", config
 
 
-def update_state(db: Session, db_train, run_time) -> dts.DockerTrainState:
+def update_state(db: Session, db_train: dtm.DockerTrain, run_time: datetime) -> dts.DockerTrainState:
     """
-    Update the train state object corresponding to the train
-    :param db: database session
-    :param db_train: train object
-    :param run_time: time when run is triggered
-    :return: train state object
+    Update the train state object of the train after starting an execution.
+    Args:
+        db: database session
+        db_train: train object
+        run_time: time when the run was triggered
+
+    Returns:
+        updated train state object
+
     """
     train_state = db.query(dtm.DockerTrainState).filter(dtm.DockerTrainState.train_id == db_train.id).first()
     if train_state:
@@ -110,14 +114,23 @@ def update_state(db: Session, db_train, run_time) -> dts.DockerTrainState:
     return train_state
 
 
-def update_train(db: Session, db_train, run_id: str, config_id: int) -> dts.DockerTrain:
+def update_train_after_run(db: Session,
+                           db_train: dtm.DockerTrain,
+                           run_id: str,
+                           config_id: int,
+                           dataset_id: int = None) -> dts.DockerTrain:
     """
-    Update train parameters
-    :param config_id: config id to save for execution
-    :param db: database session
-    :param db_train: db_train object to update
-    :param run_id: run_id of the triggered run
-    :return:
+    Update train in the database and create a new execution object that stores the run configuration.
+
+    Args:
+        db: database session
+        db_train: train object
+        run_id: run id of the airflow DAG run
+        config_id: id of the config used for the run
+        dataset_id: id of the dataset used for the run
+
+    Returns:
+        updated train object
     """
     db_train.is_active = True
     run_time = datetime.now()
@@ -127,7 +140,12 @@ def update_train(db: Session, db_train, run_id: str, config_id: int) -> dts.Dock
     train_state = update_state(db, db_train, run_time)
 
     # Create an execution
-    execution = dtm.DockerTrainExecution(train_id=db_train.id, airflow_dag_run=run_id, config=config_id)
+    execution = dtm.DockerTrainExecution(
+        train_id=db_train.id,
+        airflow_dag_run=run_id,
+        config=config_id,
+        dataset=dataset_id
+    )
     db.add(execution)
     db.commit()
     db.refresh(execution)

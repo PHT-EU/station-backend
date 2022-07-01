@@ -76,6 +76,7 @@ class DockerTrainSavedExecution(DBSchema):
     end: Optional[datetime] = None
     airflow_dag_run: Optional[str] = None
     config: Optional[int] = None
+    dataset: Optional[str] = None
 
 
 class DockerTrain(DBSchema):
