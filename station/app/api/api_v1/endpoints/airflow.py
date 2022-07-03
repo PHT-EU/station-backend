@@ -53,7 +53,7 @@ def run(run_msg: AirflowRunMsg, dag_id: str, db: Session = Depends(dependencies.
 
 
 @router.get("/logs/{dag_id}/{run_id}", response_model=AirflowInformation)
-def get_airflow_run_information(run_id: str, dag_id: str):
+def get_airflow_run_information(dag_id: str, run_id: str):
     """
     Get information about one airflow DAG execution.
     @param dag_id: ID of the DAG e.G. "run_local" , "run_pht_train" etc.
