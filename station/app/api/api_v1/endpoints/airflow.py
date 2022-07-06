@@ -62,6 +62,7 @@ def get_airflow_run_information(dag_id: str, run_id: str):
     """
 
     run_info = airflow_client.get_run_information(dag_id, run_id)
+
     for instance in run_info["tasklist"]["task_instances"][:]:
         try:
             instance.pop("sla_miss")
@@ -76,12 +77,11 @@ def get_airflow_run_information(dag_id: str, run_id: str):
         except KeyError:
             pass
 
-    print(run_info["tasklist"]["task_instances"][:])
     return run_info
 
 
-@router.get("/logs/{dag_id}/{run_id}/{task_id}", response_model=AirflowTaskLog)
-def get_airflow_task_log(dag_id: str, run_id: str, task_id: str, task_try_number: int = None):
+@router.get("/logs/{dag_id}/{run_id}/{task_id}/{task_try_number}", response_model=AirflowTaskLog)
+def get_airflow_task_log(dag_id: str, run_id: str, task_id: str, task_try_number: int):
     """
     Get log of a task in a DAG execution.
     @param dag_id: ID of the DAG e.G. "run_local" , "run_pht_train" etc.

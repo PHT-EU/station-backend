@@ -94,7 +94,7 @@ class AirflowClient:
         information["tasklist"] = task_list
         return information
 
-    def get_task_log(self, dag_id: str, run_id: str, task_id: str, task_try_number: int = None) -> dict:
+    def get_task_log(self, dag_id: str, run_id: str, task_id: str, task_try_number: int = None) -> str:
         """
         get the log of a task for a specific run
         @param dag_id: dag under which the task is run
@@ -121,7 +121,7 @@ class AirflowClient:
             log.raise_for_status()
             return log.content.decode("utf-8")
         else:
-            return None
+            return ""
 
 
 airflow_client = AirflowClient()
