@@ -5,7 +5,7 @@ from jinja2 import Environment
 
 from station.ctl.util import get_template_env
 from station.ctl.constants import PHTImages, ServiceImages, PHTDirectories
-from station.app.config import StationEnvironmentVariables
+from station.app.env import StationEnvironmentVariables
 
 
 def render_compose(config: dict, env: Environment = None) -> str:

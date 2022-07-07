@@ -1,0 +1,49 @@
+from enum import Enum
+
+
+class StationEnvironmentVariables(Enum):
+    # station configuration variables
+    STATION_ID = "STATION_ID"
+    ENVIRONMENT = "ENVIRONMENT"
+    STATION_DB = "STATION_DB"
+    STATION_API_HOST = "STATION_API_HOST"
+    STATION_API_PORT = "STATION_API_PORT"
+    FERNET_KEY = "FERNET_KEY"
+    STATION_DATA_DIR = "STATION_DATA_DIR"
+    CONFIG_PATH = "STATION_CONFIG_PATH"
+
+    # central api configuration variables
+    CENTRAL_API_URL = "CENTRAL_API_URL"
+    STATION_ROBOT_ID = "STATION_ROBOT_ID"
+    STATION_ROBOT_SECRET = "STATION_ROBOT_SECRET"
+
+    # airflow environment variables
+    AIRFLOW_HOST = "AIRFLOW_HOST"
+    AIRFLOW_PORT = "AIRFLOW_PORT"
+    AIRFLOW_USER = "AIRFLOW_USER"
+    AIRFLOW_PW = "AIRFLOW_PW"
+    AIRFLOW_API_URL = "AIRFLOW_API_URL"
+
+    # Redis environment variables
+    REDIS_HOST = "REDIS_HOST"
+    REDIS_PORT = "REDIS_PORT"
+    REDIS_PW = "REDIS_PW"
+    REDIS_DB = "REDIS_DB"
+
+    # auth environment variables
+    AUTH_SERVER_HOST = "AUTH_SERVER_HOST"
+    AUTH_SERVER_PORT = "AUTH_SERVER_PORT"
+    AUTH_ROBOT_ID = "AUTH_ROBOT_ID"
+    AUTH_ROBOT_SECRET = "AUTH_ROBOT_SECRET"
+
+    # Registry environment variables
+    REGISTRY_URL = "HARBOR_URL"
+    REGISTRY_USER = "HARBOR_USER"
+    REGISTRY_PW = "HARBOR_PW"
+    REGISTRY_PROJECT = "HARBOR_PROJECT"
+
+    # minio environment variables
+    MINIO_HOST = "MINIO_HOST"
+    MINIO_PORT = "MINIO_PORT"
+    MINIO_ACCESS_KEY = "MINIO_USER"
+    MINIO_SECRET_KEY = "MINIO_PW"
