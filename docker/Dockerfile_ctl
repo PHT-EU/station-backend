@@ -18,7 +18,7 @@ RUN pip install /home/station
 
 # Add the entrypoint
 COPY docker/ctl_entrypoint.sh /entrypoint.sh
-
+RUN chmod +x /entrypoint.sh
 WORKDIR /
 
 ENTRYPOINT ["/entrypoint.sh"]
