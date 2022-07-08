@@ -110,21 +110,29 @@ def _fix_private_key(config: dict) -> str:
             raise click.BadParameter(f"{path} is not a file")
         else:
             return path
-
     name = click.prompt('Name your private key file')
     passphrase = click.prompt('Enter your passphrase. If given, it will be used to encrypt the private key', default="")
     private_key_path, private_key, public_key = generate_private_key(name, passphrase)
-    private_key_abs_path = os.path.abspath(private_key_path)
-    if not os.path.exists(private_key_path):
-        click.echo(f'Private key file {private_key_abs_path} was not created. Please check the permissions.')
-        return None
-    else:
-        click.echo(f'New private key created: {private_key_abs_path}. Submitting public key to central API...',
-                   nl=False)
-        _submit_public_key(config, public_key)
-        click.echo(Icons.CHECKMARK.value)
 
-    return private_key_abs_path
+    # if a host path is given append the name of the private key to this path
+    host_path = config.get("host_path", None)
+    if host_path:
+        private_key_path = os.path.join(host_path, private_key_path)
+        click.echo(f"Private key will be saved at: {private_key_path} on the host machine")
+    else:
+        private_key_path = os.path.abspath(private_key_path)
+        if not os.path.exists(private_key_path):
+            click.echo(f'Private key file {private_key_path} was not created. Please check the permissions.')
+            return None
+        else:
+            click.echo(f'New private key created: {private_key_path}. Submitting public key to central API...',
+                       nl=False)
+            _submit_public_key(config, public_key)
+            click.echo(Icons.CHECKMARK.value)
+
+
+
+    return private_key_path
 
 
 def _set_config_values(config: dict, field: str, value: Any):

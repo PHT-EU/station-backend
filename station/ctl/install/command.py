@@ -24,12 +24,14 @@ from station.ctl.install.fs import check_create_pht_dirs
 @click.option('--install-dir',
               type=click.Path(exists=True, file_okay=False, dir_okay=True),
               help='Install location for station software. Defaults to current working directory.')
+@click.option('--host-path', type=str, help='Host path for containerized execution of the installer', required=False)
 @click.pass_context
-def install(ctx, install_dir):
+def install(ctx, install_dir, host_path):
     # validate configuration before installing
     click.echo('Validating configuration... ', nl=False)
     validation_results, table = validate_config(ctx.obj)
-
+    print(host_path)
+    ctx.obj["host_path"] = host_path
     issues = [result for result in validation_results if result.status != ConfigItemValidationStatus.VALID]
 
     if issues:

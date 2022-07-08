@@ -16,7 +16,8 @@ def cli(ctx, config):
     if config:
         ctx.obj = load_config(config)
     else:
-        click.echo('No config file given. Looking for config file in current directory... ', nl=False)
+        click.echo(f'No config file given. Looking for config file in current directory({str(os.getcwd())})... ',
+                   nl=False)
         try:
             config_dict, path = find_config(os.getcwd())
             ctx.obj = config_dict
@@ -24,7 +25,7 @@ def cli(ctx, config):
             click.echo(Icons.CHECKMARK.value)
         except FileNotFoundError:
             click.echo(Icons.CROSS.value)
-            click.echo('No config file found')
+            click.echo('No config file found.')
 
 
 @cli.command()
