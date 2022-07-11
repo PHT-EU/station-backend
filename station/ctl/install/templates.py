@@ -149,6 +149,19 @@ def render_compose(config: dict, env: Environment = None) -> str:
 
     station_data_dir = str(os.path.join(config["install_dir"], PHTDirectories.STATION_DATA_DIR.value))
 
+    ui_config = {
+        "env": {
+            "STATION_API_URL": config["https"]["domain"] + "/api",
+            "AUTH_API_URL": config["https"]["domain"] + "/auth",
+        },
+        "labels": [
+            "traefik.enable=true",
+            "traefik.http.routers.ui.tls=true",
+            f'traefik.http.routers.ui.rule=Host("{config["https"]["domain"]}")',
+            "traefik.http.services.airflow.loadbalancer.server.port=3000"
+        ]
+    }
+
     return template.render(
         service_images=service_images,
         pht_images=pht_images,
@@ -160,7 +173,8 @@ def render_compose(config: dict, env: Environment = None) -> str:
         auth_config=auth_config,
         api_config=api_config,
         minio_config=minio_config,
-        airflow_config=airflow_config
+        airflow_config=airflow_config,
+        ui_config=ui_config,
     )
 
 

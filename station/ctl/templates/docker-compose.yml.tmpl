@@ -67,6 +67,19 @@ services:
       - {{ label }}
       {%- endfor %}
 
+  frontend:
+    image: {{ pht_images.ui }}:{{ version }}
+    restart: unless-stopped
+    container_name: pht-station-frontend
+    environment:{% for key, value in ui_config.env.items() %}
+      - {{ key }}={{ value }}
+      {%- endfor %}
+    ports:
+      - "3000:3000"
+    labels: {% for label in ui_config.labels %}
+      - {{ label }}
+      {%- endfor %}
+
   redis:
     image: {{ service_images.redis }}
     restart: unless-stopped
