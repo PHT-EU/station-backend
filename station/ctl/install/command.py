@@ -240,7 +240,7 @@ def write_airflow_config(ctx) -> str:
 
 
 def write_compose_file(ctx):
-    compose_path = os.path.join(ctx.obj["install_dir"], "docker-compose-test.yml")
+    compose_path = os.path.join(ctx.obj["install_dir"], "docker-compose.yml")
     click.echo(f'Writing compose file to {compose_path}... ', nl=False)
 
     content = templates.render_compose(config=ctx.obj)
