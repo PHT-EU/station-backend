@@ -130,8 +130,6 @@ def _fix_private_key(config: dict) -> str:
             _submit_public_key(config, public_key)
             click.echo(Icons.CHECKMARK.value)
 
-
-
     return private_key_path
 
 
