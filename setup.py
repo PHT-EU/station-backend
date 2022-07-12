@@ -54,4 +54,8 @@ setup(
             'station_ctl = station.ctl.cli:cli',
         ],
     },
+    include_package_data=True
+    # package_data={
+    #     "station.ctl.templates": ["station/ctl/templates/*.tmpl", "station/ctl/templates/traefik/*.tmpl"],
+    # }
 )
