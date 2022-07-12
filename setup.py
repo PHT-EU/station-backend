@@ -54,9 +54,4 @@ setup(
             'station_ctl = station.ctl.cli:cli',
         ],
     },
-    package_data={
-        # If any package contains .tmpl files include them :
-        "": ["*.tmpl"],
-    }
-
 )
