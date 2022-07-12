@@ -155,21 +155,18 @@ def write_init_sql(ctx) -> str:
     try:
 
         db_config = ctx.obj['db']
-        print("install dir: ", ctx.obj['install_dir'])
         init_sql_path = os.path.join(
             ctx.obj['install_dir'],
             PHTDirectories.SETUP_SCRIPT_DIR.value,
             'init.sql'
         )
         with open(init_sql_path, 'w') as f:
-            print("rendering template")
             f.write(templates.render_init_sql(db_user=db_config["admin_user"]))
 
         click.echo(Icons.CHECKMARK.value)
         return str(init_sql_path)
 
     except Exception as e:
-        print(e)
         click.echo(Icons.CROSS.value)
         click.echo(f'Error creating init sql: {e}', err=True)
         sys.exit(1)
