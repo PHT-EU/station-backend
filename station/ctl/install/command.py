@@ -29,9 +29,8 @@ from station.ctl.install.fs import check_create_pht_dirs
 def install(ctx, install_dir, host_path):
     # validate configuration before installing
     click.echo('Validating configuration... ', nl=False)
-    validation_results, table = validate_config(ctx.obj)
-    print(host_path)
     ctx.obj["host_path"] = host_path
+    validation_results, table = validate_config(ctx.obj)
     issues = [result for result in validation_results if result.status != ConfigItemValidationStatus.VALID]
 
     if issues:

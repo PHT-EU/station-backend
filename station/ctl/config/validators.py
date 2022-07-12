@@ -314,7 +314,7 @@ def validate_web_config(config: dict, strict: bool = True) -> List[ConfigItemVal
                                 level=ConfigIssueLevel.ERROR,
                                 field=f"certs[{i}]",
                                 display_field=f"https.certs[{i}]",
-                                message="Cert entry is not a valid cer/key object",
+                                message="Cert entry is not a valid cert/key object",
                                 fix_hint=f"Change https.certs[{i}] to a valid cert/key object"
                             )
                         )
