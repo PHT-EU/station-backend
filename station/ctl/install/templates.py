@@ -247,8 +247,11 @@ def render_init_sql(db_user: str, env: Environment = None) -> str:
 
     """
     if not env:
+        print("Initializing environment")
         env = get_template_env()
+    print("loading template")
     template = env.get_template('init.sql.tmpl')
+    print("rendering template")
     return template.render(db_user=db_user)
 
 

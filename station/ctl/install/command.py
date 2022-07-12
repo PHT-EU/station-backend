@@ -169,8 +169,9 @@ def write_init_sql(ctx) -> str:
         return str(init_sql_path)
 
     except Exception as e:
+        print(e)
         click.echo(Icons.CROSS.value)
-        click.echo(f'Error: {e}', err=True)
+        click.echo(f'Error creating init sql: {e}', err=True)
         sys.exit(1)
 
 
