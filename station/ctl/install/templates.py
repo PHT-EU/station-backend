@@ -225,6 +225,14 @@ def render_traefik_configs(
         domain=domain,
     )
 
+    certs = [
+        {
+            "cert": f"/etc/certs/{cert['cert'].split('/')[-1]}",
+            "key": f"/etc/certs/{cert['key'].split('/')[-1]}",
+        }
+        for cert in certs
+    ]
+
     # render traefik router config
     router_config = _make_traefik_router_config(
         env=env,
