@@ -15,7 +15,7 @@ from station.ctl.config.command import render_config
 from station.ctl.config.validators import ConfigItemValidationStatus
 from station.ctl.config.generators import password_generator
 from station.ctl.constants import Icons, PHTDirectories, PHTImages
-from station.ctl.install.docker import setup_docker
+from station.ctl.install.docker import setup_docker, download_docker_images
 from station.ctl.install import templates
 from station.ctl.install.fs import check_create_pht_dirs
 
@@ -60,7 +60,7 @@ def install(ctx, install_dir, host_path):
 
     # setup docker
     setup_docker()
-    # download_docker_images(ctx)
+    download_docker_images(ctx)
     _setup_auth_server(ctx)
 
 
