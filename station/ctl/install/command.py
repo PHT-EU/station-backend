@@ -98,7 +98,10 @@ def _setup_auth_server(ctx):
     auth_image = f"{PHTImages.AUTH.value}:{ctx.obj['version']}"
     command = "setup"
 
-    writable_dir = os.path.join(ctx.obj['install_dir'], PHTDirectories.SERVICE_DATA_DIR.value, "auth")
+    if ctx.obj.get("host_path"):
+        writable_dir = os.path.join(ctx.obj['host_path'], PHTDirectories.SERVICE_DATA_DIR.value, "auth")
+    else:
+        writable_dir = os.path.join(ctx.obj['install_dir'], PHTDirectories.SERVICE_DATA_DIR.value, "auth")
 
     auth_volumes = {
         str(writable_dir): {
@@ -111,9 +114,6 @@ def _setup_auth_server(ctx):
         "ADMIN_USER": "admin",
         "ADMIN_PASSWORD": ctx.obj['admin_password'],
     }
-
-    print("volumes: ", auth_volumes)
-    print("environment: ", environment)
 
     container = client.containers.run(auth_image,
                                       command,
