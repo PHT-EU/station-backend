@@ -106,6 +106,9 @@ def render_compose(config: dict, env: Environment = None) -> str:
             StationEnvironmentVariables.REGISTRY_USER.value: registry_user,
             StationEnvironmentVariables.REGISTRY_PW.value: config["registry"]["password"],
             StationEnvironmentVariables.REGISTRY_PROJECT.value: config["registry"]["project"],
+            StationEnvironmentVariables.CENTRAL_API_URL.value: config["central"]["api_url"],
+            StationEnvironmentVariables.STATION_ROBOT_ID.value: config["central"]["robot_id"],
+            StationEnvironmentVariables.STATION_ROBOT_SECRET.value: config["central"]["robot_secret"],
 
         },
         "labels": [
