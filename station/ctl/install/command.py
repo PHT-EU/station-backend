@@ -239,7 +239,13 @@ def write_airflow_config(ctx) -> str:
             'airflow.cfg'
         )
 
-        with open(airflow_config_path, 'w') as f:
+        write_path = os.path.join(
+            ctx.obj['install_dir'],
+            PHTDirectories.CONFIG_DIR.value,
+            'airflow.cfg'
+        )
+
+        with open(write_path, 'w') as f:
             f.write(airflow_config)
 
         click.echo(Icons.CHECKMARK.value)
