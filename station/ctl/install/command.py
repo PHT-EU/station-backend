@@ -103,12 +103,13 @@ def _setup_auth_server(ctx):
 
     auth_volumes = {
         str(writable_dir): {
-            "bind": "/usr/src/project/packages/server/writable",
+            "bind": "/usr/src/app/packages/backend/api/writable",
             "mode": "rw"
         }
     }
 
     environment = {
+        "ADMIN_USER": "admin",
         "ADMIN_PASSWORD": ctx.obj['admin_password'],
     }
 
