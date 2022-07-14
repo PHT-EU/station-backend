@@ -112,6 +112,9 @@ def _setup_auth_server(ctx):
         "ADMIN_PASSWORD": ctx.obj['admin_password'],
     }
 
+    print("volumes: ", auth_volumes)
+    print("environment: ", environment)
+
     container = client.containers.run(auth_image,
                                       command,
                                       remove=True,
