@@ -335,9 +335,11 @@ def validate_web_config(config: dict, strict: bool = True, host_path: str = None
 
                         # check that paths given for certificates and keys are valid
                         else:
-                            if host_path and cert_path and key_path:
-                                cert_path = "/mnt/station/certs/" + cert_path.split("/")[-1]
-                                key_path = "/mnt/station/certs/" + key_path.split("/")[-1]
+                            if host_path:
+                                if cert_path:
+                                    cert_path = "/mnt/station/certs/" + cert_path.split("/")[-1]
+                                if key_path:
+                                    key_path = "/mnt/station/certs/" + key_path.split("/")[-1]
 
                             if not os.path.isfile(cert_path) and not os.path.isfile(key_path):
                                 status = ConfigItemValidationStatus.INVALID
