@@ -204,6 +204,10 @@ def write_traefik_configs(ctx) -> Tuple[str, str]:
             f.write(router_config)
 
         click.echo(Icons.CHECKMARK.value)
+        host_path = ctx.obj.get("host_path")
+        if host_path:
+            traefik_config_path = os.path.join(host_path, PHTDirectories.CONFIG_DIR.value, "traefik", "traefik.yml")
+            router_config_path = os.path.join(host_path, PHTDirectories.CONFIG_DIR.value, "traefik", "config.yml")
         return str(traefik_config_path), str(router_config_path)
 
     except Exception as e:
