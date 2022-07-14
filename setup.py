@@ -48,6 +48,7 @@ setup(
         "loguru",
         "psutil",
         "plotly",
+        "s3fs",
     ],
     entry_points={
         'console_scripts': [
