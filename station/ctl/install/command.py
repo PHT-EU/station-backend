@@ -134,6 +134,10 @@ def _setup_auth_server(ctx):
         if "Robot ID" in decoded and "Robot Secret" in decoded:
             robot_id_index = decoded.find("Robot ID")
             robot_secret_index = decoded.find("Robot Secret")
+            print(robot_id_index)
+            print(decoded[robot_id_index:robot_secret_index])
+            print(robot_secret_index)
+            print(decoded[robot_secret_index:])
             robot_id = decoded[robot_id_index + len("Robot ID:"):robot_secret_index - 2].strip()
             robot_secret = decoded[robot_secret_index + len("Robot Secret:"):].strip()
 
