@@ -134,10 +134,6 @@ def _setup_auth_server(ctx):
         if "Robot ID" in decoded and "Robot Secret" in decoded:
             robot_id_index = decoded.find("Robot ID")
             robot_secret_index = decoded.find("Robot Secret")
-            print(robot_id_index)
-            print(decoded[robot_id_index:robot_secret_index])
-            print(robot_secret_index)
-            print(decoded[robot_secret_index:])
             robot_id = decoded[robot_id_index + len("Robot ID:"):robot_secret_index - 2].strip()
             robot_secret = decoded[robot_secret_index + len("Robot Secret:"):].strip()
 
@@ -258,7 +254,10 @@ def write_airflow_config(ctx) -> str:
 
 
 def write_compose_file(ctx):
-    compose_path = os.path.join(ctx.obj["install_dir"], "docker-compose.yml")
+    if ctx.obj.get("host_path"):
+        compose_path = os.path.join(ctx.obj["host_path"], "docker-compose.yml")
+    else:
+        compose_path = os.path.join(ctx.obj["install_dir"], "docker-compose.yml")
     click.echo(f'Writing compose file to {compose_path}... ', nl=False)
 
     content = templates.render_compose(config=ctx.obj)

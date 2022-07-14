@@ -78,6 +78,8 @@ services:
     labels: {% for label in ui_config.labels %}
       - {{ label }}
       {%- endfor %}
+    command:
+      - app
 
   redis:
     image: {{ service_images.redis }}
