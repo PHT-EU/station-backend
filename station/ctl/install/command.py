@@ -49,7 +49,8 @@ def install(ctx, install_dir, host_path):
         install_dir = os.getcwd()
 
     ctx.obj['install_dir'] = install_dir
-    click.echo('Installing station software to {}'.format(install_dir))
+    host_path = ctx.obj.get("host_path")
+    click.echo('Installing station software to {}'.format(host_path if host_path else install_dir))
     # ensure file system is set up
     check_create_pht_dirs(install_dir)
 

@@ -47,7 +47,7 @@ setup(
         "pht-train-container-library",
         "loguru",
         "psutil",
-
+        "plotly",
     ],
     entry_points={
         'console_scripts': [
