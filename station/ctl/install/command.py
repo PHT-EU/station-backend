@@ -254,11 +254,12 @@ def write_airflow_config(ctx) -> str:
 
 
 def write_compose_file(ctx):
-    if ctx.obj.get("host_path"):
-        compose_path = os.path.join(ctx.obj["host_path"], "docker-compose.yml")
-    else:
-        compose_path = os.path.join(ctx.obj["install_dir"], "docker-compose.yml")
-    click.echo(f'Writing compose file to {compose_path}... ', nl=False)
+    host_path = ctx.obj.get("host_path")
+    if host_path:
+        host_path = os.path.join(ctx.obj["host_path"], "docker-compose.yml")
+
+    compose_path = os.path.join(ctx.obj["install_dir"], "docker-compose.yml")
+    click.echo(f'Writing compose file to {host_path if host_path else compose_path}... ', nl=False)
 
     content = templates.render_compose(config=ctx.obj)
     with open(compose_path, 'w') as f:

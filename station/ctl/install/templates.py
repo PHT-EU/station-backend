@@ -157,8 +157,8 @@ def render_compose(config: dict, env: Environment = None) -> str:
 
     ui_config = {
         "env": {
-            "STATION_API_URL": config["https"]["domain"] + "/api",
-            "AUTH_API_URL": config["https"]["domain"] + "/auth",
+            "STATION_API_URL": "https://" + config["https"]["domain"] + "/api",
+            "AUTH_API_URL": "https://" + config["https"]["domain"] + "/auth",
         },
         "labels": [
             "traefik.enable=true",
