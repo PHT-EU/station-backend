@@ -191,7 +191,7 @@ def validate_airflow_config(airflow_config: dict) -> List[ConfigItemValidationRe
     return validation_results
 
 
-def validate_web_config(config: dict, strict: bool = True) -> List[ConfigItemValidationResult]:
+def validate_web_config(config: dict, strict: bool = True, host_path: str = None) -> List[ConfigItemValidationResult]:
     """
     Validates the web configuration
     """
@@ -322,6 +322,7 @@ def validate_web_config(config: dict, strict: bool = True) -> List[ConfigItemVal
                         # check that each cert has a cert and key
                         cert_path = cert.get("cert")
                         key_path = cert.get("key")
+
                         if not cert_path and key_path:
                             message = "Certificate path is missing from https.certs[{}]".format(i)
                             status = ConfigItemValidationStatus.MISSING

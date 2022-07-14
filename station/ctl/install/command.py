@@ -30,7 +30,7 @@ def install(ctx, install_dir, host_path):
     # validate configuration before installing
     click.echo('Validating configuration... ', nl=False)
     ctx.obj["host_path"] = host_path
-    validation_results, table = validate_config(ctx.obj)
+    validation_results, table = validate_config(ctx.obj, host_path=host_path)
     issues = [result for result in validation_results if result.status != ConfigItemValidationStatus.VALID]
 
     if issues:
@@ -97,7 +97,7 @@ def _setup_auth_server(ctx):
     client = docker.from_env()
 
     auth_image = f"{PHTImages.AUTH.value}:{ctx.obj['version']}"
-    command = "server setup"
+    command = "setup"
 
     writable_dir = os.path.join(ctx.obj['install_dir'], PHTDirectories.SERVICE_DATA_DIR.value, "auth")
 

@@ -1,107 +1,168 @@
-version: '3.8'
+version: "3.8"
 
-
+# external volume for persisting the station database
 volumes:
   pg_pht_station:
     external: True
 
-  fhir-data:
-
-
 services:
-
-  station:
-    build: .
-    environment:
-      - STATION_ID=dev
-      - STATION_DB=postgresql+psycopg2://admin:admin@pg_station/pht_station
-      - ENVIRONMENT=production
-      - MINIO_URL=minio:9000
-      - MINIO_HOST=minio
-      - MINIO_USER=minio_admin
-      - MINIO_PW=minio_admin
-      - FERNET_KEY=XvKQY_wa9EtUh2j8numvvzKzamXLH4DvVmBAkopYdY4=
-      - HARBOR_URL=https://dev-harbor.grafm.de
-      - HARBOR_USER=admin
-      - HARBOR_PW=admin
-      - AUTH_SERVER_HOST=station-auth
-      - AUTH_SERVER_PORT=3010
-      - REDIS_HOST=redis
-      - AIRFLOW_USER=admin
-      - AIRFLOW_PW=start123
-      - STATION_API_HOST=0.0.0.0
-      - STATION_API_PORT=8001
-    ports:
-      - "8001:8001"
-    command: [ "./wait-for-it.sh","--timeout=10", "pg_station:5432", "--", "python", "/home/station/run_station.py" ]
-
-  pg_station:
+  postgres:
     image: postgres:13
+    restart: unless-stopped
+    container_name: pht-station-db
     volumes:
-      - ./setup_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - C:\Users\Michael Graf\pht\station\setup_scripts\init.sql:/docker-entrypoint-initdb.d/init.sql
       - pg_pht_station:/var/lib/postgresql/data
-    environment:
+    environment: 
       - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=admin
-    ports:
-      - "5432:5432"
+      - POSTGRES_PASSWORD=FnRfgXpRDSgtgzbzT1bl85cyfP8P77Yl
 
-  airflow:
-    container_name: station-airflow
-    build:
-      context: '.'
-      dockerfile: './airflow/Dockerfile'
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      # Station Private Key needs to be set and registered
-      - ./S_2_sk.pem:/opt/private_key.pem
-      # Mount the dags directory as a volume
-      - ./airflow/dags:/root/airflow/dags
-      # - ./station /opt/station
-    depends_on:
-      - pg_station
-    env_file:
-      - .env
-    #    environment:
-    #      - FHIR_ADDRESS=$FHIR_SERVER_URL
-    #      - STATION_ID=$STATION_ID
-    #      - PRIVATE_KEY_PATH=/opt/private_key.pem
-    #      - STATION_DATA_DIR=$STATION_DATA_DIR
+  traefik:
+    image: traefik:v2.6
+    restart: unless-stopped
+    container_name: pht-station-traefik
     ports:
-      - "8080:8080"
+      # The HTTP port
+      - "80:80"
+      - "443:443"
+      - "8081:8080" # todo check if this is needed
+    volumes:
+      - C:\Users\Michael Graf\pht\station\configs\traefik\traefik.yml:/etc/traefik/traefik.yml:ro
+      - C:\Users\Michael Graf\pht\station\configs\traefik\config.yml:/etc/traefik/config.yml:ro
+      - C:\Users\Michael Graf\pht\station\certs:/etc/certs:ro
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik=true
 
   auth:
-    image: ghcr.io/pht-medic/station-ui:latest
-    container_name: station-auth
+    image: ghcr.io/tada5hi/authelion-server:latest
+    container_name: pht-station-auth
+    restart: unless-stopped
     volumes:
-      - auth_data:/usr/src/app/writable
+      - C:\Users\Michael Graf\pht\station\service_data\auth:/usr/src/project/packages/server/writable
     ports:
-      - '3010:3010'
+      - "3010:3010"
     environment:
-      PORT: 3010
-      ADMIN_USER: admin
-      ADMIN_PASSWORD: start123
+      - ADMIN_PASSWORD=5gPYikUiWh030rLNtgeu0BlYoFpWVBBz
     command:
-      - server
       - start
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.auth.tls=true
+      - traefik.http.routers.auth.rule=Host("station.localhost") && PathPrefix("/auth")
+      - traefik.http.services.auth.loadbalancer.server.port=8000
 
-  minio:
-    image: minio/minio:latest
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - ./data/minio:/data
-
+  api:
+    image: ghcr.io/pht-medic/station-api:latest
+    restart: unless-stopped
+    container_name: pht-station-api
     environment:
-      - MINIO_ROOT_USER=minio_admin
-      - MINIO_ROOT_PASSWORD=minio_admin
+      - STATION_ID=3b6c97df-0e34-4242-be3a-0a5e3561d8c4
+      - STATION_DB=postgresql+psycopg2://admin:FnRfgXpRDSgtgzbzT1bl85cyfP8P77Yl@postgres/pht_station
+      - FERNET_KEY=3pQMANDt_8CwXwPE5vwUqwwS7AvvrfNRF_sZbkoGPrk=
+      - ENVIRONMENT=development
+      - AIRFLOW_API_URL=http://airflow:8080/api/v1/
+      - AIRFLOW_USER=admin
+      - AIRFLOW_PW=5gPYikUiWh030rLNtgeu0BlYoFpWVBBz
+      - MINIO_HOST=minio
+      - MINIO_PORT=9000
+      - MINIO_USER=minio_access_key
+      - MINIO_PW=y9f6fNu9KzEZSAbt9fp2ezldVKDHNoiM
+      - REDIS_HOST=redis
+      - AUTH_SERVER_HOST=station-auth
+      - AUTH_SERVER_PORT=3010
+      - AUTH_ROBOT_ID=e5a7abbf-be09-4714-8eac-6326b7b6e4a5
+      - AUTH_ROBOT_SECRET=e60ru0ipwuxaifu1surkfyi82yecgaff3nvpnghc6yelchbxmf2rm67sadhcwjez
+      - HARBOR_URL=staging-harbor.tada5hi.net
+      - HARBOR_USER=robot$$aotq23y7qcwphcwu542or
+      - HARBOR_PW=0j8miBOmILJJCq8oFNgGDTSnMfYO01LN
+      - HARBOR_PROJECT=aotq23y7qcwphcwu542or
+    ports:
+      - "8000:8000"
+    labels: 
+      - traefik.enable=true
+      - traefik.http.routers.api.tls=true
+      - traefik.http.routers.api.rule=Host("station.localhost") && PathPrefix("/api")
+      - traefik.http.services.api.loadbalancer.server.port=8000
 
-    command: server /data --console-address ":9001"
+  frontend:
+    image: ghcr.io/pht-medic/station-ui:latest
+    restart: unless-stopped
+    container_name: pht-station-frontend
+    environment:
+      - STATION_API_URL=station.localhost/api
+      - AUTH_API_URL=station.localhost/auth
+    ports:
+      - "3000:3000"
+    labels: 
+      - traefik.enable=true
+      - traefik.http.routers.ui.tls=true
+      - traefik.http.routers.ui.rule=Host("station.localhost")
+      - traefik.http.services.airflow.loadbalancer.server.port=3000
 
   redis:
     image: redislabs/rejson:latest
+    restart: unless-stopped
+    container_name: pht-station-redis
     ports:
       - "6379:6379"
     volumes:
-      - ./.data/redis:/data
+      - C:\Users\Michael Graf\pht\station\service_data/redis:/data
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    container_name: pht-station-minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+    volumes:
+      - C:\Users\Michael Graf\pht\station\station_data:/data
+    environment:
+      - MINIO_SERVER_URL=http://127.0.0.1:9000
+      - MINIO_BROWSER_REDIRECT_URL=http://127.0.0.1:9001 
+      - MINIO_ROOT_USER=minio_access_key
+      - MINIO_ROOT_PASSWORD=y9f6fNu9KzEZSAbt9fp2ezldVKDHNoiM
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.minio.tls=true
+      - traefik.http.routers.minio.rule=Host("minio.station.localhost")
+      - traefik.http.routers.minio.service=minio
+      - traefik.http.services.minio.loadbalancer.server.port=9000
+      - traefik.http.routers.minio-console.tls=true
+      - traefik.http.routers.minio-console.rule=Host("minio-console.station.localhost")
+      - traefik.http.routers.minio-console.service=minio-console
+      - traefik.http.services.minio-console.loadbalancer.server.port=9001
+
+  airflow:
+    image: ghcr.io/pht-medic/airflow:latest
+    container_name: pht-station-airflow
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - C:\Users\Michael Graf\pht\station\test-key.pem:/opt/private_key.pem
+      - C:\Users\Michael Graf\pht\station\configs\airflow.cfg:/root/airflow/airflow.cfg
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    environment:
+      - PRIVATE_KEY_PATH=/opt/private_key.pem 
+      - STATION_ID=aotq23y7qcwphcwu542or
+      - AIRFLOW_USER=admin
+      - AIRFLOW_PW=5gPYikUiWh030rLNtgeu0BlYoFpWVBBz
+      - HARBOR_URL=staging-harbor.tada5hi.net
+      - HARBOR_USER=robot$$aotq23y7qcwphcwu542or
+      - HARBOR_PW=0j8miBOmILJJCq8oFNgGDTSnMfYO01LN
+    labels: 
+      - traefik.enable=true
+      - traefik.http.routers.airflow.tls=true
+      - traefik.http.routers.airflow.rule=Host("station.localhost") && PathPrefix("/airflow")
+      - traefik.http.services.airflow.loadbalancer.server.port=8080
+
+networks:
+  default:
+    external:
+      name: pht-station

@@ -41,14 +41,13 @@ services:
     container_name: pht-station-auth
     restart: unless-stopped
     volumes:
-      - {{ auth_config.data_dir }}:/usr/src/project/packages/server/writable
+      - {{ auth_config.data_dir }}:/usr/src/app/packages/backend/api/writable
     ports:
       - "3010:3010"
     environment:{% for key, value in auth_config.env.items() %}
       - {{ key }}={{ value }}
       {%- endfor %}
     command:
-      - server
       - start
     labels:{% for label in auth_config.labels %}
       - {{ label }}

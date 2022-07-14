@@ -11,7 +11,7 @@ YELLOW = Style(color="yellow")
 RED = Style(color="red")
 
 
-def validate_config(config: dict) -> Tuple[List[ConfigItemValidationResult], Table]:
+def validate_config(config: dict, host_path: str = None) -> Tuple[List[ConfigItemValidationResult], Table]:
     """
     Validates a config file and returns a table containing the validation results
     """
