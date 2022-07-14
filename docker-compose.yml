@@ -41,7 +41,7 @@ services:
     container_name: pht-station-auth
     restart: unless-stopped
     volumes:
-      - C:\Users\Michael Graf\pht\station\service_data\auth:/usr/src/project/packages/server/writable
+      - C:\Users\Michael Graf\pht\station\service_data\auth:/usr/src/app/packages/backend/api/writable
     ports:
       - "3010:3010"
     environment:
@@ -73,8 +73,8 @@ services:
       - REDIS_HOST=redis
       - AUTH_SERVER_HOST=station-auth
       - AUTH_SERVER_PORT=3010
-      - AUTH_ROBOT_ID=e5a7abbf-be09-4714-8eac-6326b7b6e4a5
-      - AUTH_ROBOT_SECRET=e60ru0ipwuxaifu1surkfyi82yecgaff3nvpnghc6yelchbxmf2rm67sadhcwjez
+      - AUTH_ROBOT_ID=ce512951-df01-435f-b01e-702fcfeadd10
+      - AUTH_ROBOT_SECRET=acno3xl4zloh9om20ywodqsd84ldhsgoz7ur2qs96a3t5zq7gwkct50supqafbsn
       - HARBOR_URL=staging-harbor.tada5hi.net
       - HARBOR_USER=robot$$aotq23y7qcwphcwu542or
       - HARBOR_PW=0j8miBOmILJJCq8oFNgGDTSnMfYO01LN

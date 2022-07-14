@@ -369,7 +369,7 @@ def validate_web_config(config: dict, strict: bool = True, host_path: str = None
     return validation_results
 
 
-def validate_central_config(central_config: dict) -> List[ConfigItemValidationResult]:
+def validate_central_config(central_config: dict, host_path: str = None) -> List[ConfigItemValidationResult]:
     """
     Validates the central services' config items
     """
@@ -419,6 +419,11 @@ def validate_central_config(central_config: dict) -> List[ConfigItemValidationRe
         validation_results.append(robot_field_result)
 
     # validate central private key
+
+    if host_path:
+        private_key_path = "/mnt/station/" + central_config.get("private_key").split("/")[-1]
+        central_config["private_key"] = private_key_path
+
     private_key_result = _validate_config_value(central_config,
                                                 field="private_key",
                                                 default_value=DefaultValues.PRIVATE_KEY.value,

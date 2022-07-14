@@ -23,7 +23,7 @@ def validate_config(config: dict, host_path: str = None) -> Tuple[List[ConfigIte
     validation_results.extend(top_level_results)
 
     # validate configuration for central services
-    central_results = validators.validate_central_config(config.get("central"))
+    central_results = validators.validate_central_config(config.get("central"), host_path=host_path)
     validation_results.extend(central_results)
 
     # validate registry config

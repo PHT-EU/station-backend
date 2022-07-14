@@ -17,7 +17,7 @@ def check_create_pht_dirs(path):
     )
 
     if pht_dir_check and service_dir_check:
-        click.confirm('The previous installation found, do you want to overwrite it?', abort=True)
+        click.confirm('Previous installation found. Do you want to overwrite it?', abort=True)
         create_pht_dirs(path)
     else:
         create_pht_dirs(path)
