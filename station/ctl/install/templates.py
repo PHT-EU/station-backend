@@ -37,8 +37,11 @@ def render_compose(config: dict, env: Environment = None) -> str:
         "auth": PHTImages.AUTH.value,
 
     }
+    host_path = config.get("host_path", None)
 
-    service_data_dir = os.path.join(config["install_dir"], PHTDirectories.SERVICE_DATA_DIR.value)
+    install_dir = host_path if host_path else config["install_dir"]
+
+    service_data_dir = os.path.join(install_dir, PHTDirectories.SERVICE_DATA_DIR.value)
 
     db_config = {
         "init_sql_path": config["init_sql_path"],
@@ -48,7 +51,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
         }
     }
 
-    certs_dir = str(os.path.join(config["install_dir"], PHTDirectories.CERTS_DIR.value))
+    certs_dir = str(os.path.join(install_dir, PHTDirectories.CERTS_DIR.value))
 
     proxy_config = {
         "http_port": config["http"]["port"],

@@ -320,8 +320,8 @@ def validate_web_config(config: dict, strict: bool = True, host_path: str = None
                         )
                     else:
                         # check that each cert has a cert and key
-                        cert_path = cert.get("cert")
-                        key_path = cert.get("key")
+                        cert_path: str = cert.get("cert")
+                        key_path: str = cert.get("key")
 
                         if not cert_path and key_path:
                             message = "Certificate path is missing from https.certs[{}]".format(i)
@@ -335,6 +335,10 @@ def validate_web_config(config: dict, strict: bool = True, host_path: str = None
 
                         # check that paths given for certificates and keys are valid
                         else:
+                            if host_path:
+                                cert_path = "/mnt/station/certs/" + cert_path.split("/")[-1]
+                                key_path = "/mnt/station/certs/" + key_path.split("/")[-1]
+
                             if not os.path.isfile(cert_path) and not os.path.isfile(key_path):
                                 status = ConfigItemValidationStatus.INVALID
                                 message = 'Cert file "{}" and key file "{}" do not exist'.format(

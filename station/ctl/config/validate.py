@@ -31,7 +31,7 @@ def validate_config(config: dict, host_path: str = None) -> Tuple[List[ConfigIte
     validation_results.extend(registry_results)
 
     # validate http/https config
-    web_results = validators.validate_web_config(config, strict=strict)
+    web_results = validators.validate_web_config(config, strict=strict, host_path=host_path)
     validation_results.extend(web_results)
 
     # validate db config

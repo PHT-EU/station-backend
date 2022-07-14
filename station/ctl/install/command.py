@@ -63,7 +63,6 @@ def install(ctx, install_dir, host_path):
     download_docker_images(ctx)
     _setup_auth_server(ctx)
 
-
     # render templates according to configuration and store output paths in configuration object
     ctx.obj["init_sql_path"] = write_init_sql(ctx)
     traefik_config_path, router_config_path = write_traefik_configs(ctx)
@@ -221,8 +220,14 @@ def write_airflow_config(ctx) -> str:
             domain=ctx.obj['https']['domain']
         )
 
+        host_path = ctx.obj.get('host_path')
+        if host_path:
+            path = host_path
+        else:
+            path = ctx.obj['install_dir']
+
         airflow_config_path = os.path.join(
-            ctx.obj['install_dir'],
+            path,
             PHTDirectories.CONFIG_DIR.value,
             'airflow.cfg'
         )
