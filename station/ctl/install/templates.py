@@ -73,7 +73,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
             "traefik.enable=true",
             "traefik.http.routers.auth.tls=true",
             f'traefik.http.routers.auth.rule=Host("{config["https"]["domain"]}") && PathPrefix("/auth")',
-            "traefik.http.services.auth.loadbalancer.server.port=8000"
+            "traefik.http.services.auth.loadbalancer.server.port=3010"
         ],
         "data_dir": str(os.path.join(service_data_dir, "auth")),
     }
