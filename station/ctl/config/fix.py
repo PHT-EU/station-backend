@@ -64,6 +64,7 @@ def _fix_certs(config: dict, strict: bool, install_dir: str):
     click.echo(f"Generating certificates for domain {domain}...")
 
     cert_dir = os.path.join(install_dir, PHTDirectories.CERTS_DIR.value)
+
     if not os.path.exists(cert_dir):
         os.makedirs(cert_dir)
     cert_path = os.path.join(cert_dir, "cert.pem")
@@ -75,6 +76,12 @@ def _fix_certs(config: dict, strict: bool, install_dir: str):
     if not cert_list:
         print(cert_list)
         cert_list = []
+
+    host_path = config.get("host_path", None)
+    if host_path:
+        cert_dir = os.path.join(host_path, PHTDirectories.CERTS_DIR.value)
+        cert_path = os.path.join(cert_dir, "cert.pem")
+        key_path = os.path.join(cert_dir, "key.pem")
     cert_paths = {
         "cert": str(cert_path),
         "key": str(key_path)
