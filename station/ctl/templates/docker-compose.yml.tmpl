@@ -80,6 +80,7 @@ services:
       {%- endfor %}
     command:
       - app
+      - start
 
   redis:
     image: {{ service_images.redis }}

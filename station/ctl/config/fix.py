@@ -64,6 +64,8 @@ def _fix_certs(config: dict, strict: bool, install_dir: str):
     click.echo(f"Generating certificates for domain {domain}...")
 
     cert_dir = os.path.join(install_dir, PHTDirectories.CERTS_DIR.value)
+    if not os.path.exists(cert_dir):
+        os.makedirs(cert_dir)
     cert_path = os.path.join(cert_dir, "cert.pem")
     key_path = os.path.join(cert_dir, "key.pem")
     generate_certificates(domain, cert_path=str(cert_path), key_path=str(key_path))
@@ -84,6 +86,7 @@ def _fix_certs(config: dict, strict: bool, install_dir: str):
 def _fix_certs_path(config: dict, index: int):
     cert_path = config["https"]["certs"][index]["cert"]
     key_path = config["https"]["certs"][index]["key"]
+
     if not os.path.isfile(cert_path):
         cert_path = click.prompt(f"Certificate at {cert_path} does not exist. "
                                  f"Please enter the correct path to the certificate file")
