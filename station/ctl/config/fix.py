@@ -23,7 +23,7 @@ def fix_config(ctx: dict, config: dict, results: List[ConfigItemValidationResult
         results: validation results of the given dictionary
 
     Returns:
-
+        updated config dictionary
     """
     strict = config["environment"] != "development"
     fixed_config = config.copy()
@@ -41,7 +41,6 @@ def fix_config(ctx: dict, config: dict, results: List[ConfigItemValidationResult
             elif re.match(CERTS_REGEX, result.display_field):
                 index = int(re.match(CERTS_REGEX, result.display_field).group(1))
                 _fix_certs_path(fixed_config, index)
-
 
             else:
                 default = ""

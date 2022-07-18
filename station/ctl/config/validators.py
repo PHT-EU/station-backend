@@ -448,7 +448,6 @@ def validate_top_level_config(config: dict) -> List[ConfigItemValidationResult]:
     """
 
     validation_issues = []
-
     # validate station_id
     id_result = _validate_config_value(config, "station_id")
 
@@ -472,6 +471,7 @@ def validate_top_level_config(config: dict) -> List[ConfigItemValidationResult]:
     if admin_password_result.status != ConfigItemValidationStatus.VALID:
         admin_password_result.fix_hint = "Set admin password to a strong password"
         admin_password_result.level = ConfigIssueLevel.ERROR
+        validation_issues.append(admin_password_result)
 
     return validation_issues
 
