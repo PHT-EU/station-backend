@@ -126,23 +126,22 @@ def _fix_private_key(config: dict) -> str:
     name = click.prompt('Name your private key file')
     passphrase = click.prompt('Enter your passphrase. If given, it will be used to encrypt the private key', default="")
     private_key_path, private_key, public_key = generate_private_key(name, passphrase)
+    if passphrase:
+        config["central"]["private_key_password"] = passphrase
 
     # if a host path is given append the name of the private key to this path
     host_path = config.get("host_path", None)
     if host_path:
         private_key_path = os.path.join(host_path, private_key_path)
         click.echo(f"Private key will be saved at: {private_key_path} on the host machine")
-        config["central"]["private_key"] = private_key_path
     else:
         private_key_path = os.path.abspath(private_key_path)
-        if not os.path.exists(private_key_path):
-            click.echo(f'Private key file {private_key_path} was not created. Please check the permissions.')
-            return None
-        else:
-            click.echo(f'New private key created: {private_key_path}. Submitting public key to central API...',
-                       nl=False)
-            _submit_public_key(config, public_key)
-            click.echo(Icons.CHECKMARK.value)
+        click.echo(f'New private key created: {private_key_path}')
+
+    click.echo("Submitting public key to central API...", nl=False)
+    # submit public key to central API
+    _submit_public_key(config, public_key)
+    click.echo(Icons.CHECKMARK.value)
 
     return private_key_path
 
