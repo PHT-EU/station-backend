@@ -167,7 +167,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
             "traefik.enable=true",
             "traefik.http.routers.ui.tls=true",
             f'traefik.http.routers.ui.rule=Host("{config["https"]["domain"]}") && !PathPrefix("/api") && !PathPrefix("/auth")',
-            "traefik.http.services.airflow.loadbalancer.server.port=3000"
+            "traefik.http.services.ui.loadbalancer.server.port=3000"
         ]
     }
 
