@@ -439,6 +439,7 @@ def validate_central_config(central_config: dict, host_path: str = None) -> List
         private_key_result.fix_hint = f'Ensure that the private key in "{private_key_result.value}" is readable and ' \
                                       f'a valid PEM file.'
         private_key_result.level = ConfigIssueLevel.ERROR
+
     validation_results.append(private_key_result)
 
     return validation_results
