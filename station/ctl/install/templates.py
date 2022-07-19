@@ -74,7 +74,9 @@ def render_compose(config: dict, env: Environment = None) -> str:
             "traefik.http.routers.auth.tls=true",
             f'traefik.http.routers.auth.rule=Host("{config["https"]["domain"]}") && PathPrefix("/auth")',
             "traefik.http.services.auth.loadbalancer.server.port=3010",
-            "traefik.http.middlewares.auth-stripprefix.stripprefix.prefixes=/auth"
+            "traefik.http.middlewares.auth-stripprefix.stripprefix.prefixes=/auth",
+            "traefik.http.routers.auth.middlewares=auth-stripprefix@docker"
+
         ],
         "data_dir": str(os.path.join(service_data_dir, "auth")),
     }
