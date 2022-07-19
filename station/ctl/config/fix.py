@@ -90,10 +90,14 @@ def _fix_certs(config: dict, strict: bool, install_dir: str):
     config["https"]["certs"] = cert_list
 
 
-def _fix_certs_path(config: dict, index: int):
+def _fix_certs_path(config: dict, index: int, strict: bool = False):
     cert_path = config["https"]["certs"][index]["cert"]
     key_path = config["https"]["certs"][index]["key"]
 
+    print(cert_path, key_path)
+    if not cert_path and not key_path:
+        _fix_certs(config, strict, config.get("install_dir", os.getcwd()))
+        return
     if not os.path.isfile(cert_path):
         cert_path = click.prompt(f"Certificate at {cert_path} does not exist. "
                                  f"Please enter the correct path to the certificate file")
