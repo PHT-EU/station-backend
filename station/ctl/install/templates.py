@@ -196,7 +196,8 @@ def render_airflow_config(domain: str, sql_alchemy_conn: str, env: Environment =
         env = get_template_env()
 
     template = env.get_template('airflow.cfg.tmpl')
-    return template.render(domain=domain, sql_alchemy_conn=sql_alchemy_conn)
+    airflow_base_url = "https://" + domain + "/airflow"
+    return template.render(airflow_base_url=airflow_base_url, sql_alchemy_conn=sql_alchemy_conn)
 
 
 def render_traefik_configs(
