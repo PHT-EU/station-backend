@@ -22,7 +22,8 @@ class ServiceImages(Enum):
     MINIO = "minio/minio:latest"
     POSTGRES = "postgres:13"
     REDIS = "redislabs/rejson:latest"
-    TRAEFIK = "traefik:v2.6"
+    TRAEFIK = "traefik:v2.8"
+    BLAZE = "samply/blaze:latest"
 
 
 class DefaultValues(Enum):

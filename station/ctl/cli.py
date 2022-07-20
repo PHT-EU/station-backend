@@ -4,13 +4,14 @@ import click
 from station.ctl.config import load_config, find_config
 from station.ctl.install.command import install
 from station.ctl.config.command import config
+from station.ctl.fhir.command import fhir
 from station.ctl.constants import Icons
 
 
 @click.group()
 @click.option('--config',
               type=click.Path(exists=True),
-              help='Path to config file. If none is given assumes config file is in current directory.')
+              help='Path to config file. If none is given assumes config file is located in current working directory.')
 @click.pass_context
 def cli(ctx, config):
     if config:
@@ -28,26 +29,24 @@ def cli(ctx, config):
             click.echo('No config file found.')
 
 
-@cli.command()
+@cli.command(help="Uninstall the station software. Coming soon..")
 @click.pass_context
 def uninstall(ctx):
+    # todo
     print(ctx.obj)
+    click.echo("Coming soon...")
 
 
-@cli.command()
+@cli.command(help="Update the station software. Coming soon..")
 @click.pass_context
 def update(ctx):
-    pass
-
-
-@cli.command()
-@click.pass_context
-def services(ctx):
-    pass
+    # todo
+    click.echo("Coming soon...")
 
 
 cli.add_command(install)
 cli.add_command(config)
+cli.add_command(fhir)
 
 if __name__ == '__main__':
     cli()

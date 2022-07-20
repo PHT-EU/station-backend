@@ -1,9 +1,7 @@
 import os
 import pprint
 import sys
-from collections import namedtuple
 from typing import Tuple
-import re
 
 import click
 import docker
@@ -13,7 +11,6 @@ from station.clients.central.central_client import CentralApiClient
 from station.ctl.config import validate_config, fix_config
 from station.ctl.config.command import render_config
 from station.ctl.config.validators import ConfigItemValidationStatus
-from station.ctl.config.generators import password_generator
 from station.ctl.constants import Icons, PHTDirectories, PHTImages
 from station.ctl.install.docker import setup_docker, download_docker_images
 from station.ctl.install import templates
