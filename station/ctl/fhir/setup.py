@@ -50,9 +50,9 @@ def _setup_volume(client: docker.DockerClient, name: str) -> List[str]:
 def _make_labels(domain: str, name: str) -> dict:
     return {
         "traefik.enable": "true",
-        f"traefik.http.routers.{name}.tls": "true",
-        f'traefik.http.routers.{name}.rule': f'Host("{domain}") && PathPrefix("/fhir-servers/{name}")',
-        f"traefik.http.services.{name}.loadbalancer.server.port": "8080"
+        f"traefik.http.routers.{'fhir-' + name}.tls": "true",
+        f'traefik.http.routers.{"fhir-" + name}.rule': f'Host("{domain}") && PathPrefix("/fhir-servers/{name}")',
+        f"traefik.http.services.{'fhir-' + name}.loadbalancer.server.port": "8080"
     }
 
 
