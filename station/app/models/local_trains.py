@@ -1,5 +1,10 @@
+import uuid
+
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, JSON
 from datetime import datetime
+
+from sqlalchemy.dialects.postgresql import UUID
+
 from station.app.db.base_class import Base
 
 
@@ -19,6 +24,18 @@ class LocalTrainExecution(Base):
     airflow_dag_run = Column(String, nullable=True, unique=True)
     start = Column(DateTime, default=datetime.now())
     end = Column(DateTime, nullable=True)
+
+
+class LocalTrainMasterImage(Base):
+    __tablename__ = "local_train_master_images"
+    id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
+    registry = Column(String, nullable=True)
+    group = Column(String, nullable=True)
+    artifact = Column(String, nullable=True)
+    tag = Column(String, default="latest")
+    image_id = Column(String, nullable=True, unique=True)
+    created_at = Column(DateTime, default=datetime.now())
+    updated_at = Column(DateTime, nullable=True)
 
 
 class LocalTrainFile(Base):

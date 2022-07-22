@@ -3,7 +3,7 @@ import tarfile
 from typing import List
 
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, UploadFile, HTTPException
 
 from station.app.api import dependencies
 from station.clients.airflow.client import airflow_client
@@ -11,9 +11,12 @@ from station.app.local_train_minio.LocalTrainMinIO import train_data
 from fastapi.responses import Response
 from fastapi.responses import FileResponse
 from station.app.schemas.local_trains import LocalTrain, LocalTrainCreate, LocalTrainAddMasterImage, LocalTrainAddTag, \
-    LocalTrainGetFile, LocalTrainRun, LocalTrainMasterImage
+    LocalTrainGetFile, LocalTrainRun, LocalTrainMasterImageBase
+
+from station.app.schemas import local_trains
 
 from station.app.crud.crud_local_train import local_train
+from station.app.crud.local_train_master_image import local_train_master_image
 from station.clients.harbor_client import harbor_client
 
 router = APIRouter()
@@ -31,6 +34,44 @@ def create_local_train(create_msg: LocalTrainCreate, db: Session = Depends(depen
     train = local_train.create(db, obj_in=create_msg)
     return train
 
+
+@router.post("/masterImages", response_model=local_trains.LocalTrainMasterImage)
+def add_master_image(
+        add_master_image_msg: local_trains.LocalTrainMasterImageCreate,
+        db: Session = Depends(dependencies.get_db)
+):
+    # check if id already exists
+    if local_train_master_image.get_by_image_id(db, add_master_image_msg.image_id):
+        raise HTTPException(status_code=400,
+                            detail=f"Image with the given id: ({add_master_image_msg.image_id}) already exists")
+    image = local_train_master_image.create(db, obj_in=add_master_image_msg)
+    return image
+
+
+@router.get("/masterImages/{image_id}", response_model=local_trains.LocalTrainMasterImage)
+def get_master_image(image_id: str, db: Session = Depends(dependencies.get_db)):
+    image = local_train_master_image.get(db, image_id)
+    if not image:
+        raise HTTPException(status_code=404, detail="Image not found")
+    return image
+
+
+@router.get("/masterImages", response_model=List[local_trains.LocalTrainMasterImage])
+def list_master_images(db: Session = Depends(dependencies.get_db), skip: int = 0, limit: int = 100, sync: bool = False):
+    if sync:
+        local_train_master_image.sync_with_harbor(db)
+    images = local_train_master_image.get_multi(db, skip=skip, limit=limit)
+    return images
+
+
+@router.put("/masterImages/{image_id}", response_model=local_trains.LocalTrainMasterImage)
+def update_master_image(image_id: str, update_msg: local_trains.LocalTrainMasterImageUpdate,
+                        db: Session = Depends(dependencies.get_db)):
+    db_image = local_train_master_image.get(db, image_id)
+    if not db_image:
+        raise HTTPException(status_code=404, detail="Image not found")
+    image = local_train_master_image.update(db, db_obj=db_image, obj_in=update_msg)
+    return image
 
 
 @router.post("/{train_id}/run")
@@ -58,7 +99,6 @@ async def add_file_for_train(train_id: str, file: UploadFile = File(...), db: Se
 
 @router.get("/{train_id}/files/{file_id}")
 async def read_train_file(train_id: str, file_id: str, db: Session = Depends(dependencies.get_db)):
-
     file = await local_train.get_file(train_id, file_id)
 
     pass
@@ -95,20 +135,6 @@ def create_local_train(db: Session = Depends(dependencies.get_db)):
     """
     train = local_train.create(db, obj_in=None)
     return train
-
-
-@router.put("/addMasterImage")
-def add_master_image(add_master_image_msg: LocalTrainAddMasterImage, db: Session = Depends(dependencies.get_db)):
-    """
-    Modifies the train configuration with a MasterImage that is defined in add_master_image_msg in the train
-    specified by the train id
-
-    @param add_master_image_msg:  message with  train_id: str, image: str
-    @param db: reference to the postgres database
-    @return:
-    """
-    new_config = local_train.update_config_add_repository(db, add_master_image_msg.train_id, add_master_image_msg.image)
-    return new_config
 
 
 @router.put("/tag")
@@ -227,15 +253,6 @@ def get_train_status(train_id: str, db: Session = Depends(dependencies.get_db)):
     """
     obj = local_train.get_train_status(db, train_id)
     return obj
-
-
-@router.get("/masterImages", response_model=List[LocalTrainMasterImage])
-def get_master_images():
-    """
-
-    @return:
-    """
-    return harbor_client.get_master_images()
 
 
 @router.get("/getAllLocalTrains")

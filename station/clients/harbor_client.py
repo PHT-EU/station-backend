@@ -4,7 +4,7 @@ from typing import Union, List
 
 from dotenv import load_dotenv, find_dotenv
 
-from station.app.schemas.local_trains import LocalTrainMasterImage
+from station.app.schemas.local_trains import LocalTrainMasterImageBase
 from station.app.schemas.station_status import HealthStatus
 
 
@@ -58,7 +58,7 @@ class HarborClient:
 
         return results
 
-    def get_master_images(self) -> List[LocalTrainMasterImage]:
+    def get_master_images(self) -> List[LocalTrainMasterImageBase]:
         """
         returns names of master images form harbor
         """
@@ -69,7 +69,8 @@ class HarborClient:
             project, group, artifact = repo["name"].split("/")
             image_id = f"{self.domain}/{project}/{group}/{artifact}"
             master_images.append(
-                LocalTrainMasterImage(
+                LocalTrainMasterImageBase(
+                    registry=self.domain,
                     group=group,
                     artifact=artifact,
                     image_id=image_id,
