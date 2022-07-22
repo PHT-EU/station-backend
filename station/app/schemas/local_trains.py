@@ -1,11 +1,18 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, root_validator
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Dict
 
 
 class DBSchema(BaseModel):
     class Config:
         orm_mode = True
+
+
+class LocalTrainMasterImage(BaseModel):
+    group: str
+    artifact: str
+    tag: Optional[str] = "latest"
+    image_id: Optional[str] = None
 
 
 class LocalTrainBase(BaseModel):
@@ -30,18 +37,20 @@ class LocalTrain(DBSchema):
     config_id: Optional[int] = None
 
 
-
 class LocalTrainAddMasterImage(BaseModel):
     train_id: str
     image: str
+
 
 class LocalTrainGetFile(BaseModel):
     train_id: str
     file_name: str
 
+
 class LocalTrainAddTag(BaseModel):
     train_id: str
     tag: str
+
 
 class LocalTrainGetFile(BaseModel):
     train_id: str

@@ -13,6 +13,6 @@ http:
 tls:
   certificates:
     
-    - certFile: "/etc/certs/C:\Users\Michael Graf\pht\station\certs\cert.pem"
-      keyFile: "/etc/certs/C:\Users\Michael Graf\pht\station\certs\key.pem"
+    - certFile: "/etc/certs/cert.pem"
+      keyFile: "/etc/certs/key.pem"
     

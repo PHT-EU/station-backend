@@ -1,5 +1,7 @@
 import io
 import tarfile
+from typing import List
+
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, File, UploadFile
 
@@ -9,7 +11,7 @@ from station.app.local_train_minio.LocalTrainMinIO import train_data
 from fastapi.responses import Response
 from fastapi.responses import FileResponse
 from station.app.schemas.local_trains import LocalTrain, LocalTrainCreate, LocalTrainAddMasterImage, LocalTrainAddTag, \
-    LocalTrainGetFile, LocalTrainRun
+    LocalTrainGetFile, LocalTrainRun, LocalTrainMasterImage
 
 from station.app.crud.crud_local_train import local_train
 from station.clients.harbor_client import harbor_client
@@ -227,7 +229,7 @@ def get_train_status(train_id: str, db: Session = Depends(dependencies.get_db)):
     return obj
 
 
-@router.get("/masterImages")
+@router.get("/masterImages", response_model=List[LocalTrainMasterImage])
 def get_master_images():
     """
 

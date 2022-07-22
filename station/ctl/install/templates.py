@@ -68,6 +68,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
     auth_config = {
         "env": {
             "ADMIN_PASSWORD": config["admin_password"],
+            "NODE_ENV": "test",
         },
         "labels": [
             "traefik.enable=true",

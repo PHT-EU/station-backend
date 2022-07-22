@@ -103,7 +103,7 @@ def _setup_auth_server(ctx):
 
     auth_volumes = {
         str(writable_dir): {
-            "bind": "/usr/src/app/packages/backend/api/writable",
+            "bind": "/usr/src/app/writable",
             "mode": "rw"
         }
     }
