@@ -6,11 +6,9 @@ from station.app.api import dependencies
 from station.clients.airflow.client import airflow_client
 from station.clients.airflow import docker_trains as airflow_docker_train
 from station.app.schemas.airflow import AirflowInformation, AirflowTaskLog, AirflowRun, AirflowRunMsg
-from station.app.schemas.local_trains import LocalTrainRun
 from station.app.schemas.docker_trains import DockerTrainExecution
 from station.app.crud.crud_local_train import local_train
 from station.app.crud.crud_docker_trains import docker_trains
-
 
 router = APIRouter()
 
@@ -25,10 +23,7 @@ def run(run_msg: AirflowRunMsg, dag_id: str, db: Session = Depends(dependencies.
     """
 
     if dag_id == "run_local":
-        config = local_train.get_train_config(db, run_msg.train_id)
-        run_id = airflow_client.trigger_dag("run_local", config)
-        run_information = LocalTrainRun(train_id=run_msg.train_id, run_id=run_id)
-        local_train.create_run(db, obj_in=run_information)
+        raise NotImplementedError("run_local is not implemented yet")
 
     elif dag_id == "run_pht_train":
         train = docker_trains.get_by_train_id(db, run_msg.train_id)

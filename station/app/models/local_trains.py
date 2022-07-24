@@ -4,6 +4,7 @@ from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, J
 from datetime import datetime
 
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 
 from station.app.db.base_class import Base
 
@@ -11,19 +12,20 @@ from station.app.db.base_class import Base
 class LocalTrainState(Base):
     __tablename__ = "local_train_states"
     id = Column(Integer, primary_key=True, index=True)
-    train_id = Column(Integer, ForeignKey('local_trains.id'))
+    train_id = Column(UUID(as_uuid=True), ForeignKey('local_trains.id'))
     last_execution = Column(DateTime, nullable=True)
     num_executions = Column(Integer, default=0)
     status = Column(String, default="inactive")
+    configuration_state = Column(String, default="initialized")
 
 
 class LocalTrainExecution(Base):
     __tablename__ = "local_train_executions"
-    id = Column(Integer, primary_key=True, index=True)
-    train_id = Column(Integer, ForeignKey('local_trains.id'))
+    id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
+    train_id = Column(UUID, ForeignKey('local_trains.id'))
     airflow_dag_run = Column(String, nullable=True, unique=True)
     start = Column(DateTime, default=datetime.now())
-    end = Column(DateTime, nullable=True)
+    finish = Column(DateTime, nullable=True)
 
 
 class LocalTrainMasterImage(Base):
@@ -38,29 +40,18 @@ class LocalTrainMasterImage(Base):
     updated_at = Column(DateTime, nullable=True)
 
 
-class LocalTrainFile(Base):
-    __tablename__ = "local_train_files"
-    id = Column(Integer, primary_key=True, index=True)
-    train_id = Column(Integer, ForeignKey('local_trains.id'))
-    access_path = Column(String)
-    file_name = Column(String)
-    file_size = Column(Integer, nullable=True)
-    file_type = Column(String, nullable=True)
-
-
 class LocalTrain(Base):
     __tablename__ = "local_trains"
-    id = Column(Integer, primary_key=True, index=True)
-    train_id = Column(String, unique=True)
-    train_name = Column(String, unique=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
+    name = Column(String, nullable=True)
+
+    master_image_id = Column(UUID, ForeignKey('local_train_master_images.id'), nullable=True)
+    entrypoint = Column(String, nullable=True)
+    custom_image = Column(String, nullable=True)
+    fhir_query = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.now())
     updated_at = Column(DateTime, nullable=True)
-    airflow_config_json = Column(JSON, default=None, nullable=True)
-    # config_id = Column(Integer, ForeignKey("local_train_configs.id"), nullable=True)
-    # config = relationship("LocalTrainConfig", back_populates="trains")
-    is_active = Column(Boolean, default=False)
-    # state = relationship("LocalTrainState")
-    # executions = relationship("LocalTrainExecution")
+    state = relationship("LocalTrainState", cascade="all,delete", uselist=False)
 
 
 '''

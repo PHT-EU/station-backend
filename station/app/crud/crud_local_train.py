@@ -2,44 +2,28 @@ import uuid
 import os
 import asyncio
 from datetime import datetime
+
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 from fastapi import UploadFile, HTTPException
 
-from station.app.crud.base import CRUDBase, ModelType
-from station.app.models.local_trains import LocalTrain, LocalTrainExecution
-from station.app.schemas.local_trains import LocalTrainCreate, LocalTrainUpdate, LocalTrainRun
+from station.app.crud.base import CRUDBase, ModelType, CreateSchemaType
+from station.app.models.local_trains import LocalTrain, LocalTrainExecution, LocalTrainState, LocalTrainMasterImage
+from station.app.schemas.local_trains import LocalTrainCreate, LocalTrainUpdate, LocalTrainRunConfig
 from station.app.local_train_minio.LocalTrainMinIO import train_data
 
 
 class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
-    def create(self, db: Session, *, obj_in: LocalTrainCreate) -> ModelType:
-        """
-        Create the data base entry for a local train
-        @param db: reference to the postgres database
-        @param obj_in: LocalTrainCreate json as defined in the schemas
-        @return: local train object
-        """
-        # if no name is given in the local train the uid  is set as train id and train name
-        if obj_in.train_name is None:
-            train_id = str(uuid.uuid4())
-            train = LocalTrain(train_id=train_id,
-                               train_name=train_id,
-                               airflow_config_json=self._create_emty_config(train_id)
-                               )
-        else:
-            train_id = str(uuid.uuid4())
-            train = LocalTrain(
-                train_id=train_id,
-                train_name=obj_in.train_name,
-                airflow_config_json=self._create_emty_config(train_id)
-            )
-        # add and commit the new entry
-        db.add(train)
+
+    def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
+        obj_in_data = jsonable_encoder(obj_in, exclude_none=True)
+        db_obj = self.model(**obj_in_data)
+        db.add(db_obj)
         db.commit()
-        db.refresh(train)
+        train = self.create_initial_state(db, db_obj)
         return train
 
-    def create_run(self, db: Session, *, obj_in: LocalTrainRun) -> ModelType:
+    def create_run(self, db: Session, *, obj_in: LocalTrainRunConfig) -> ModelType:
         """
         create a database entry for a local train execution
 
@@ -302,6 +286,15 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         # TODO get last run id
         runs = db.query(LocalTrainExecution).filter(LocalTrainExecution.train_id == train_id).all()
         print(runs)
+
+    def create_initial_state(self, db: Session, db_obj: LocalTrain):
+        state = LocalTrainState(
+            train_id=db_obj.id
+        )
+        db.add(state)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
 
 
 local_train = CRUDLocalTrain(LocalTrain)

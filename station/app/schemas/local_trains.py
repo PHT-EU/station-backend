@@ -1,8 +1,9 @@
 import uuid
+from enum import Enum
 
 from pydantic import BaseModel, root_validator
 from datetime import datetime
-from typing import Optional, Dict
+from typing import Optional, Dict, List, Union
 
 
 class DBSchema(BaseModel):
@@ -44,47 +45,65 @@ class LocalTrainMasterImage(LocalTrainMasterImageBase):
         orm_mode = True
 
 
+class LocalTrainConfigurationStep(str, Enum):
+    initialized = "initialized"
+    master_image_selected = "master_image_selected"
+    files_uploaded = "files_uploaded"
+    entrypoint_selected = "entrypoint_selected"
+    finished = "finished"
+
+
+class LocalTrainStateBase(BaseModel):
+    last_execution: Optional[datetime] = None
+    num_executions: int = 0
+    status: str = "inactive"
+    configuration_state: LocalTrainConfigurationStep = None
+
+    class Config:
+        use_enum_values = True
+
+
+class LocalTrainStateCreate(LocalTrainStateBase):
+    pass
+
+
+class LocalTrainStateUpdate(LocalTrainStateBase):
+    pass
+
+
+class LocalTrainState(LocalTrainStateBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+
 class LocalTrainBase(BaseModel):
-    name: str
-    TrainID: int
+    name: Optional[str] = None
+    master_image_id: Optional[str] = None
+    entrypoint: Optional[str] = None
+    files: Optional[List[str]] = None
+    custom_image: Optional[str] = None
+    fhir_query: Optional[Union[str, dict]] = None
 
 
-class LocalTrainRun(BaseModel):
-    train_id: str
-    run_id: str
+class LocalTrainCreate(LocalTrainBase):
+    pass
 
 
-class LocalTrainCreate(BaseModel):
-    train_name: str
+class LocalTrainUpdate(LocalTrainBase):
+    pass
 
 
-class LocalTrain(DBSchema):
+class LocalTrain(LocalTrainBase, DBSchema):
+    id: uuid.UUID
     created_at: datetime
     updated_at: Optional[datetime] = None
-    is_active: bool
-    train_id: Optional[str] = None
+    status: Optional[str] = None
+    state: Optional[LocalTrainState] = None
+
+
+class LocalTrainRunConfig(BaseModel):
+    dataset_id: Optional[str] = None
     config_id: Optional[int] = None
-
-
-class LocalTrainAddMasterImage(BaseModel):
-    train_id: str
-    image: str
-
-
-class LocalTrainGetFile(BaseModel):
-    train_id: str
-    file_name: str
-
-
-class LocalTrainAddTag(BaseModel):
-    train_id: str
-    tag: str
-
-
-class LocalTrainGetFile(BaseModel):
-    train_id: str
-    file_name: str
-
-
-class LocalTrainUpdate(LocalTrainCreate):
-    pass
+    config: Optional[Dict] = None
