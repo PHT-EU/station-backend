@@ -65,3 +65,4 @@ def test_delete_local_train(train_id):
     r = client.get(f"/api/local-trains/{train_id}")
     with pytest.raises(HTTPError):
         r.raise_for_status()
+

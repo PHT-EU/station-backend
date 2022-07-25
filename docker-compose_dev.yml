@@ -2,48 +2,24 @@ version: '3.8'
 
 
 volumes:
-  pg_pht_station:
-    external: True
-
+  pg_data:
   blaze_data:
-  auth_data:
 
 services:
   pg_station:
     image: postgres:13
     volumes:
       - ./setup_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - pg_pht_station:/var/lib/postgresql/data
+      - pg_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
     ports:
       - "5432:5432"
 
-  reverse-proxy:
-    # The official v2 Traefik docker image
-    image: traefik:v2.6
-    # Enables the web UI and tells Traefik to listen to docker
-#    command: --api.insecure=true --providers.docker
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik=true"
-    ports:
-      # The HTTP port
-      - "80:80"
-      - "443:443"
-      # The Web UI (enabled by --api.insecure=true)
-      - "8081:8080"
-    volumes:
-      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
-      - ./traefik/config.yml:/etc/traefik/config.yml:ro
-      - ./certs:/etc/certs:ro
-      # So that Traefik can listen to the Docker events
-      - /var/run/docker.sock:/var/run/docker.sock
-
   auth:
-    image: ghcr.io/pht-medic/station-ui:latest
-    container_name: station-auth
+    image: ghcr.io/tada5hi/authelion-server:latest
+    container_name: pht-station-auth
     volumes:
       - ./data/auth:/usr/src/app/writable
     ports:
@@ -53,7 +29,6 @@ services:
       ADMIN_USER: admin
       ADMIN_PASSWORD: start123
     command:
-      - server
       - start
 
   redis:
@@ -70,13 +45,9 @@ services:
       dockerfile: ./airflow/Dockerfile
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      # Station Private Key needs to be set and registered
-      # - ./station/station_leipzig_private_key.pem:/opt/private_key.pem
-      # Mount the dags directory as a volume
       - ./airflow/dags:/root/airflow/dags
       - ./S_2_sk.pem:/opt/private_key.pem
       - ./data/station:/opt/station_data
-      # - ./station /opt/station
     depends_on:
       - pg_station
     env_file:
@@ -85,11 +56,6 @@ services:
       - AIRFLOW__WEBSERVER__X_FRAME_ENABLED=True
     ports:
       - "8080:8080"
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.airflow.tls=true
-      - traefik.http.routers.airflow.rule=Host("airflow.station.localhost")
-      - traefik.http.services.airflow.loadbalancer.server.port=8080
 
   minio:
     image: minio/minio:latest
@@ -106,28 +72,15 @@ services:
       - MINIO_BROWSER_REDIRECT_URL=http://127.0.0.1:9001
 
     command: server /data --console-address ":9001"
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.minio.tls=true
-      - traefik.http.routers.minio.rule=Host("minio.station.localhost")
-      - traefik.http.routers.minio.service=minio
-      - traefik.http.services.minio.loadbalancer.server.port=9000
-      - traefik.http.routers.minio-console.tls=true
-      - traefik.http.routers.minio-console.rule=Host("minio-console.station.localhost")
-#      - traefik.http.routers.minio-console.rule=Host("station.localhost") && Path("/minio")
-#      - "traefik.http.middlewares.minio-strip.stripprefix.prefixes=/minio"
-#      - traefik.http.routers.minio.middlewares=minio-strip
-      - traefik.http.routers.minio-console.service=minio-console
-      - traefik.http.services.minio-console.loadbalancer.server.port=9001
 
-  fhir-blaze:
-    image: samply/blaze
+  blaze-fhir:
+    image: "samply/blaze:latest"
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xmx2g"
+      #      OPENID_PROVIDER_URL: "https://dev-keycloak.grafm.de/auth/realms/blaze"
+      BASE_URL: "http://localhost:9090"
+    ports:
+      - "9090:8080"
     volumes:
       - blaze_data:/app/data
-    environment:
-      BASE_URL: "127.0.0.1:8082"
-      JAVA_TOOL_OPTIONS: "-Xmx2g"
-      OPENID_PROVIDER_URL: "https://dev-keycloak.grafm.de/auth/realms/blaze"
-    ports:
-      - "8082:8080"
 

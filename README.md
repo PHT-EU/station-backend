@@ -6,27 +6,64 @@
 
 This project contains the implementation of the station API, workers for training models, as well as the configuration
 for the station airflow instance and related workers. A FastAPI REST API for train and station management can be found
-in the `station` directory
+in the `station` directory.
 
-## Environment configuration
+## Setup development environment
 
+Checkout the repository and navigate to project directory.
 
-## Installation
+```bash
+git clone https://github.com/PHT-Medic/station-backend.git
+```
 
-1. Create a named docker volume for the postgres database `docker volume create pg_pht_station`
-2. Edit the environment variables in the `environment` section of the docker-compose file to match your configuration
-3. Run the docker-compose file `docker-compose up -d`, which will start the station and associated services
-4. Check the logs for any errors while bringing up the project `docker-compose logs`
+```bash
+cd station-backend
+```
 
+Make sure the following ports required for the services are open or change the port mappings in the `docker-compose_dev.yml` file.
 
-## Development environment
+- Postgres: 5432
+- Redis: 6379
+- Minio: 9000 & 9001 (Console)
+- Airflow: 8080
+- Blaze FHIR server: 9090
+- API: 8000
+
+### Start third party services
+
+Spin up the backend services
+
+#### Setup the auth server
+
+When installing for the first time, run the following command to perform the initial setup of the auth server.
+NODE_ENV=test
+WRITABLE_DIRECTORY_PATH=/usr/src/app/writable
+```bash
+docker run -v $(pwd)/data/auth:/usr/src/app/writable -e "NODE_ENV=test" -e "WRITABLE_DIRECTORY_PATH=/usr/src/app/writable" ghcr.io/tada5hi/authelion-server:latest setup
+```
+
+The end of the output should contain two lines containing the robot id and secret:
+
+```text
+ℹ Robot ID: dfdd59e9-bc26-42c3-8cbb-6665f58bd62d
+ℹ Robot Secret: 4ahwcc1jgobo07kori4hxw7i0f9mn1zqvgkjx5uzrv05yqbkiyl2hfn4wfd5cyq5
+```
+
+Copy the id and secret into the `.env` file.
+
+```bash
+docker-compose -f docker-compose_dev.yml up -d
+```
+
+### Install python dependencies
 
 [Pipenv](https://pipenv.pypa.io/en/latest/) should be used as a dependency manager for developing in the project.
 
-1. Install dev dependencies
-   ```shell
-   pipenv install --dev
-   ```
+```shell
+pipenv install --dev
+```
+
+### Start the backend services
 
 2. Spin up the backend services
    ```shell
@@ -36,17 +73,20 @@ in the `station` directory
    rename it to `station_config.yml` for it to be pucked up on station start up
 4. Make sure the environment is set to `development` in the `station/example.station_config.yml` file or via the
    `ENVIRONMENT` environment variable.
-5. Run the tests
-   ```shell
-   pipenv shell
-   pipenv run pytest station
-   ```
-6. Run the server in the activated virtual environment (or via your IDE)
+5. Run the server in the activated virtual environment (or via your IDE)
    ```shell
    pipenv shell
    pipenv python station/run_station.py
    ```
-7. Inspect the logs for any errors
+6. Inspect the logs for any errors
+
+### Running the tests
+
+7. Run the tests
+   ```shell
+   pipenv shell
+   pipenv run pytest station
+   ```
 
 ### Setup authentication server for testing
 

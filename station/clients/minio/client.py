@@ -112,6 +112,27 @@ class MinioClient:
             resp.append(res)
         return resp
 
+    async def save_local_train_files(self, train_id: str, files: List[Union[File, UploadFile]]):
+        """
+        store files of local train in minio
+        """
+        resp = []
+
+        for file in files:
+            data = await file.read()
+            data_file = BytesIO(data)
+            res = self.client.put_object(
+                bucket_name="local-train",
+                object_name=f"{train_id}/{file.filename}",
+                data=data_file,
+                length=len(data)
+            )
+            resp.append(res)
+        return resp
+
+
+
+
     def get_file(self, bucket: str, name: str) -> bytes:
         response = self.client.get_object(bucket_name=bucket, object_name=name)
         data = response.read()

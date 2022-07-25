@@ -6,15 +6,12 @@ from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, File, UploadFile, HTTPException
 
 from station.app.api import dependencies
-from station.clients.airflow.client import airflow_client
-from station.app.local_train_minio.LocalTrainMinIO import train_data
-from fastapi.responses import Response
-from fastapi.responses import FileResponse
 
 from station.app.schemas import local_trains
 
 from station.app.crud.crud_local_train import local_train
 from station.app.crud.local_train_master_image import local_train_master_image
+from station.clients.minio import MinioClient
 
 router = APIRouter()
 
@@ -48,13 +45,15 @@ def get_local_trains(db: Session = Depends(dependencies.get_db), skip: int = 0, 
 
 
 @router.put("/{train_id}", response_model=local_trains.LocalTrain)
-def update_local_train(train_id: str, update_msg: local_trains.LocalTrainUpdate, db: Session = Depends(dependencies.get_db)):
+def update_local_train(train_id: str, update_msg: local_trains.LocalTrainUpdate,
+                       db: Session = Depends(dependencies.get_db)):
     train = local_train.get(db, train_id)
     if not train:
         raise HTTPException(status_code=404, detail=f"Train ({train_id}) not found")
 
     train = local_train.update(db, db_obj=train, obj_in=update_msg)
     return train
+
 
 @router.delete("/{train_id}", response_model=local_trains.LocalTrain)
 def delete_local_train(train_id: str, db: Session = Depends(dependencies.get_db)):
@@ -64,6 +63,23 @@ def delete_local_train(train_id: str, db: Session = Depends(dependencies.get_db)
 
     train = local_train.remove(db, id=train_id)
     return train
+
+
+@router.post("/{train_id}/files")
+async def upload_train_files(train_id: str,
+                             files: List[UploadFile] = File(description="Multiple files as UploadFile"),
+                             db: Session = Depends(dependencies.get_db)) -> List[dict]:
+    db_train = local_train.get(db, train_id)
+    if not db_train:
+        raise HTTPException(status_code=404, detail=f"Local train ({train_id}) not found.")
+    if not files:
+        raise HTTPException(status_code=400, detail="No files provided.")
+    for file in files:
+        if not file.filename:
+            raise HTTPException(status_code=400, detail="No filename provided.")
+    minio_client = MinioClient()
+    resp = await minio_client.save_local_train_files(db_train.id, files)
+    return resp
 
 
 @router.post("/master-images", response_model=local_trains.LocalTrainMasterImage)
