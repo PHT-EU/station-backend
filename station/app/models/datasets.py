@@ -20,4 +20,3 @@ class DataSet(Base):
     access_path = Column(String, nullable=True)
     fhir_server = Column(Integer, ForeignKey('fhir_servers.id'), nullable=True)
     summary = Column(JSON, nullable=True)
-    # trains = relationship("Train", back_populates="dataset")

@@ -21,7 +21,7 @@ services:
     image: ghcr.io/tada5hi/authelion-server:latest
     container_name: pht-station-auth
     volumes:
-      - ./data/auth:/usr/src/app/writable
+      - ./data/auth:/usr/src/app/packages/backend/api/writable
     ports:
       - '3010:3010'
     environment:
