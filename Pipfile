@@ -25,6 +25,7 @@ rich = "*"
 plotly = "*"
 s3fs = "*"
 python-multipart = "*"
+redis = "*"
 
 [dev-packages]
 pytest = "*"
