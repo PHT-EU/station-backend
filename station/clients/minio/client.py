@@ -130,8 +130,15 @@ class MinioClient:
             resp.append(res)
         return resp
 
+    def get_local_train_files(self, train_id: str):
+        items = self.client.list_objects("local-trains", prefix=train_id, recursive=True)
 
+        files = []
+        for item in items:
+            file_data = self.client.get_object("local-trains", item.object_name)
+            files.append(file_data)
 
+        return files
 
     def get_file(self, bucket: str, name: str) -> bytes:
         response = self.client.get_object(bucket_name=bucket, object_name=name)
@@ -204,7 +211,6 @@ class MinioClient:
             )
             for item in items
         ]
-
 
     def get_classes_by_folders(self, data_set_id: str) -> List[str]:
         """
