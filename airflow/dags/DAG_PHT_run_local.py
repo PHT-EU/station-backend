@@ -42,7 +42,7 @@ def run_local_train():
     def get_local_train_config():
         context = get_current_context()
         train_id, env, volumes = [context['dag_run'].conf.get(_, None) for _ in
-                                  ['train_id', 'env', 'volumes']]
+                                  ['train_id', 'env', 'volumes', 'master_image', 'custom_image']]
 
         # check and process the volumes passed to the dag via the config
         if volumes:
@@ -83,7 +83,6 @@ def run_local_train():
 
     train_config = get_local_train_config()
     train_config = build_train_image(train_config)
-
 
 
 local_train_dag = run_local_train()

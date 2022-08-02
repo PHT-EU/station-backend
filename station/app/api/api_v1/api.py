@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from station.app.api.api_v1.endpoints import datasets, docker_trains, station, \
-    station_status, local_trains, airflow, fhir, notifications
+    station_status, local_trains, airflow, fhir, notifications, master_images
 
 api_router = APIRouter()
 
@@ -14,3 +14,4 @@ api_router.include_router(local_trains.router, prefix="/local-trains", tags=["Lo
 api_router.include_router(airflow.router, prefix="/airflow", tags=["Airflow"])
 api_router.include_router(fhir.router, prefix="/fhir/server", tags=["FHIR"])
 api_router.include_router(notifications.router, prefix="/notifications", tags=["Notifications"])
+api_router.include_router(master_images.router, prefix="/master-images", tags=["Master Images"])

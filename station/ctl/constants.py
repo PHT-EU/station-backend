@@ -56,7 +56,7 @@ class DataDirectories(Enum):
     MODELS = "models"
     TRAINS = "trains"
     DATASETS = "datasets"
-    LOCAL_TRAINS = "local_trains"
+    LOCAL_TRAINS = "local-trains"
 
 
 class ServiceDirectories(Enum):

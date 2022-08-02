@@ -3,7 +3,7 @@ from enum import Enum
 
 from pydantic import BaseModel, root_validator
 from datetime import datetime
-from typing import Optional, Dict, List, Union
+from typing import Optional, Dict, List, Union, Any
 
 
 class DBSchema(BaseModel):
@@ -80,7 +80,7 @@ class LocalTrainState(LocalTrainStateBase):
 
 class LocalTrainBase(BaseModel):
     name: Optional[str] = None
-    master_image_id: Optional[str] = None
+    master_image_id: Optional[Any] = None
     entrypoint: Optional[str] = None
     files: Optional[List[str]] = None
     custom_image: Optional[str] = None

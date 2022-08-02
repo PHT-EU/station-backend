@@ -811,4 +811,3 @@ class Settings:
 
 
 settings = Settings()
-settings.setup()

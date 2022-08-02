@@ -6,12 +6,22 @@ from station.app.db.setup_db import setup_db, reset_db
 from station.app.config import settings, Settings
 from station.app.config import StationRuntimeEnvironment
 from station.app.cache import redis_cache, Cache
+from station.clients.minio import MinioClient
+
+
+def setup():
+    load_dotenv(find_dotenv())
+    settings.setup()
+    setup_db(dev=os.getenv("ENVIRONMENT") != "production")
+
+    # minio
+    minio_client = MinioClient()
+    minio_client.setup_buckets()
+
 
 if __name__ == '__main__':
     load_dotenv(find_dotenv())
-    # todo remove reset in production
-    # reset_db(dev=os.getenv("ENVIRONMENT") != "production")
-    setup_db(dev=os.getenv("ENVIRONMENT") != "production")
+    setup()
 
     # Configure logging behaviour
     log_config = uvicorn.config.LOGGING_CONFIG

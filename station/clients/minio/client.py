@@ -8,12 +8,14 @@ import os
 from fastapi import File, UploadFile
 from typing import List, Union, Dict
 from loguru import logger
+from enum import Enum
 
 from dotenv import load_dotenv, find_dotenv
 
 from station.app.config import settings
 from station.app.schemas.datasets import DataSetFile
 from station.app.schemas.station_status import HealthStatus
+from station.ctl.constants import DataDirectories
 
 
 class MinioClient:
@@ -122,7 +124,7 @@ class MinioClient:
             data = await file.read()
             data_file = BytesIO(data)
             res = self.client.put_object(
-                bucket_name="local-train",
+                bucket_name="local-trains",
                 object_name=f"{train_id}/{file.filename}",
                 data=data_file,
                 length=len(data)
@@ -253,3 +255,10 @@ class MinioClient:
         except Exception as e:
             logger.error(f"Error while checking minio health: {e}")
             return HealthStatus.error
+
+    def setup_buckets(self):
+        for d in DataDirectories:
+            try:
+                self.client.make_bucket(d.value)
+            except Exception as e:
+                print(e)

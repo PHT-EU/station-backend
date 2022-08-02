@@ -45,7 +45,7 @@ class LocalTrain(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
     name = Column(String, nullable=True)
 
-    master_image_id = Column(UUID, ForeignKey('local_train_master_images.id'), nullable=True)
+    master_image_id = Column(UUID(as_uuid=True), ForeignKey('local_train_master_images.id'), nullable=True)
     entrypoint = Column(String, nullable=True)
     custom_image = Column(String, nullable=True)
     fhir_query = Column(String, nullable=True)

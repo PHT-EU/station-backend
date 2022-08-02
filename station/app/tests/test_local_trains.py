@@ -1,4 +1,5 @@
 from station.app.local_trains.docker import make_docker_file
+from station.app.local_trains.build import build_train
 
 
 def test_make_docker_file():
