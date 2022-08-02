@@ -47,7 +47,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./airflow/dags:/root/airflow/dags
       - ./S_2_sk.pem:/opt/private_key.pem
-      - ./data/station:/opt/station_data
+      - ./station_data:/opt/station_data
     depends_on:
       - pg_station
     env_file:
