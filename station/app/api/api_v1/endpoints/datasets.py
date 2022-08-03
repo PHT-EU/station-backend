@@ -3,6 +3,7 @@ import pandas as pd
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from station.app.api import dependencies
+from fastapi.responses import FileResponse
 
 from station.app.schemas.datasets import DataSet, DataSetCreate, DataSetUpdate, DataSetStatistics, DataSetFile
 from station.app.datasets import statistics
@@ -100,13 +101,20 @@ async def delete_file_from_dataset(data_set_id: str, file_name: str, db: Session
     minio_client.delete_file("datasets", file_name)
 
 
-@router.get("/{data_set_id}/download")
-def download(data_set_id: Any, db: Session = Depends(dependencies.get_db)):
+@router.get("/{data_set_id}/download", response_model=FileResponse)
+async def download(data_set_id: Any, db: Session = Depends(dependencies.get_db)):
     db_dataset = datasets.get(db, data_set_id)
     if not db_dataset:
         raise HTTPException(status_code=404, detail="Dataset not found.")
-    # TODO download as file
+    minio_client = MinioClient()
+    items = minio_client.get_data_set_items(data_set_id)
 
+    for item in items:
+        data = minio_client.get_file(item.file_name)
+        print(data)
+        return FileResponse(content=data, media_type="application/octet-stream")
+
+    # TODO download as file
 
 
 @router.get("/{data_set_id}/stats", response_model=DataSetStatistics)

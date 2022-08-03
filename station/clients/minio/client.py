@@ -1,6 +1,10 @@
-from io import BytesIO
+import datetime
+import time
+from io import BytesIO, StringIO
 from io import BufferedReader
 from io import TextIOWrapper
+
+import tarfile
 
 import starlette
 from minio import Minio
@@ -104,15 +108,39 @@ class MinioClient:
 
         for file in files:
             data = await file.read()
-            data_file = BytesIO(data)
+            data = data.decode('utf-8')
+
+            data_file = BytesIO(data.encode('utf-8'))
+            print(file.filename)
             res = self.client.put_object(
                 bucket_name="datasets",
-                object_name=f"{dataset_id}/{file.filename}",
+                # object_name=f"{dataset_id}/{file.filename}",
+                object_name=f"{file.filename}",
                 data=data_file,
-                length=len(data)
+                length=len(data),
+                content_type="text/plain"
             )
             resp.append(res)
+            data_file.seek(0)
+            print(data_file.read())
         return resp
+
+    async def make_local_train_archive(self, train_id: str) -> BytesIO:
+        """
+        create a tar file of the local train files
+        """
+        files = self.get_local_train_files(train_id)
+        tar_file = BytesIO()
+        with tarfile.TarFile(fileobj=tar_file, mode="w") as tar:
+            for file in files:
+                data = file.read()
+                info = tarfile.TarInfo(name=file.object_name)
+                info.size = len(data)
+                info.mtime = time.time()
+                tar.addfile(info, BytesIO(data))
+
+        tar_file.seek(0)
+        return tar_file
 
     async def save_local_train_files(self, train_id: str, files: List[Union[File, UploadFile]]):
         """

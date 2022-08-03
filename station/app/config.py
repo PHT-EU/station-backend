@@ -227,6 +227,8 @@ class Settings:
             self.config_path = os.getenv(StationEnvironmentVariables.CONFIG_PATH.value, "station_config.yml")
             self._config_file = True
         # todo create/update config file
+        if os.getenv("ENVIRONMENT") == "development":
+            self.setup()
 
     def setup(self) -> StationConfig:
         """

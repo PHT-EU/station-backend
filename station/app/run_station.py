@@ -23,6 +23,8 @@ if __name__ == '__main__':
     load_dotenv(find_dotenv())
     setup()
 
+    print(settings.config)
+
     # Configure logging behaviour
     log_config = uvicorn.config.LOGGING_CONFIG
     log_config["formatters"]["access"]["fmt"] = "%(asctime)s - %(levelname)s - %(message)s"
