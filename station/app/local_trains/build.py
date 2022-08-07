@@ -16,7 +16,7 @@ def build_train(
         fhir_query: Union[str, dict] = None) -> Image:
     minio_client = MinioClient()
 
-    files = minio_client.get_local_train_files(train_id)
+    files = minio_client.get_local_train_archive(train_id)
 
     image = _make_train_image(train_id, files, master_image_id, entrypoint_file, custom_image)
     return image

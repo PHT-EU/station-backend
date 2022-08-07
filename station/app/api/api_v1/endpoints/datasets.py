@@ -8,10 +8,11 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from station.app.api import dependencies
 from fastapi.responses import StreamingResponse
 
-from station.app.schemas.datasets import DataSet, DataSetCreate, DataSetUpdate, DataSetStatistics, DataSetFile
+from station.app.schemas.datasets import DataSet, DataSetCreate, DataSetUpdate, DataSetStatistics, MinioFile
 from station.app.datasets import statistics
 from station.app.crud import datasets
 from station.clients.minio import MinioClient
+from station.ctl.constants import DataDirectories
 
 router = APIRouter()
 
@@ -81,14 +82,14 @@ async def upload_data_set_file(dataset_id: str,
     await minio_client.save_dataset_files(db_dataset.id, files)
 
 
-@router.get("/{data_set_id}/files", response_model=List[DataSetFile])
+@router.get("/{data_set_id}/files", response_model=List[MinioFile])
 async def get_data_set_files(data_set_id: str, file_name: str = None, db: Session = Depends(dependencies.get_db)):
     db_dataset = datasets.get(db, data_set_id)
     if not db_dataset:
         raise HTTPException(status_code=404, detail=f"Dataset {data_set_id} not found.")
 
     minio_client = MinioClient()
-    items = minio_client.get_data_set_items(data_set_id)
+    items = minio_client.get_minio_dir_items(DataDirectories.DATASETS, data_set_id)
     if file_name:
         pass
     return items
@@ -101,26 +102,26 @@ async def delete_file_from_dataset(data_set_id: str, file_name: str, db: Session
         raise HTTPException(status_code=404, detail=f"Dataset {data_set_id} not found.")
 
     minio_client = MinioClient()
-    minio_client.delete_file("datasets", file_name)
+    minio_client.delete_file(DataDirectories.DATASETS.value, file_name)
 
 
 @router.get("/{data_set_id}/download", response_class=StreamingResponse)
-async def download(data_set_id: Any, db: Session = Depends(dependencies.get_db)):
+async def download(data_set_id: Any, archive_type: str = "tar", db: Session = Depends(dependencies.get_db)):
     db_dataset = datasets.get(db, data_set_id)
     if not db_dataset:
         raise HTTPException(status_code=404, detail="Dataset not found.")
     minio_client = MinioClient()
-    items = minio_client.get_data_set_items(data_set_id)
+    items = minio_client.get_minio_dir_items(DataDirectories.DATASETS, data_set_id)
 
     if len(items) == 0:
         raise HTTPException(status_code=404, detail="No files found.")
     elif len(items) == 1:
-        data = minio_client.get_file("datasets", items[0].full_path)
+        data = minio_client.get_file(DataDirectories.DATASETS.value, items[0].full_path)
         obj = BytesIO(data)
         return StreamingResponse(content=obj, media_type="application/octet-stream")
 
     else:
-        archive = minio_client.make_dataset_archive(data_set_id, items=items)
+        archive = minio_client.make_dataset_archive(data_set_id, items=items, archive_type=archive_type)
         return StreamingResponse(content=archive, media_type="application/zip")
 
 

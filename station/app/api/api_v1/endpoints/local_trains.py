@@ -4,6 +4,7 @@ from typing import List
 
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, File, UploadFile, HTTPException
+from fastapi.responses import StreamingResponse
 
 from station.app.api import dependencies
 
@@ -11,7 +12,9 @@ from station.app.schemas import local_trains
 
 from station.app.crud.crud_local_train import local_train
 from station.app.crud.local_train_master_image import local_train_master_image
+from station.app.schemas.datasets import MinioFile
 from station.clients.minio import MinioClient
+from station.ctl.constants import DataDirectories
 
 router = APIRouter()
 
@@ -82,3 +85,24 @@ async def upload_train_files(train_id: str,
     return resp
 
 
+@router.get("/{train_id}/files", response_model=List[MinioFile])
+async def get_train_files(train_id: str, file_name: str = None, db: Session = Depends(dependencies.get_db)):
+    db_train = local_train.get(db, train_id)
+    if not db_train:
+        raise HTTPException(status_code=404, detail=f"Local train ({train_id}) not found.")
+
+    minio_client = MinioClient()
+    items = minio_client.get_minio_dir_items(DataDirectories.LOCAL_TRAINS, str(db_train.id))
+    if file_name:
+        pass
+    return items
+
+
+@router.get("/{train_id}/archive", response_class=StreamingResponse)
+async def get_train_archive(train_id: str, db: Session = Depends(dependencies.get_db)):
+    db_train = local_train.get(db, train_id)
+    if not db_train:
+        raise HTTPException(status_code=404, detail=f"Local train ({train_id}) not found.")
+    minio_client = MinioClient()
+    resp = minio_client.get_local_train_archive(str(db_train.id))
+    return StreamingResponse(content=resp, media_type="application/octet-stream")

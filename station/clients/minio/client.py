@@ -1,6 +1,5 @@
-import datetime
 import time
-from io import BytesIO, StringIO
+from io import BytesIO
 from io import BufferedReader
 from io import TextIOWrapper
 
@@ -9,16 +8,13 @@ from zipfile import ZipFile
 
 import starlette
 from minio import Minio
-import os
 from fastapi import File, UploadFile
 from typing import List, Union, Dict
 from loguru import logger
-from enum import Enum
 
-from dotenv import load_dotenv, find_dotenv
 
 from station.app.config import settings
-from station.app.schemas.datasets import DataSetFile
+from station.app.schemas.datasets import MinioFile
 from station.app.schemas.station_status import HealthStatus
 from station.ctl.constants import DataDirectories
 
@@ -59,17 +55,19 @@ class MinioClient:
             secure=False
         )
 
-        self._init_server()
-
     async def store_model_file(self, id: str, model_file: Union[File, UploadFile]):
         model_data = await model_file.read()
         file = BytesIO(model_data)
-        res = self.client.put_object("models", object_name=id, data=file, length=len(file.getbuffer()))
+        res = self.client.put_object(
+            DataDirectories.MODELS.value,
+            object_name=id,
+            data=file,
+            length=len(file.getbuffer()))
         return res
 
     def get_model_file(self, model_id: str) -> bytes:
         try:
-            response = self.client.get_object(bucket_name="models", object_name=model_id)
+            response = self.client.get_object(bucket_name=DataDirectories.MODELS.value, object_name=model_id)
             data = response.read()
         finally:
             response.close()
@@ -113,7 +111,7 @@ class MinioClient:
 
             data_file = BytesIO(data.encode('utf-8'))
             res = self.client.put_object(
-                bucket_name="datasets",
+                bucket_name=DataDirectories.DATASETS.value,
                 object_name=f"{dataset_id}/{file.filename}",
                 data=data_file,
                 length=len(data),
@@ -123,23 +121,6 @@ class MinioClient:
             data_file.seek(0)
 
         return resp
-
-    async def make_local_train_archive(self, train_id: str) -> BytesIO:
-        """
-        create a tar file of the local train files
-        """
-        files = self.get_local_train_files(train_id)
-        tar_file = BytesIO()
-        with tarfile.TarFile(fileobj=tar_file, mode="w") as tar:
-            for file in files:
-                data = file.read()
-                info = tarfile.TarInfo(name=file.object_name)
-                info.size = len(data)
-                info.mtime = time.time()
-                tar.addfile(info, BytesIO(data))
-
-        tar_file.seek(0)
-        return tar_file
 
     async def save_local_train_files(self, train_id: str, files: List[Union[File, UploadFile]]):
         """
@@ -151,7 +132,7 @@ class MinioClient:
             data = await file.read()
             data_file = BytesIO(data)
             res = self.client.put_object(
-                bucket_name="local-trains",
+                bucket_name=DataDirectories.LOCAL_TRAINS.value,
                 object_name=f"{train_id}/{file.filename}",
                 data=data_file,
                 length=len(data)
@@ -159,15 +140,13 @@ class MinioClient:
             resp.append(res)
         return resp
 
-    def get_local_train_files(self, train_id: str):
-        items = self.client.list_objects("local-trains", prefix=train_id, recursive=True)
+    def get_local_train_archive(self, train_id: str):
+        print(DataDirectories.LOCAL_TRAINS.value)
+        items = self.get_minio_dir_items(bucket=DataDirectories.LOCAL_TRAINS.value, directory=train_id)
 
-        files = []
-        for item in items:
-            file_data = self.client.get_object("local-trains", item.object_name)
-            files.append(file_data)
+        archive = self.make_download_archive("local-trains", items=items)
 
-        return files
+        return archive
 
     def get_file(self, bucket: str, name: str) -> bytes:
         response = self.client.get_object(bucket_name=bucket, object_name=name)
@@ -190,22 +169,6 @@ class MinioClient:
         if not found:
             self.client.make_bucket(bucket_name)
 
-    def _init_server(self):
-        """
-        Checks if the required buckets are present on the minio server and creates them if necessary
-
-        :return:
-        """
-        # Create a Minio Bucket for station models
-        found = self.client.bucket_exists("models")
-        if not found:
-            print("Creating minio bucket for models")
-            self.client.make_bucket("models")
-        # Create bucket for data sets
-        found = self.client.bucket_exists("datasets")
-        if not found:
-            print("Creating minio bucket for data sets")
-            self.client.make_bucket("datasets")
 
     def list_data_sets(self):
         data_sets = self.client.list_objects("datasets")
@@ -222,17 +185,21 @@ class MinioClient:
     def load_data_set(self):
         pass
 
-    def get_data_set_items(self, data_set_id: str) -> List[DataSetFile]:
+    def get_minio_dir_items(self, bucket: Union[str, DataDirectories], directory: str) -> List[MinioFile]:
         """
         Get all objects in the data set specified by data_set_id and return them as a generator
+        Args:
+            bucket:
+            directory:
 
-        :param data_set_id:
-        :return:
+        Returns:
+
         """
-        items = self.client.list_objects("datasets", prefix=data_set_id, recursive=True)
-
-        return [
-            DataSetFile(
+        if isinstance(bucket, DataDirectories):
+            bucket = bucket.value
+        items = self.client.list_objects(bucket, prefix=directory, recursive=True, use_url_encoding_type=True)
+        file_info = [
+            MinioFile(
                 file_name=item.object_name.split("/")[-1],
                 full_path=item.object_name,
                 size=item.size,
@@ -240,10 +207,11 @@ class MinioClient:
             )
             for item in items
         ]
+        return file_info
 
     def make_dataset_archive(self,
                              data_set_id: str,
-                             items: List[DataSetFile] = None,
+                             items: List[MinioFile] = None,
                              archive_type: str = "tar") -> BytesIO:
         """
         Create an archive of the data set specified by data_set_id and return it as a BytesIO object
@@ -256,14 +224,19 @@ class MinioClient:
 
         """
         if items is None:
-            items = self.get_data_set_items(data_set_id)
+            items = self.get_minio_dir_items("datasets", data_set_id)
 
+        archive = self.make_download_archive("datasets", items, archive_type=archive_type)
+
+        return archive
+
+    def make_download_archive(self, bucket: str, items: List[MinioFile], archive_type: str = "tar") -> BytesIO:
         archive = BytesIO()
 
         if archive_type == "tar":
             with tarfile.TarFile(fileobj=archive, mode="w") as tar:
                 for file in items:
-                    data = self.get_file("datasets", file.full_path)
+                    data = self.get_file(bucket, file.full_path)
                     info = tarfile.TarInfo(name=file.full_path)
                     info.size = len(data)
                     info.mtime = time.time()
@@ -274,15 +247,12 @@ class MinioClient:
         elif archive_type == "zip":
             with ZipFile(archive, 'w') as zip:
                 for item in items:
-                    data = self.get_file("datasets", item.full_path)
+                    data = self.get_file(bucket, item.full_path)
                     zip.writestr(item.full_path, data)
             archive.seek(0)
             return archive
 
         raise ValueError(f"Unknown archive type {archive_type}")
-
-    def make_download_archive(self, items: List[DataSetFile]):
-        pass
 
     def get_classes_by_folders(self, data_set_id: str) -> List[str]:
         """
