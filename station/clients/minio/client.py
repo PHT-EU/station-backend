@@ -5,6 +5,7 @@ from io import BufferedReader
 from io import TextIOWrapper
 
 import tarfile
+from zipfile import ZipFile
 
 import starlette
 from minio import Minio
@@ -111,18 +112,16 @@ class MinioClient:
             data = data.decode('utf-8')
 
             data_file = BytesIO(data.encode('utf-8'))
-            print(file.filename)
             res = self.client.put_object(
                 bucket_name="datasets",
-                # object_name=f"{dataset_id}/{file.filename}",
-                object_name=f"{file.filename}",
+                object_name=f"{dataset_id}/{file.filename}",
                 data=data_file,
                 length=len(data),
                 content_type="text/plain"
             )
             resp.append(res)
             data_file.seek(0)
-            print(data_file.read())
+
         return resp
 
     async def make_local_train_archive(self, train_id: str) -> BytesIO:
@@ -241,6 +240,49 @@ class MinioClient:
             )
             for item in items
         ]
+
+    def make_dataset_archive(self,
+                             data_set_id: str,
+                             items: List[DataSetFile] = None,
+                             archive_type: str = "tar") -> BytesIO:
+        """
+        Create an archive of the data set specified by data_set_id and return it as a BytesIO object
+        Args:
+            data_set_id: id of the dataset
+            items: list of items to include in the archive
+            archive_type: tar or zip
+
+        Returns:
+
+        """
+        if items is None:
+            items = self.get_data_set_items(data_set_id)
+
+        archive = BytesIO()
+
+        if archive_type == "tar":
+            with tarfile.TarFile(fileobj=archive, mode="w") as tar:
+                for file in items:
+                    data = self.get_file("datasets", file.full_path)
+                    info = tarfile.TarInfo(name=file.full_path)
+                    info.size = len(data)
+                    info.mtime = time.time()
+                    tar.addfile(info, BytesIO(data))
+
+            archive.seek(0)
+            return archive
+        elif archive_type == "zip":
+            with ZipFile(archive, 'w') as zip:
+                for item in items:
+                    data = self.get_file("datasets", item.full_path)
+                    zip.writestr(item.full_path, data)
+            archive.seek(0)
+            return archive
+
+        raise ValueError(f"Unknown archive type {archive_type}")
+
+    def make_download_archive(self, items: List[DataSetFile]):
+        pass
 
     def get_classes_by_folders(self, data_set_id: str) -> List[str]:
         """

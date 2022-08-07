@@ -1,9 +1,12 @@
+from io import BytesIO
 from typing import Any, List
+from zipfile import ZipFile
+
 import pandas as pd
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from station.app.api import dependencies
-from fastapi.responses import FileResponse
+from fastapi.responses import StreamingResponse
 
 from station.app.schemas.datasets import DataSet, DataSetCreate, DataSetUpdate, DataSetStatistics, DataSetFile
 from station.app.datasets import statistics
@@ -101,7 +104,7 @@ async def delete_file_from_dataset(data_set_id: str, file_name: str, db: Session
     minio_client.delete_file("datasets", file_name)
 
 
-@router.get("/{data_set_id}/download", response_model=FileResponse)
+@router.get("/{data_set_id}/download", response_class=StreamingResponse)
 async def download(data_set_id: Any, db: Session = Depends(dependencies.get_db)):
     db_dataset = datasets.get(db, data_set_id)
     if not db_dataset:
@@ -109,12 +112,16 @@ async def download(data_set_id: Any, db: Session = Depends(dependencies.get_db))
     minio_client = MinioClient()
     items = minio_client.get_data_set_items(data_set_id)
 
-    for item in items:
-        data = minio_client.get_file(item.file_name)
-        print(data)
-        return FileResponse(content=data, media_type="application/octet-stream")
+    if len(items) == 0:
+        raise HTTPException(status_code=404, detail="No files found.")
+    elif len(items) == 1:
+        data = minio_client.get_file("datasets", items[0].full_path)
+        obj = BytesIO(data)
+        return StreamingResponse(content=obj, media_type="application/octet-stream")
 
-    # TODO download as file
+    else:
+        archive = minio_client.make_dataset_archive(data_set_id, items=items)
+        return StreamingResponse(content=archive, media_type="application/zip")
 
 
 @router.get("/{data_set_id}/stats", response_model=DataSetStatistics)
