@@ -123,7 +123,7 @@ def _setup_auth_server(ctx):
     output = container.attach(stdout=True, stream=True, logs=True, stderr=True)
     container.wait()
 
-    with open(os.path.join(writable_dir, "seed.json"), "r") as f:
+    with open(os.path.join(ctx.obj['install_dir'], PHTDirectories.SERVICE_DATA_DIR.value, "auth"), "r") as f:
         seed = json.load(f)
 
     robot_id = seed["robotId"]
