@@ -126,8 +126,8 @@ def _setup_auth_server(ctx):
     with open(os.path.join(writable_dir, "seed.json"), "r") as f:
         seed = json.load(f)
 
-    robot_id = seed["robot_id"]
-    robot_secret = seed["robot_secret"]
+    robot_id = seed["robotId"]
+    robot_secret = seed["robotSecret"]
 
     if not (robot_id and robot_secret):
         click.echo(Icons.CROSS.value)
@@ -138,8 +138,8 @@ def _setup_auth_server(ctx):
     else:
 
         auth = {
-            "robotId": robot_id,
-            "robotSecret": robot_secret,
+            "robot_id": robot_id,
+            "robot_secret": robot_secret,
         }
         ctx.obj["auth"] = auth
         click.echo(Icons.CHECKMARK.value)
