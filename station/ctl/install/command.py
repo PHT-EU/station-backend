@@ -138,8 +138,8 @@ def _setup_auth_server(ctx):
     else:
 
         auth = {
-            "robot_id": robot_id,
-            "robot_secret": robot_secret,
+            "robotId": robot_id,
+            "robotSecret": robot_secret,
         }
         ctx.obj["auth"] = auth
         click.echo(Icons.CHECKMARK.value)
