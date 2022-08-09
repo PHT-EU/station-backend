@@ -47,6 +47,8 @@ services:
     environment:
       - ADMIN_PASSWORD=6CKzZlzmRFsnYTEAqabSphHHE6W4O0Xd
       - NODE_ENV=production
+      - SELF_URL=station.localhost/auth
+      - WEB_URL=station.localhost
     labels:
       - traefik.enable=true
       - traefik.http.routers.auth.tls=true
@@ -76,8 +78,8 @@ services:
       - REDIS_HOST=redis
       - AUTH_SERVER_HOST=https://station.localhost/auth
       - AUTH_SERVER_PORT=3010
-      - AUTH_ROBOT_ID=72992b10-e25f-496d-94b1-0303f5ef8204
-      - AUTH_ROBOT_SECRET=kwoyh6dnl3zrkfo4vxt13sn83cfsh1fq9dbwgtrlcdh68eenmcnjnx3zfx89beq9
+      - AUTH_ROBOT_ID=b2ce7e24-9846-43df-a574-d4f3f8790611
+      - AUTH_ROBOT_SECRET=bgh06f1k18iekf6z0gc3xcub9myds5l9rd3ikig40c1zhwhyo5k6u3vyxhnd7zf0
       - HARBOR_URL=staging-harbor.tada5hi.net
       - HARBOR_USER=robot$$10fqi2nugnog5nak0ylec
       - HARBOR_PW=jFluVcDzsOofUIiBXa4yyW49NvA2BJHp

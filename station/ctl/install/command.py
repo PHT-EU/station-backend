@@ -111,28 +111,34 @@ def _setup_auth_server(ctx):
     environment = {
         "ADMIN_USER": "admin",
         "ADMIN_PASSWORD": ctx.obj['admin_password'],
+        "NODE_ENV": "production",
+        "WRITABLE_DIRECTORY_PATH": "/usr/src/app/writable"
     }
+
+    install_dir = os.path.join(ctx.obj['install_dir'], PHTDirectories.SERVICE_DATA_DIR.value, "auth")
 
     container = client.containers.run(auth_image,
                                       command,
-                                      remove=True,
+                                      remove=False,
                                       detach=True,
                                       environment=environment,
                                       volumes=auth_volumes)
-
-    output = container.attach(stdout=True, stream=True, logs=True, stderr=True)
-    container.wait()
-
-    with open(os.path.join(ctx.obj['install_dir'], PHTDirectories.SERVICE_DATA_DIR.value, "auth"), "r") as f:
+    exit_code = container.wait()
+    logs = container.logs()
+    with open(
+            os.path.join(ctx.obj['install_dir'], PHTDirectories.SERVICE_DATA_DIR.value, "auth", "seed.json")
+            , "r"
+    ) as f:
         seed = json.load(f)
 
     robot_id = seed["robotId"]
     robot_secret = seed["robotSecret"]
+    # print("".join(output))
 
     if not (robot_id and robot_secret):
         click.echo(Icons.CROSS.value)
         click.echo("Failed to setup auth server", err=True)
-        pprint.pp("".join(output))
+        click.echo(logs, err=True)
         raise Exception("Could not get robot credentials from auth server")
 
     else:
