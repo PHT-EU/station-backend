@@ -10,7 +10,7 @@ from fastapi import UploadFile, HTTPException
 from station.app.crud.base import CRUDBase, ModelType, CreateSchemaType
 from station.app.models.local_trains import LocalTrain, LocalTrainExecution, LocalTrainState, LocalTrainMasterImage
 from station.app.schemas.local_trains import LocalTrainCreate, LocalTrainUpdate, LocalTrainRunConfig
-from station.app.local_train_minio.LocalTrainMinIO import train_data
+from station.app.trains.local.minio import train_data
 
 
 class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):

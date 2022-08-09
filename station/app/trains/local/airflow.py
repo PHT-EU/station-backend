@@ -1,4 +1,8 @@
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from typing import Optional
+
+from fhir_kindling.fhir_query.query_parameters import FHIRQueryParameters
 
 from station.app.crud.crud_local_train import local_train
 from station.app.crud.local_train_master_image import local_train_master_image
@@ -8,6 +12,21 @@ from station.app.crud.crud_train_configs import docker_train_config
 from station.app.config import settings
 from station.clients.airflow.docker_trains import process_dataset, process_db_config
 from station.clients.airflow.client import airflow_client
+
+
+class FHIRConfig(BaseModel):
+    server_id: str
+    query_string: Optional[str] = None
+    parameters: Optional[FHIRQueryParameters] = None
+
+
+class AirflowRunConfig(BaseModel):
+    train_id: str
+    env: Optional[dict] = None
+    volumes: Optional[dict] = None
+    master_image: Optional[str] = None
+    custom_image: Optional[str] = None
+    fhir: Optional[FHIRConfig] = None
 
 
 def run_local_train(db: Session, train_id: str, dataset_id: str = None, config_id: int = None) -> dict:

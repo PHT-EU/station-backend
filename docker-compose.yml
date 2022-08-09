@@ -13,8 +13,6 @@ services:
     volumes:
       - C:\Users\micha\tbi\repos\station\setup_scripts\init.sql:/docker-entrypoint-initdb.d/init.sql
       - pg_pht_station:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     environment: 
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=pw3j5YjdKO2BRKKwE1ELGMITPp73KRkt
@@ -49,8 +47,6 @@ services:
     environment:
       - ADMIN_PASSWORD=6CKzZlzmRFsnYTEAqabSphHHE6W4O0Xd
       - NODE_ENV=test
-    command:
-      - start
     labels:
       - traefik.enable=true
       - traefik.http.routers.auth.tls=true
@@ -58,6 +54,8 @@ services:
       - traefik.http.services.auth.loadbalancer.server.port=3010
       - traefik.http.middlewares.auth-stripprefix.stripprefix.prefixes=/auth
       - traefik.http.routers.auth.middlewares=auth-stripprefix@docker
+    command:
+      - start
 
   api:
     image: ghcr.io/pht-medic/station-api:latest
@@ -78,8 +76,8 @@ services:
       - REDIS_HOST=redis
       - AUTH_SERVER_HOST=https://station.localhost/auth
       - AUTH_SERVER_PORT=3010
-      - AUTH_ROBOT_ID=a344eaf1-9a35-4213-a51b-83c86bced1da
-      - AUTH_ROBOT_SECRET=n14w6yi68buivfekpg0hvzqxsv8ni5e4of5bhzf8rq9bie69cs7mgzrsc5pj787g
+      - AUTH_ROBOT_ID=25e48f19-855a-434a-bbdd-fe6362c6d817
+      - AUTH_ROBOT_SECRET=fsih5ataxs7njfuvtlbwlmhzhmajapr3o11qxq376xzw1rh2bmizmbhtrmd82urz
       - HARBOR_URL=staging-harbor.tada5hi.net
       - HARBOR_USER=robot$$10fqi2nugnog5nak0ylec
       - HARBOR_PW=jFluVcDzsOofUIiBXa4yyW49NvA2BJHp
@@ -109,10 +107,6 @@ services:
       - traefik.http.routers.ui.tls=true
       - traefik.http.routers.ui.rule=Host("station.localhost") && !PathPrefix("/api") && !PathPrefix("/auth") && !PathPrefix("/airflow") && !PathPrefix("/fhir-servers")
       - traefik.http.services.ui.loadbalancer.server.port=3000
-    command:
-      - app
-      - start
-
   redis:
     image: redislabs/rejson:latest
     restart: unless-stopped

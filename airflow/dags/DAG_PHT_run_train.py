@@ -200,7 +200,7 @@ def run_pht_train():
         client = docker.from_env()
         environment = train_state.get("env", {})
         volumes = train_state.get("volumes", {})
-        print("Volumes", train_state["volumes"])
+        print("Volumes", volumes)
         print("Env dict: ", environment)
 
         try:

@@ -1,3 +1,4 @@
+import json
 import os
 import pprint
 import sys
@@ -85,7 +86,6 @@ def _request_registry_credentials(ctx):
     credentials = client.get_registry_credentials(ctx.obj["station_id"])
     click.echo(Icons.CHECKMARK.value)
 
-
     return credentials
 
 
@@ -121,24 +121,18 @@ def _setup_auth_server(ctx):
                                       volumes=auth_volumes)
 
     output = container.attach(stdout=True, stream=True, logs=True, stderr=True)
+    container.wait()
 
-    robot_id = None
-    robot_secret = None
+    with open(os.path.join(writable_dir, "seed.json"), "r") as f:
+        seed = json.load(f)
 
-    logs = []
-    for line in output:
-        decoded = line.decode("utf-8")
-        logs.append(decoded)
-        if "Robot ID" in decoded and "Robot Secret" in decoded:
-            robot_id_index = decoded.find("Robot ID")
-            robot_secret_index = decoded.find("Robot Secret")
-            robot_id = decoded[robot_id_index + len("Robot ID:"):robot_secret_index - 2].strip()
-            robot_secret = decoded[robot_secret_index + len("Robot Secret:"):].strip()
+    robot_id = seed["robot_id"]
+    robot_secret = seed["robot_secret"]
 
-    if not robot_id or not robot_secret:
+    if not (robot_id and robot_secret):
         click.echo(Icons.CROSS.value)
         click.echo("Failed to setup auth server", err=True)
-        pprint.pp(logs)
+        pprint.pp("".join(output))
         raise Exception("Could not get robot credentials from auth server")
 
     else:

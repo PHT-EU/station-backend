@@ -5,7 +5,7 @@ import docker
 from docker.models.images import Image
 from train_lib.docker_util.docker_ops import add_archive
 
-from station.app.local_trains.docker import make_docker_file
+from station.app.trains.local.docker import make_docker_file
 from station.clients.minio import MinioClient
 from station.app.models.local_trains import LocalTrain
 from loguru import logger
