@@ -65,12 +65,13 @@ def render_compose(config: dict, env: Environment = None) -> str:
         "certs_dir": certs_dir,
     }
 
+    auth_url = "https://" + config["https"]["domain"] + "/auth"
     auth_config = {
         "env": {
             "ADMIN_PASSWORD": config["admin_password"],
             "NODE_ENV": "production",
-            "SELF_URL": "https://" + config["https"]["domain"] + "/auth",
-            "WEB_URL": "https://" + config["https"]["domain"]
+            "SELF_URL": auth_url,
+            "WEB_URL": auth_url,
         },
         "labels": [
             "traefik.enable=true",
@@ -172,8 +173,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
         "labels": [
             "traefik.enable=true",
             "traefik.http.routers.ui.tls=true",
-            f'traefik.http.routers.ui.rule=Host("{config["https"]["domain"]}") && !PathPrefix("/api") '
-            f'&& !PathPrefix("/auth") && !PathPrefix("/airflow") && !PathPrefix("/fhir-servers")',
+            f'traefik.http.routers.ui.rule=Host("{config["https"]["domain"]}")',
             "traefik.http.services.ui.loadbalancer.server.port=3000"
         ]
     }
