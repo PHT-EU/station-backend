@@ -107,15 +107,22 @@ def _setup_auth_server(ctx):
             "mode": "rw"
         }
     }
-
+    print(ctx.obj)
     environment = {
         "ADMIN_USER": "admin",
         "ADMIN_PASSWORD": ctx.obj['admin_password'],
         "NODE_ENV": "production",
-        "WRITABLE_DIRECTORY_PATH": "/usr/src/app/writable"
+        "SELF_URL": "https://" + ctx.obj["https"]["domain"] + "/auth",
+        "WEB_URL": "https://" + ctx.obj["https"]["domain"],
+        # "TYPEORM_CONNECTION": "postgres",
+        # "TYPEORM_HOST": "postgres",
+        # "TYPEORM_USERNAME": ctx.obj["db"]["admin_user"],
+        # "TYPEORM_PASSWORD": ctx.obj["db"]["admin_password"],
+        # "TYPEORM_DATABASE": "auth",
+        # "TYPEORM_PORT": 5432,
+        # "TYPEORM_SYNCHRONIZE": "false",
+        # "TYPEORM_LOGGING": "true",
     }
-
-    install_dir = os.path.join(ctx.obj['install_dir'], PHTDirectories.SERVICE_DATA_DIR.value, "auth")
 
     container = client.containers.run(auth_image,
                                       command,
@@ -125,9 +132,9 @@ def _setup_auth_server(ctx):
                                       volumes=auth_volumes)
     exit_code = container.wait()
     logs = container.logs()
+    print(logs.decode())
     with open(
-            os.path.join(ctx.obj['install_dir'], PHTDirectories.SERVICE_DATA_DIR.value, "auth", "seed.json")
-            , "r"
+            os.path.join(ctx.obj['install_dir'], PHTDirectories.SERVICE_DATA_DIR.value, "auth", "seed.json"), "r"
     ) as f:
         seed = json.load(f)
 
