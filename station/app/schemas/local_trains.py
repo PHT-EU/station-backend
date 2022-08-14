@@ -47,9 +47,10 @@ class LocalTrainMasterImage(LocalTrainMasterImageBase):
 
 class LocalTrainConfigurationStep(str, Enum):
     initialized = "initialized"
-    master_image_selected = "master_image_selected"
+    image_configured = "image_configured"
     files_uploaded = "files_uploaded"
-    entrypoint_selected = "entrypoint_selected"
+    dataset_selected = "dataset_selected"
+    train_configured = "train_configured"
     finished = "finished"
 
 

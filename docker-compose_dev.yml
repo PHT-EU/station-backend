@@ -78,7 +78,7 @@ services:
     image: "samply/blaze:latest"
     environment:
       JAVA_TOOL_OPTIONS: "-Xmx2g"
-      #      OPENID_PROVIDER_URL: "https://dev-keycloak.grafm.de/auth/realms/blaze"
+      OPENID_PROVIDER_URL: "http://auth:3010/realms/master"
       BASE_URL: "http://localhost:9090"
     ports:
       - "9090:8080"

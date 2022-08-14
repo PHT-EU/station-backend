@@ -44,7 +44,6 @@ class LocalTrain(Base):
     __tablename__ = "local_trains"
     id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
     name = Column(String, nullable=True)
-
     master_image_id = Column(UUID(as_uuid=True), ForeignKey('local_train_master_images.id'), nullable=True)
     entrypoint = Column(String, nullable=True)
     custom_image = Column(String, nullable=True)
@@ -52,6 +51,7 @@ class LocalTrain(Base):
     created_at = Column(DateTime, default=datetime.now())
     updated_at = Column(DateTime, nullable=True)
     state = relationship("LocalTrainState", cascade="all,delete", uselist=False)
+    dataset_id = Column(UUID(as_uuid=True), ForeignKey('datasets.id'), nullable=True)
 
 
 '''

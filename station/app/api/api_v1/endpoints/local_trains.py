@@ -73,6 +73,7 @@ async def upload_train_files(train_id: str,
                              files: List[UploadFile] = File(description="Multiple files as UploadFile"),
                              db: Session = Depends(dependencies.get_db)) -> List[dict]:
     db_train = local_train.get(db, train_id)
+
     if not db_train:
         raise HTTPException(status_code=404, detail=f"Local train ({train_id}) not found.")
     if not files:
@@ -80,8 +81,19 @@ async def upload_train_files(train_id: str,
     for file in files:
         if not file.filename:
             raise HTTPException(status_code=400, detail="No filename provided.")
+
+    state = db_train.state
+
+    if state.configuration_status != local_trains.LocalTrainConfigurationStep.image_configured.value:
+        raise HTTPException(status_code=400, detail="Train image is not configured. Select an image first before up"
+                                                    "loading files.")
+
     minio_client = MinioClient()
     resp = await minio_client.save_local_train_files(db_train.id, files)
+
+    state.configuration_status = local_trains.LocalTrainConfigurationStep.files_uploaded.value
+    db.commit()
+
     return resp
 
 
