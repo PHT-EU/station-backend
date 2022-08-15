@@ -12,7 +12,6 @@ from fastapi import File, UploadFile
 from typing import List, Union, Dict
 from loguru import logger
 
-
 from station.app.config import settings
 from station.app.schemas.datasets import MinioFile
 from station.app.schemas.station_status import HealthStatus
@@ -169,7 +168,6 @@ class MinioClient:
         if not found:
             self.client.make_bucket(bucket_name)
 
-
     def list_data_sets(self):
         data_sets = self.client.list_objects("datasets")
         return [ds.object_name for ds in list(data_sets)]
@@ -197,17 +195,23 @@ class MinioClient:
         """
         if isinstance(bucket, DataDirectories):
             bucket = bucket.value
-        items = self.client.list_objects(bucket, prefix=directory, recursive=True, use_url_encoding_type=True)
-        file_info = [
-            MinioFile(
-                file_name=item.object_name.split("/")[-1],
-                full_path=item.object_name,
-                size=item.size,
-                updated_at=item.last_modified
-            )
-            for item in items
-        ]
-        return file_info
+        items = self.client.list_objects(bucket, prefix=directory, recursive=True)
+        try:
+            dir_files = []
+            for item in items:
+                print(item)
+                dir_files.append(
+                    MinioFile(
+                        file_name=item.object_name.split("/")[-1],
+                        full_path=item.object_name,
+                        size=item.size,
+                        updated_at=item.last_modified
+                    )
+                )
+            return dir_files
+        except Exception as e:
+            print(e)
+            return []
 
     def make_dataset_archive(self,
                              data_set_id: str,

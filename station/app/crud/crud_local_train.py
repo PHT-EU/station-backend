@@ -10,9 +10,10 @@ from fastapi import UploadFile, HTTPException
 
 from station.app.crud.base import CRUDBase, ModelType, CreateSchemaType, UpdateSchemaType
 from station.app.models.local_trains import LocalTrain, LocalTrainExecution, LocalTrainState, LocalTrainMasterImage
-from station.app.schemas.local_trains import LocalTrainCreate, LocalTrainUpdate, LocalTrainRunConfig
+from station.app.schemas.local_trains import LocalTrainCreate, LocalTrainUpdate, LocalTrainRunConfig, LocalTrainConfigurationStep
 from station.app.trains.local.minio import train_data
 from station.app.trains.local.update import update_configuration_status
+from station.clients.minio import MinioClient
 
 
 class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
@@ -24,8 +25,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         db.commit()
         train = self.create_initial_state(db, db_obj)
         state = train.state
-        configuration_state = update_configuration_status(train)
-        state.configuration_state = configuration_state
+        state.configuration_state = LocalTrainConfigurationStep.initialized.value
         db.commit()
 
         return train
@@ -84,7 +84,9 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
     def update(self, db: Session, *, db_obj: ModelType, obj_in: Union[UpdateSchemaType, Dict[str, Any]]) -> ModelType:
         update_train = super().update(db, db_obj=db_obj, obj_in=obj_in)
         state = update_train.state
-        configuration_state = update_configuration_status(update_train)
+        minio_client = MinioClient()
+        files = minio_client.get_minio_dir_items("local-trains", db_obj.id)
+        configuration_state = update_configuration_status(update_train, files)
         state.configuration_state = configuration_state
         db.commit()
         return update_train
