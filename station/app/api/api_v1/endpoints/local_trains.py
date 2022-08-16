@@ -84,7 +84,7 @@ async def upload_train_files(train_id: str,
 
     state = db_train.state
 
-    if state.configuration_status != local_trains.LocalTrainConfigurationStep.image_configured.value:
+    if state.configuration_state != local_trains.LocalTrainConfigurationStep.image_configured.value:
         raise HTTPException(status_code=400, detail="Train image is not configured. Select an image first before up"
                                                     "loading files.")
 
@@ -104,7 +104,7 @@ async def get_train_files(train_id: str, file_name: str = None, db: Session = De
         raise HTTPException(status_code=404, detail=f"Local train ({train_id}) not found.")
 
     minio_client = MinioClient()
-    items = minio_client.get_minio_dir_items(DataDirectories.LOCAL_TRAINS, str(db_train.id))
+    items = minio_client.get_minio_dir_items(DataDirectories.LOCAL_TRAINS.value, str(db_train.id))
     if file_name:
         pass
     return items

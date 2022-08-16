@@ -106,9 +106,8 @@ class MinioClient:
 
         for file in files:
             data = await file.read()
-            data = data.decode('utf-8')
 
-            data_file = BytesIO(data.encode('utf-8'))
+            data_file = BytesIO(data)
             res = self.client.put_object(
                 bucket_name=DataDirectories.DATASETS.value,
                 object_name=f"{dataset_id}/{file.filename}",
@@ -143,7 +142,7 @@ class MinioClient:
         print(DataDirectories.LOCAL_TRAINS.value)
         items = self.get_minio_dir_items(bucket=DataDirectories.LOCAL_TRAINS.value, directory=train_id)
 
-        archive = self.make_download_archive("local-trains", items=items)
+        archive = self.make_download_archive(DataDirectories.LOCAL_TRAINS.value, items=items)
 
         return archive
 
