@@ -140,7 +140,7 @@ class MinioClient:
             resp.append(
                 MinioFile(
                     file_name=file.filename,
-                    file_size=data_file.getbuffer().nbytes,
+                    file_size=len(data),
                     full_path=f"{res.bucket_name}/{res.object_name}",
                     updated_at=pendulum.now()
                 )
