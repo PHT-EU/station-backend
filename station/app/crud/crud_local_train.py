@@ -46,7 +46,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         db.refresh(run)
         return run
 
-    def remove_train(self, db: Session, train_id: str) -> ModelType:
+    async def remove_train(self, db: Session, train_id: str) -> ModelType:
         """
 
         @param db:
@@ -54,24 +54,20 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         @return:
         """
         # TODO remove query results when exist
-        # remove minIo entry
-        files = self.get_all_uploaded_files(train_id)
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        for file in files:
-            loop.run_until_complete(train_data.delete_train_file(file.object_name))
-        # remove sql database entrys for LocalTrainExecution
+        # remove files stored in minio
+        minio_client = MinioClient()
+        minio_client.delete_folder(bucket=str(DataDirectories.LOCAL_TRAINS.value), directory=train_id)
+
+        # remove sql database entries for LocalTrainExecution
         obj = db.query(LocalTrainExecution).filter(LocalTrainExecution.train_id == train_id).all()
         for run in obj:
             db.delete(run)
         db.commit()
         # remove sql database entry for LocalTrain
-        obj = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).all()
-        if not obj:
-            return f"train_id {train_id} dose not exit"
-        db.delete(obj[0])
+        db_train = db.query(LocalTrain).filter(LocalTrain.train_id == train_id).first()
+        db.delete(db_train)
         db.commit()
-        return obj
+        return db_train
 
     def create_initial_state(self, db: Session, db_obj: LocalTrain):
         state = LocalTrainState(

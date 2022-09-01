@@ -71,9 +71,8 @@ def delete_local_train(train_id: str, db: Session = Depends(dependencies.get_db)
 @router.post("/{train_id}/files")
 async def upload_train_files(train_id: str,
                              files: List[UploadFile] = File(description="Multiple files as UploadFile"),
-                             db: Session = Depends(dependencies.get_db)) -> List[dict]:
+                             db: Session = Depends(dependencies.get_db)) -> List[MinioFile]:
     db_train = local_train.get(db, train_id)
-
     if not db_train:
         raise HTTPException(status_code=404, detail=f"Local train ({train_id}) not found.")
     if not files:

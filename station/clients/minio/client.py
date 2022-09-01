@@ -6,6 +6,7 @@ from io import TextIOWrapper
 import tarfile
 from zipfile import ZipFile
 
+import pendulum
 import starlette
 from minio import Minio
 from fastapi import File, UploadFile
@@ -120,7 +121,7 @@ class MinioClient:
 
         return resp
 
-    async def save_local_train_files(self, train_id: str, files: List[Union[File, UploadFile]]):
+    async def save_local_train_files(self, train_id: str, files: List[Union[File, UploadFile]]) -> List[MinioFile]:
         """
         store files of local train in minio
         """
@@ -135,7 +136,15 @@ class MinioClient:
                 data=data_file,
                 length=len(data)
             )
-            resp.append(res)
+
+            resp.append(
+                MinioFile(
+                    file_name=file.filename,
+                    file_size=data_file.getbuffer().nbytes,
+                    full_path=f"{res.bucket_name}/{res.object_name}",
+                    updated_at=pendulum.now()
+                )
+            )
         return resp
 
     def get_local_train_archive(self, train_id: str):
@@ -156,6 +165,11 @@ class MinioClient:
 
     def delete_file(self, bucket: str, name: str):
         self.client.remove_object(bucket_name=bucket, object_name=name)
+
+    def delete_folder(self, bucket: str, directory: str):
+        delete_objects = self.client.list_objects(bucket_name=bucket, prefix=directory, recursive=True)
+        for obj in delete_objects:
+            self.client.remove_object(bucket_name=bucket, object_name=obj.object_name)
 
     def get_file_names(self, bucket: str, prefix: str = "") -> [str]:
         response = self.client.list_objects(bucket, prefix=prefix)
