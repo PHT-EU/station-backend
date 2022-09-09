@@ -99,6 +99,8 @@ class LocalTrainBase(BaseModel):
     files: Optional[List[str]] = None
     custom_image: Optional[str] = None
     fhir_query: Optional[Union[str, dict]] = None
+    command: Optional[str] = None
+    command_args: Optional[str] = None
 
 
 class LocalTrainCreate(LocalTrainBase):

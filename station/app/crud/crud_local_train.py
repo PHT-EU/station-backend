@@ -86,6 +86,8 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
 
     def update(self, db: Session, *, db_obj: ModelType, obj_in: Union[UpdateSchemaType, Dict[str, Any]]) -> ModelType:
         update_train = super().update(db, db_obj=db_obj, obj_in=obj_in)
+        update_train.updated_at = datetime.now()
+        db.commit()
         state = update_train.state
         minio_client = MinioClient()
         files = minio_client.get_minio_dir_items(DataDirectories.LOCAL_TRAINS.value, db_obj.id)

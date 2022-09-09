@@ -5,13 +5,19 @@ import os.path
 import docker
 from airflow.decorators import dag, task
 from airflow.operators.python import get_current_context
+from airflow.hooks.base import BaseHook
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 from docker.errors import APIError
 
 from airflow.utils.dates import days_ago
 
+from station.app.models.local_trains import LocalTrain
+from station.app.models.docker_trains import DockerTrainConfig
+from station.app.models.datasets import DataSet
 from station.app.trains.local.build import build_train
-from station.app.trains.local.airflow import AirflowRunConfig
 
 default_args = {
     'owner': 'airflow',
@@ -70,11 +76,24 @@ def run_local_train():
             "volumes": volumes
         }
 
-        return train_config m
+        return train_config
 
     @task()
     def build_train_image(train_config):
+
+        connection = BaseHook.get_connection("pg_station")
+        print(connection.login)
+        print(connection.password)
+        print(connection.get_uri())
+
+        db_url = f"postgresql://{connection.login}:{connection.password}@{connection.host}:{connection.port}/{connection.schema}"
+        print(db_url)
+
+        engine = create_engine(db_url)
         train_id = train_config['train_id']
+        session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+        db = session_local()
+
 
         image = build_train(train_id, )
 
