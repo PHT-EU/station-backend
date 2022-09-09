@@ -12,6 +12,7 @@ from station.app.crud.crud_train_configs import docker_train_config
 from station.app.config import settings
 from station.clients.airflow.docker_trains import process_dataset, process_db_config
 from station.clients.airflow.client import airflow_client
+from station.app.schemas.local_trains import LocalTrainExecution
 
 
 class FHIRConfig(BaseModel):
@@ -29,7 +30,7 @@ class AirflowRunConfig(BaseModel):
     fhir: Optional[FHIRConfig] = None
 
 
-def run_local_train(db: Session, train_id: str, dataset_id: str = None, config_id: int = None) -> dict:
+def run_local_train(db: Session, train_id: str, dataset_id: str = None, config_id: int = None) -> LocalTrainExecution:
     """
     Run a local train
 
@@ -42,8 +43,17 @@ def run_local_train(db: Session, train_id: str, dataset_id: str = None, config_i
     if db_train is None:
         raise ValueError(f"Train {train_id} not found")
     config = make_dag_config(db, db_train, train_id, dataset_id, config_id)
+    print(config)
     run_id = airflow_client.trigger_dag("run_local_train", config=config)
-    return config
+    train_execution = local_train.create_run(
+        db,
+        train_id=train_id,
+        dag_run=run_id,
+        config_id=config_id,
+        dataset_id=dataset_id
+    )
+
+    return train_execution
 
 
 def make_dag_config(db: Session, db_train, train_id: str, dataset_id: str = None, config_id: int = None) -> dict:

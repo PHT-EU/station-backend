@@ -79,6 +79,19 @@ class LocalTrainState(LocalTrainStateBase):
         orm_mode = True
 
 
+class LocalTrainExecution(BaseModel):
+    id: uuid.UUID
+    train_id: uuid.UUID
+    airflow_dag_run: Optional[str] = None
+    config_id: Optional[int] = None
+    dataset_id: Optional[uuid.UUID] = None
+    start: datetime
+    finish: Optional[datetime] = None
+
+    class Config:
+        orm_mode = True
+
+
 class LocalTrainBase(BaseModel):
     name: Optional[str] = None
     master_image_id: Optional[Any] = None

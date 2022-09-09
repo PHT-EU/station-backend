@@ -24,6 +24,8 @@ class LocalTrainExecution(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
     train_id = Column(UUID, ForeignKey('local_trains.id'))
     airflow_dag_run = Column(String, nullable=True, unique=True)
+    config_id = Column(Integer, ForeignKey('docker_train_configs.id'), nullable=True)
+    dataset_id = Column(UUID(as_uuid=True), ForeignKey('datasets.id'), nullable=True)
     start = Column(DateTime, default=datetime.now())
     finish = Column(DateTime, nullable=True)
 

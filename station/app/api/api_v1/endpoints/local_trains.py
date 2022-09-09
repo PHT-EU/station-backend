@@ -15,6 +15,7 @@ from station.app.crud.local_train_master_image import local_train_master_image
 from station.app.schemas.datasets import MinioFile
 from station.clients.minio import MinioClient
 from station.ctl.constants import DataDirectories
+from station.app.trains.local.airflow import run_local_train
 
 router = APIRouter()
 
@@ -68,6 +69,23 @@ def delete_local_train(train_id: str, db: Session = Depends(dependencies.get_db)
     return train
 
 
+@router.post("/{train_id}/run", response_model=local_trains.LocalTrainExecution)
+async def trigger_train_execution(train_id: str, run_config: local_trains.LocalTrainRunConfig,
+                          db: Session = Depends(dependencies.get_db)):
+    train = local_train.get(db, train_id)
+    if not train:
+        raise HTTPException(status_code=404, detail=f"Train ({train_id}) not found")
+
+    execution = run_local_train(
+        db=db,
+        train_id=train_id,
+        config_id=run_config.config_id,
+        dataset_id=run_config.dataset_id,
+    )
+
+    return execution
+
+
 @router.post("/{train_id}/files")
 async def upload_train_files(train_id: str,
                              files: List[UploadFile] = File(description="Multiple files as UploadFile"),
@@ -92,7 +110,6 @@ async def upload_train_files(train_id: str,
 
     state.configuration_status = local_trains.LocalTrainConfigurationStep.files_uploaded.value
     db.commit()
-
     return resp
 
 

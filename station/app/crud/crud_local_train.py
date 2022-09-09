@@ -10,7 +10,8 @@ from fastapi import UploadFile, HTTPException
 
 from station.app.crud.base import CRUDBase, ModelType, CreateSchemaType, UpdateSchemaType
 from station.app.models.local_trains import LocalTrain, LocalTrainExecution, LocalTrainState, LocalTrainMasterImage
-from station.app.schemas.local_trains import LocalTrainCreate, LocalTrainUpdate, LocalTrainRunConfig, LocalTrainConfigurationStep
+from station.app.schemas.local_trains import LocalTrainCreate, LocalTrainUpdate, LocalTrainRunConfig, \
+    LocalTrainConfigurationStep
 from station.app.trains.local.minio import train_data
 from station.app.trains.local.update import update_configuration_status
 from station.clients.minio import MinioClient
@@ -31,7 +32,8 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
 
         return train
 
-    def create_run(self, db: Session, *, obj_in: LocalTrainRunConfig) -> ModelType:
+    def create_run(self, db: Session, *, train_id: str, dag_run: str,
+                   config_id: int = None, dataset_id: str = None) -> LocalTrainExecution:
         """
         create a database entry for a local train execution
 
@@ -39,8 +41,12 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         @param obj_in: LocalTrainRun json as defind in the schemas
         @return: local run object
         """
-        run = LocalTrainExecution(train_id=obj_in.train_id,
-                                  airflow_dag_run=obj_in.run_id)
+        run = LocalTrainExecution(
+            train_id=train_id,
+            airflow_dag_run=dag_run,
+            config_id=config_id,
+            dataset_id=dataset_id,
+        )
         db.add(run)
         db.commit()
         db.refresh(run)

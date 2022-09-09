@@ -42,7 +42,7 @@ def run_local_train():
     @task()
     def get_local_train_config():
         context = get_current_context()
-        train_id, env, volumes = [context['dag_run'].conf.get(_, None) for _ in
+        train_id, env, volumes, master_image, custom_image = [context['dag_run'].conf.get(_, None) for _ in
                                   ['train_id', 'env', 'volumes', 'master_image', 'custom_image']]
 
 
@@ -70,7 +70,7 @@ def run_local_train():
             "volumes": volumes
         }
 
-        return train_config
+        return train_config m
 
     @task()
     def build_train_image(train_config):
