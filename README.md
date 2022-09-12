@@ -29,6 +29,14 @@ Make sure the following ports required for the services are open or change the p
 - Blaze FHIR server: 9090
 - API: 8000
 
+### Configure environment variables
+
+Copy the `.env.example` file to `.env` and adjust the values to your needs.
+
+```bash
+cp .env.template .env
+```
+
 ### Start third party services
 
 Spin up the backend services
