@@ -10,7 +10,7 @@ import tarfile
 def make_docker_file(master_image: str,
                      entrypoint_file: str,
                      command: str,
-                     command_args: List[str] = None) -> BytesIO:
+                     command_args: Union[List[str], str] = None) -> BytesIO:
     """
     Make an in memory docker file for a local train
     Args:
@@ -22,9 +22,13 @@ def make_docker_file(master_image: str,
     Returns:
 
     """
+
+    print(master_image, entrypoint_file, command, command_args)
     docker_from = f"FROM {master_image}\n"
     directory_setup = f"RUN mkdir /opt/train && mkdir /opt/results && chmod -R +x /opt/train \n"
 
+    if isinstance(command_args, str):
+        command_args = command_args.split(" ")
     if command_args:
         command_args = [f'"{arg}"' for arg in command_args]
         str_args = ", ".join(command_args) + ", "

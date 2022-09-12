@@ -18,6 +18,7 @@ from station.app.models.local_trains import LocalTrain
 from station.app.models.docker_trains import DockerTrainConfig
 from station.app.models.datasets import DataSet
 from station.app.trains.local.build import build_train
+from station.clients.minio import MinioClient
 
 default_args = {
     'owner': 'airflow',
@@ -82,23 +83,37 @@ def run_local_train():
     def build_train_image(train_config):
 
         connection = BaseHook.get_connection("pg_station")
-        print(connection.login)
-        print(connection.password)
-        print(connection.get_uri())
 
-        db_url = f"postgresql://{connection.login}:{connection.password}@{connection.host}:{connection.port}/{connection.schema}"
-        print(db_url)
+        db_url = f"postgresql://{connection.login}:{connection.password}@{connection.host}:{connection.port}/" \
+                 f"{connection.schema}"
 
+        # create a session to the station database
         engine = create_engine(db_url)
         train_id = train_config['train_id']
         session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         db = session_local()
 
 
-        image = build_train(train_id, )
+        # get the train files from minio
+        minio_client = MinioClient(
+            minio_server=os.getenv("MINIO_SERVER"),
+            access_key=os.getenv("MINIO_ACCESS_KEY"),
+            secret_key=os.getenv("MINIO_SECRET_KEY"),
+        )
+
+        train_files_archive = minio_client.get_local_train_archive(train_id)
+
+        image = build_train(
+            db=db,
+            train_id=train_id,
+            custom_image=train_config.get('custom_image'),
+            master_image_id=train_config.get('master_image'),
+            files=train_files_archive,
+        )
 
         train_config['image'] = image
 
+        db.close()
         return train_config
 
     def run_train(train_config):
