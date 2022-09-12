@@ -37,6 +37,7 @@ class AirflowClient:
 
         except Exception as e:
             logger.error(f"Error triggering dag: \n{e}")
+            logger.error(f"Error message: \n{r.text}")
             raise e
         return r.json()["dag_run_id"]
 

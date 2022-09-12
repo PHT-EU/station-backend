@@ -46,7 +46,7 @@ class DataSetUpdate(DataSetBase):
     pass
 
 
-class DataSetFile(BaseModel):
+class MinioFile(BaseModel):
     file_name: str
     full_path: Optional[str] = None
     size: Optional[int] = None

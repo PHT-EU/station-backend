@@ -3,7 +3,7 @@ from enum import Enum
 
 from pydantic import BaseModel, root_validator
 from datetime import datetime
-from typing import Optional, Dict, List, Union
+from typing import Optional, Dict, List, Union, Any
 
 
 class DBSchema(BaseModel):
@@ -47,9 +47,10 @@ class LocalTrainMasterImage(LocalTrainMasterImageBase):
 
 class LocalTrainConfigurationStep(str, Enum):
     initialized = "initialized"
-    master_image_selected = "master_image_selected"
+    image_configured = "image_configured"
     files_uploaded = "files_uploaded"
-    entrypoint_selected = "entrypoint_selected"
+    dataset_selected = "dataset_selected"
+    train_configured = "train_configured"
     finished = "finished"
 
 
@@ -78,13 +79,28 @@ class LocalTrainState(LocalTrainStateBase):
         orm_mode = True
 
 
+class LocalTrainExecution(BaseModel):
+    id: uuid.UUID
+    train_id: uuid.UUID
+    airflow_dag_run: Optional[str] = None
+    config_id: Optional[int] = None
+    dataset_id: Optional[uuid.UUID] = None
+    start: datetime
+    finish: Optional[datetime] = None
+
+    class Config:
+        orm_mode = True
+
+
 class LocalTrainBase(BaseModel):
     name: Optional[str] = None
-    master_image_id: Optional[str] = None
+    master_image_id: Optional[Any] = None
     entrypoint: Optional[str] = None
     files: Optional[List[str]] = None
     custom_image: Optional[str] = None
     fhir_query: Optional[Union[str, dict]] = None
+    command: Optional[str] = None
+    command_args: Optional[str] = None
 
 
 class LocalTrainCreate(LocalTrainBase):

@@ -43,7 +43,7 @@ class MinioFolderDataSet(IterableDataset):
         return tensor_generator
 
     def _get_minio_items(self) -> Generator[datatypes.Object, None, None]:
-        items = self.client.get_data_set_items(self.id)
+        items = self.client.get_minio_dir_items(self.id)
         return items
 
     def _make_image_generator(self,
@@ -98,7 +98,7 @@ class MinioFolderDS(Dataset):
         return torch.tensor(label, dtype=torch.long)
 
     def get_minio_items(self):
-        minio_items = self.minio_client.get_data_set_items(self.data_set_id)
+        minio_items = self.minio_client.get_minio_dir_items(self.data_set_id)
         item_list = []
         for item in minio_items:
             item_list.append(item.object_name)

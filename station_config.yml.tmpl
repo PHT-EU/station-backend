@@ -1,5 +1,5 @@
-# configure station variables
-station_id: "218f9254-07aa-4297-961b-4a778e695946"
+# Set the station id obtained in the central user interface
+station_id: ""
 version: "latest"
 
 # station runtime environment set to development to allow for debugging and reduced security settings
@@ -13,7 +13,7 @@ station_data_dir: ""
 
 # Configure authentication for central services
 central:
-  api_url: "https://staging-pht.tada5hi.net/api"
+  api_url: ""
   # Robot credentials for accessing central services, these can be obtained in the central UI
   robot_id: "central-robot-id"
   robot_secret: "central-robot-secret"
@@ -26,11 +26,11 @@ http:
 
 https:
   port: 443
-  domain: "station.localhost"
+  domain: ""
   # list of path to certificate files (cert/key)
   certs:
-    - cert: "example-cert.pem"
-      key: "example-key.pem"
+    - cert: ""
+      key: ""
 
 
 traefik:
@@ -51,7 +51,7 @@ db:
 
 api:
   # Fernet key for encryption of sensitive values stored in the database
-  fernet_key: 'your_fernet_key'
+  fernet_key: ""
 
 # configure airflow connection
 airflow:
@@ -63,14 +63,14 @@ airflow:
 
 # Configure the connection to the authentication server
 auth:
-  host: "127.0.0.1"
-  port: 3010
-  robot_id: "your_robot_id"
-  robot_secret: '**********'
+  host: ""
+  port: ""
+  robot_id: ""
+  robot_secret: ""
 
 # configure minio connection
 minio:
-  admin_user: "minio_access_key"
-  admin_password: "admin"
+  admin_user: ""
+  admin_password: ""
 
 

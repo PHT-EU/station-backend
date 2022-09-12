@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 import json
 
 from requests import HTTPError
+from station.app.local_trains.docker import make_docker_file
 
 from station.app.main import app
 from station.app.api.dependencies import get_db
@@ -65,4 +66,6 @@ def test_delete_local_train(train_id):
     r = client.get(f"/api/local-trains/{train_id}")
     with pytest.raises(HTTPError):
         r.raise_for_status()
+
+
 

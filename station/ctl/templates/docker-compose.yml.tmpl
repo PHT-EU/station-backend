@@ -47,11 +47,11 @@ services:
     environment:{% for key, value in auth_config.env.items() %}
       - {{ key }}={{ value }}
       {%- endfor %}
-    command:
-      - start
     labels:{% for label in auth_config.labels %}
       - {{ label }}
       {%- endfor %}
+    command:
+      - start
 
   api:
     image: {{ pht_images.api }}:{{ version }}
@@ -78,10 +78,6 @@ services:
     labels: {% for label in ui_config.labels %}
       - {{ label }}
       {%- endfor %}
-    command:
-      - app
-      - start
-
   redis:
     image: {{ service_images.redis }}
     restart: unless-stopped

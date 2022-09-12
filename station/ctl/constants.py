@@ -52,11 +52,11 @@ class PHTDirectories(Enum):
     SETUP_SCRIPT_DIR = "setup_scripts"
 
 
-class DataDirectories(Enum):
+class DataDirectories(str, Enum):
     MODELS = "models"
     TRAINS = "trains"
     DATASETS = "datasets"
-    LOCAL_TRAINS = "local_trains"
+    LOCAL_TRAINS = "localtrains"
 
 
 class ServiceDirectories(Enum):

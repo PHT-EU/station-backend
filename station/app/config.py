@@ -6,7 +6,7 @@ from enum import Enum
 
 import requests
 from cryptography.fernet import Fernet
-from pydantic import BaseModel, AnyHttpUrl, SecretStr, AnyUrl
+from pydantic import BaseModel, AnyHttpUrl, SecretStr, AnyUrl, PostgresDsn
 from loguru import logger
 from requests.auth import HTTPBasicAuth
 from yaml import safe_dump, safe_load
@@ -39,10 +39,7 @@ class AirflowSettings(BaseModel):
     port: Optional[int] = 8080
     user: Optional[str] = "admin"
     password: Union[SecretStr, str]
-    station_db_conn_id: Optional[str] = "psql_station_db"
-    station_db_conn_type: Optional[str] = "postgres"
-    station_db_port: Optional[int] = 5432
-    station_db_host: Optional[str] = 'postgres'
+    station_db_dsn: Optional[PostgresDsn] = None
 
 
 class MinioSettings(BaseModel):
@@ -227,6 +224,8 @@ class Settings:
             self.config_path = os.getenv(StationEnvironmentVariables.CONFIG_PATH.value, "station_config.yml")
             self._config_file = True
         # todo create/update config file
+        if os.getenv("ENVIRONMENT") == "development":
+            self.setup()
 
     def setup(self) -> StationConfig:
         """
@@ -723,23 +722,34 @@ class Settings:
 
     def _create_station_db_connection(self):
 
-        station_db_param = urlparse(self.config.db)
-        station_db_schema = self.config.db.split('/')[-1]
-        station_db_login = station_db_param.username
-        station_db_password = station_db_param.password
+        connection_id = "pg_station"
+        self.config.airflow.station_db_dsn = self.config.db
+        if isinstance(self.config.db, str):
+            credentials, host = self.config.db.split("://")[1].split("@")
+        elif isinstance(self.config.db, SecretStr):
+            credentials, host = self.config.db.get_secret_value().split("://")[1].split("@")
+        else:
+            raise ValueError(f"{Emojis.ERROR.value}   Unable to parse database connection string")
+        user, password = credentials.split(":")
+        host, schema = host.split("/")
+        port = 5432
+        if len(host.split(":")) == 2:
+            host, port = host.split(":")
+            port = int(port)
 
         conn = {
-            "connection_id": self.config.airflow.station_db_conn_id,
-            "conn_type": self.config.airflow.station_db_conn_type,
-            "host": self.config.airflow.station_db_host,
-            "login": station_db_login,
-            "port": int(self.config.airflow.station_db_port),
-            "password": station_db_password,
-            "schema": station_db_schema
+            "connection_id": connection_id,
+            "conn_type": "postgres",
+            "host": "postgres",
+            "login": user,
+            "port": port,
+            "password": password,
+            "schema": schema,
         }
+        print(conn)
 
         # Check whether connection with connection_id already exists, if not create it
-        url_get = self.config.airflow.api_url + f"connections/{self.config.airflow.station_db_conn_id}"
+        url_get = self.config.airflow.api_url + f"connections/{connection_id}"
         url_post = self.config.airflow.api_url + "connections"
         auth = HTTPBasicAuth(self.config.airflow.user, self.config.airflow.password.get_secret_value())
         r = requests.get(url=url_get, auth=auth, verify=False)
@@ -748,19 +758,19 @@ class Settings:
 
         if r.status_code != 200:
             logger.debug(
-                f"\t{Emojis.INFO}Database connection in airflow with connection id {self.config.airflow.station_db_conn_id} does not exist,"
+                f"\t{Emojis.INFO}Database connection in airflow with connection id {connection_id} does not exist,"
                 f" creating new one from environment variables.")
             try:
                 r = requests.post(url=url_post, auth=auth, json=conn, verify=False)
                 r.raise_for_status()
                 logger.info(
-                    f"\t{Emojis.INFO} Database connection in airflow with id {self.config.airflow.station_db_conn_id} got created.")
+                    f"\t{Emojis.INFO} Database connection in airflow with id {connection_id} got created.")
             except Exception as e:
-                f"\t{Emojis.WARNING}Error occured while trying to create the database connection in airflow with id {self.config.airflow.station_db_conn_id}."
+                f"\t{Emojis.WARNING}Error occured while trying to create the database connection in airflow with id {connection_id}."
                 f"\t{Emojis.WARNING} -- {e}."
         else:
             logger.info(
-                f"\t{Emojis.INFO} Database connection in airflow with id {self.config.airflow.station_db_conn_id} exists.")
+                f"\t{Emojis.INFO} Database connection in airflow with id {connection_id} exists.")
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(config={self.config})"
@@ -811,4 +821,3 @@ class Settings:
 
 
 settings = Settings()
-settings.setup()

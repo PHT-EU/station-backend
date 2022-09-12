@@ -65,10 +65,13 @@ def render_compose(config: dict, env: Environment = None) -> str:
         "certs_dir": certs_dir,
     }
 
+    auth_url = "https://" + config["https"]["domain"] + "/auth"
     auth_config = {
         "env": {
             "ADMIN_PASSWORD": config["admin_password"],
-            "NODE_ENV": "test",
+            "NODE_ENV": "production",
+            "SELF_URL": auth_url,
+            "WEB_URL": auth_url,
         },
         "labels": [
             "traefik.enable=true",
@@ -165,7 +168,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
     ui_config = {
         "env": {
             "STATION_API_URL": "https://" + config["https"]["domain"] + "/api",
-            "AUTH_API_URL": "https://" + config["https"]["domain"] + "/auth",
+            "AUTH_API_URL": "https://" + config["https"]["domain"] + "/auth/",
         },
         "labels": [
             "traefik.enable=true",

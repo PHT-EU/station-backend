@@ -1,12 +1,11 @@
 version: '3.8'
 
-
 volumes:
   pg_data:
   blaze_data:
 
 services:
-  pg_station:
+  postgres:
     image: postgres:13
     volumes:
       - ./setup_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -21,13 +20,14 @@ services:
     image: ghcr.io/tada5hi/authelion-server:latest
     container_name: pht-station-auth
     volumes:
-      - ./data/auth:/usr/src/app/packages/backend/api/writable
+      - ./service_data/auth:/usr/src/app/writable
     ports:
       - '3010:3010'
     environment:
       PORT: 3010
       ADMIN_USER: admin
       ADMIN_PASSWORD: start123
+      NODE_ENV: production
     command:
       - start
 
@@ -47,9 +47,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./airflow/dags:/root/airflow/dags
       - ./S_2_sk.pem:/opt/private_key.pem
-      - ./data/station:/opt/station_data
+      - ./station_data:/opt/station_data
     depends_on:
-      - pg_station
+      - postgres
     env_file:
       - .env
     environment:
@@ -63,7 +63,7 @@ services:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - ./test_data:/data
+      - ./station_data:/data
 
     environment:
       - MINIO_ACCESS_KEY=minio_admin
@@ -77,7 +77,7 @@ services:
     image: "samply/blaze:latest"
     environment:
       JAVA_TOOL_OPTIONS: "-Xmx2g"
-      #      OPENID_PROVIDER_URL: "https://dev-keycloak.grafm.de/auth/realms/blaze"
+      OPENID_PROVIDER_URL: "http://auth:3010/realms/master"
       BASE_URL: "http://localhost:9090"
     ports:
       - "9090:8080"

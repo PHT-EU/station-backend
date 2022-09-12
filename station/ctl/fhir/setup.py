@@ -61,6 +61,7 @@ def _make_env(domain: str, name: str) -> List[str]:
     return [
         "JAVA_TOOL_OPTIONS=-Xmx2g",
         f"BASE_URL=https://{domain}/fhir-servers/{name}",
+
     ]
 
 

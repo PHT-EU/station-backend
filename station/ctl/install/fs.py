@@ -28,7 +28,7 @@ def create_pht_dirs(path):
     Create the pht directory structure in the given directory.
     """
     if not os.path.exists(path):
-        os.makedirs(path)
+        os.makedirs(path, mode=0o777)
 
     # check that pht directories ex
     _make_dirs_from_enum(path, PHTDirectories)
@@ -44,7 +44,7 @@ def _make_dirs_from_enum(path, dir_enum: Enum):
     for dir in dir_enum:
         dir_path = os.path.join(path, dir.value)
         if not os.path.isdir(dir_path):
-            os.makedirs(dir_path)
+            os.makedirs(dir_path, mode=0o777)
 
 
 def _check_dirs_from_enum(path, dir_enum: Enum):

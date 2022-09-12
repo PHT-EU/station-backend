@@ -39,17 +39,10 @@ When installing for the first time, run the following command to perform the ini
 NODE_ENV=test
 WRITABLE_DIRECTORY_PATH=/usr/src/app/writable
 ```bash
-docker run -v $(pwd)/data/auth:/usr/src/app/packages/backend/api/writable -e "NODE_ENV=test" ghcr.io/tada5hi/authelion-server:latest setup
+docker-compose -f docker-compose_dev.yml run auth setup
 ```
-
-The end of the output should contain two lines containing the robot id and secret:
-
-```text
-ℹ Robot ID: dfdd59e9-bc26-42c3-8cbb-6665f58bd62d
-ℹ Robot Secret: 4ahwcc1jgobo07kori4hxw7i0f9mn1zqvgkjx5uzrv05yqbkiyl2hfn4wfd5cyq5
-```
-
-Copy the id and secret into the `.env` file (`AUTH_ROBOT_ID` and `AUTH_ROBOT_SECRET`).
+This should generate the files required for the auth server as well as a `seed.json` file in `service_data/auth`.
+Copy the robot id and secret from the `seed.json` file into the `.env` file (`AUTH_ROBOT_ID` and `AUTH_ROBOT_SECRET`).
 
 ```bash
 docker-compose -f docker-compose_dev.yml up -d

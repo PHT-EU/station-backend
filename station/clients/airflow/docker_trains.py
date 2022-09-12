@@ -41,7 +41,7 @@ def run_train(db: Session, train_id: Any, execution_params: dts.DockerTrainExecu
     # process assigned data sets
     if execution_params.dataset_id:
         dataset = datasets.get(db, execution_params.dataset_id)
-        _process_dataset(config_dict, dataset)
+        process_dataset(config_dict, dataset)
 
     # Execute the train using the airflow rest api
     try:
@@ -79,7 +79,7 @@ def validate_run_config(
     # Extract config by id if given
     if execution_params.config_id != "default":
         db_config = docker_train_config.get(db, execution_params.config_id)
-        _process_db_config(config, db_config)
+        process_db_config(config, db_config)
         return db_config.id, config
     # Using the default config
     else:
@@ -155,7 +155,7 @@ def update_train_after_run(db: Session,
     return db_train
 
 
-def _process_db_config(config_dict: dict, db_config: dtm.DockerTrainConfig) -> dict:
+def process_db_config(config_dict: dict, db_config: dtm.DockerTrainConfig) -> dict:
     """
     Update the config dictionary and with the values from db configuration
     :param config_dict: config dictionary
@@ -180,7 +180,7 @@ def _process_db_config(config_dict: dict, db_config: dtm.DockerTrainConfig) -> d
         return config_dict
 
 
-def _process_dataset(config_dict, dataset):
+def process_dataset(config_dict, dataset):
     """
     Update the config dictionary with the values from the dataset
     Args:

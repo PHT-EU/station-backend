@@ -1,3 +1,4 @@
+import json
 import os
 import pprint
 import sys
@@ -85,7 +86,6 @@ def _request_registry_credentials(ctx):
     credentials = client.get_registry_credentials(ctx.obj["station_id"])
     click.echo(Icons.CHECKMARK.value)
 
-
     return credentials
 
 
@@ -107,38 +107,45 @@ def _setup_auth_server(ctx):
             "mode": "rw"
         }
     }
-
+    print(ctx.obj)
     environment = {
         "ADMIN_USER": "admin",
         "ADMIN_PASSWORD": ctx.obj['admin_password'],
+        "NODE_ENV": "production",
+        "SELF_URL": "https://" + ctx.obj["https"]["domain"] + "/auth",
+        "WEB_URL": "https://" + ctx.obj["https"]["domain"],
+        # "TYPEORM_CONNECTION": "postgres",
+        # "TYPEORM_HOST": "postgres",
+        # "TYPEORM_USERNAME": ctx.obj["db"]["admin_user"],
+        # "TYPEORM_PASSWORD": ctx.obj["db"]["admin_password"],
+        # "TYPEORM_DATABASE": "auth",
+        # "TYPEORM_PORT": 5432,
+        # "TYPEORM_SYNCHRONIZE": "false",
+        # "TYPEORM_LOGGING": "true",
     }
 
     container = client.containers.run(auth_image,
                                       command,
-                                      remove=True,
+                                      remove=False,
                                       detach=True,
                                       environment=environment,
                                       volumes=auth_volumes)
+    exit_code = container.wait()
+    logs = container.logs()
+    print(logs.decode())
+    with open(
+            os.path.join(ctx.obj['install_dir'], PHTDirectories.SERVICE_DATA_DIR.value, "auth", "seed.json"), "r"
+    ) as f:
+        seed = json.load(f)
 
-    output = container.attach(stdout=True, stream=True, logs=True, stderr=True)
+    robot_id = seed["robotId"]
+    robot_secret = seed["robotSecret"]
+    # print("".join(output))
 
-    robot_id = None
-    robot_secret = None
-
-    logs = []
-    for line in output:
-        decoded = line.decode("utf-8")
-        logs.append(decoded)
-        if "Robot ID" in decoded and "Robot Secret" in decoded:
-            robot_id_index = decoded.find("Robot ID")
-            robot_secret_index = decoded.find("Robot Secret")
-            robot_id = decoded[robot_id_index + len("Robot ID:"):robot_secret_index - 2].strip()
-            robot_secret = decoded[robot_secret_index + len("Robot Secret:"):].strip()
-
-    if not robot_id or not robot_secret:
+    if not (robot_id and robot_secret):
         click.echo(Icons.CROSS.value)
         click.echo("Failed to setup auth server", err=True)
-        pprint.pp(logs)
+        click.echo(logs, err=True)
         raise Exception("Could not get robot credentials from auth server")
 
     else:
