@@ -29,8 +29,19 @@ class ResourceClient(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self._client = client
 
     def create(self, data: Union[CreateSchemaType, dict]) -> ModelType:
-        response = requests.post(f"{self.base_url}/{self.resource_name}", json=data, headers=self._client.headers)
-        response.raise_for_status()
+
+        if isinstance(data, dict):
+            data = self.model(**data)
+        response = requests.post(
+            f"{self.base_url}/{self.resource_name}",
+            json=data.dict(),
+            headers=self._client.headers
+        )
+        try:
+            response.raise_for_status()
+        except HTTPError as e:
+            print(response.text)
+            raise e
         return self.model(**response.json())
 
     def get(self, resource_id) -> ModelType:

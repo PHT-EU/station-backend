@@ -9,10 +9,11 @@ from station.app.schemas.trains import Train
 from station.app.schemas.datasets import DataSet
 from station.clients.base import BaseClient
 from station.clients.resource_client import ResourceClient
+from station.clients.station.local_trains import LocalTrainClient
 
 
 class StationAPIClient(BaseClient):
-    local_trains: ResourceClient
+    local_trains: LocalTrainClient
     datasets: ResourceClient
     trains: ResourceClient
 
@@ -31,6 +32,7 @@ class StationAPIClient(BaseClient):
             password=password
         )
 
-        self.local_trains = ResourceClient(base_url, "local-trains", LocalTrain, client=self)
+        self.local_trains = LocalTrainClient(base_url, "local-trains", LocalTrain, self)
         self.datasets = ResourceClient(base_url, "datasets", DataSet, client=self)
         self.trains = ResourceClient(base_url, "trains/docker", Train, client=self)
+

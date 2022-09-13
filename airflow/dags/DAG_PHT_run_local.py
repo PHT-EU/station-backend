@@ -93,7 +93,6 @@ def run_local_train():
         session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         db = session_local()
 
-
         # get the train files from minio
         minio_client = MinioClient(
             minio_server=os.getenv("MINIO_SERVER"),

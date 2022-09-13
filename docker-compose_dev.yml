@@ -57,6 +57,12 @@ services:
       - MINIO_HOST=minio:9000
       - MINIO_ACCESS_KEY=minio_admin
       - MINIO_SECRET_KEY=minio_admin
+      # TODO Change to your own localhost docker bridge ip
+      - STATION_HOST=http://gateway.docker.internal
+      - AUTH_URL=http://auth:3010/token
+      - STATION_PORT=8000
+      - STATION_USER=admin
+      - STATION_PASSWORD=start123
     ports:
       - "8080:8080"
 
