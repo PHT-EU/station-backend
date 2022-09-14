@@ -8,8 +8,9 @@ from train_lib.docker_util.docker_ops import add_archive
 
 from station.app.trains.local.docker import make_docker_file
 from station.clients.minio import MinioClient
-from station.app.models.local_trains import LocalTrain
+from station.app.models.local_trains import LocalTrain, LocalTrainMasterImage
 from station.app.crud.crud_local_train import CRUDLocalTrain
+from station.app.crud.local_train_master_image import CRUDLocalTrainMasterImage
 from loguru import logger
 
 
@@ -25,8 +26,6 @@ def build_train(
 
     local_crud = CRUDLocalTrain(LocalTrain)
     train = local_crud.get(db, train_id)
-
-    print(train.entrypoint)
 
     image = _make_train_image(
         train_id=train_id,
@@ -57,7 +56,7 @@ def _make_train_image(
     elif master_image:
         dockerfile = make_docker_file(master_image, entrypoint_file, command=command, command_args=command_args)
         image, logs = docker_client.images.build(fileobj=dockerfile)
-        logger.debug(logs)
+        logger.info(logs)
     else:
         raise ValueError("Must specify an entrypoint file with master image or a custom image")
 

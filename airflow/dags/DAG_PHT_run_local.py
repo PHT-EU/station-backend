@@ -50,9 +50,8 @@ def run_local_train():
     def get_local_train_config():
         context = get_current_context()
         train_id, env, volumes, master_image, custom_image = [context['dag_run'].conf.get(_, None) for _ in
-                                  ['train_id', 'env', 'volumes', 'master_image', 'custom_image']]
-
-
+                                                              ['train_id', 'env', 'volumes', 'master_image',
+                                                               'custom_image']]
 
         # check and process the volumes passed to the dag via the config
         if volumes:
@@ -74,13 +73,18 @@ def run_local_train():
         train_config = {
             "train_id": train_id,
             "env": env,
-            "volumes": volumes
+            "volumes": volumes,
+            "master_image": master_image,
+            "custom_image": custom_image
         }
 
         return train_config
 
     @task()
     def build_train_image(train_config):
+
+        print("Building train image")
+        print("config", train_config)
 
         connection = BaseHook.get_connection("pg_station")
 
@@ -95,7 +99,7 @@ def run_local_train():
 
         # get the train files from minio
         minio_client = MinioClient(
-            minio_server=os.getenv("MINIO_SERVER"),
+            minio_server=os.getenv("MINIO_HOST"),
             access_key=os.getenv("MINIO_ACCESS_KEY"),
             secret_key=os.getenv("MINIO_SECRET_KEY"),
         )
@@ -115,9 +119,28 @@ def run_local_train():
         db.close()
         return train_config
 
+    @task()
     def run_train(train_config):
-        env = train_config['env']
-        volumes = train_config['volumes']
+        client = docker.from_env()
+        environment = train_config.get("env", {})
+        volumes = train_config.get("volumes", {})
+        print("Volumes: ", volumes)
+        container = client.containers.run(
+            train_config['image'],
+            environment=environment,
+            volumes=volumes,
+            detach=True,
+            stderr=True,
+            stdout=True,
+        )
+
+        output = container.wait()
+
+        # print("Train Container ID: ", container.id)
+        print("Train Container Logs: ", container.logs().decode("utf-8"))
+        print("Train Container Exit Code: ", output['StatusCode'])
+
+
 
     train_config = get_local_train_config()
     train_config = build_train_image(train_config)
