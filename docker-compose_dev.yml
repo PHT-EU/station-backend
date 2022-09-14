@@ -40,9 +40,10 @@ services:
 
   airflow:
     container_name: station-airflow
-    build:
-      context: .
-      dockerfile: ./airflow/Dockerfile
+    #build:
+    #  context: .
+    #  dockerfile: ./airflow/Dockerfile
+    image: ghcr.io/pht-medic/station-airflow:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./airflow/dags:/root/airflow/dags
