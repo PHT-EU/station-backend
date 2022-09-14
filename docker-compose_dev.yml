@@ -55,6 +55,9 @@ services:
       - .env
     environment:
       - AIRFLOW__WEBSERVER__X_FRAME_ENABLED=True
+      - MINIO_HOST=minio:9000
+      - MINIO_ACCESS_KEY=minio_admin
+      - MINIO_SECRET_KEY=minio_admin
     ports:
       - "8080:8080"
 
