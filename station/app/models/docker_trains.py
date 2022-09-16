@@ -56,6 +56,6 @@ class DockerTrain(Base):
     updated_at = Column(DateTime, nullable=True)
     config_id = Column(Integer, ForeignKey("docker_train_configs.id"), nullable=True)
     config = relationship("DockerTrainConfig", back_populates="trains")
-    state = relationship("DockerTrainState", uselist=False)
-    executions = relationship("DockerTrainExecution")
+    state = relationship("DockerTrainState", uselist=False, cascade="all, delete")
+    executions = relationship("DockerTrainExecution", cascade="all, delete")
     num_participants = Column(Integer, nullable=True)
