@@ -121,7 +121,7 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
         return executions
 
     def get_executions(self, db: Session, skip: int = 0, limit: int = 100) -> List[DockerTrainExecution]:
-        return db.query(DockerTrainExecution).order_by(DockerTrainExecution.start).offset(skip).limit(limit).all()
+        return db.query(DockerTrainExecution).order_by(DockerTrainExecution.start.desc()).offset(skip).limit(limit).all()
 
     def synchronize_central(self, db: Session) -> List[DockerTrain]:
         client = CentralApiClient(
