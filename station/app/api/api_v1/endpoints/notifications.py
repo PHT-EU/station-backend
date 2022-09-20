@@ -16,7 +16,8 @@ def add_notification(create_msg: NotificationCreate, db: Session = Depends(depen
 
 
 @router.put("/{notification_id}", response_model=Notification)
-def update_notification(notification_id: int, update_msg: NotificationUpdate, db: Session = Depends(dependencies.get_db)):
+def update_notification(notification_id: int, update_msg: NotificationUpdate,
+                        db: Session = Depends(dependencies.get_db)):
     db_notification = notifications.get(db, id=notification_id)
     db_notification = notifications.update(db=db, db_obj=db_notification, obj_in=update_msg)
     return db_notification
