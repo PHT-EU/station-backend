@@ -1,4 +1,5 @@
 import time
+import os
 
 import requests
 import requests.auth
@@ -9,10 +10,11 @@ from station.app.schemas.trains import Train
 from station.app.schemas.datasets import DataSet
 from station.clients.base import BaseClient
 from station.clients.resource_client import ResourceClient
+from station.clients.station.local_trains import LocalTrainClient
 
 
 class StationAPIClient(BaseClient):
-    local_trains: ResourceClient
+    local_trains: LocalTrainClient
     datasets: ResourceClient
     trains: ResourceClient
 
@@ -31,6 +33,22 @@ class StationAPIClient(BaseClient):
             password=password
         )
 
-        self.local_trains = ResourceClient(base_url, "local-trains", LocalTrain, client=self)
+        self.local_trains = LocalTrainClient(base_url, "local-trains", LocalTrain, self)
         self.datasets = ResourceClient(base_url, "datasets", DataSet, client=self)
         self.trains = ResourceClient(base_url, "trains/docker", Train, client=self)
+
+    @classmethod
+    def from_env(cls):
+
+        base_url = os.getenv("STATION_API_URL")
+        username = os.getenv("STATION_USER")
+        password = os.getenv("STATION_PASSWORD")
+        auth_url = os.getenv("AUTH_URL")
+
+        return cls(
+            base_url=base_url,
+            username=username,
+            password=password,
+            auth_url=auth_url
+        )
+

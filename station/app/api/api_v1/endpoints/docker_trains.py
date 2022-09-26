@@ -43,6 +43,11 @@ def get_train_by_train_id(train_id: str, db: Session = Depends(dependencies.get_
         raise HTTPException(status_code=404, detail=f"Train with id '{train_id}' not found.")
     return db_train
 
+@router.delete("/{train_id}", response_model=DockerTrain)
+def get_train_by_train_id(train_id: str, db: Session = Depends(dependencies.get_db)):
+    db_train = docker_trains.delete_by_train_id(db, train_id=train_id)
+    return db_train
+
 
 @router.post("/{train_id}/run", response_model=DockerTrainSavedExecution)
 def run_docker_train(train_id: str, run_config: DockerTrainExecution = None,
@@ -121,7 +126,13 @@ def get_docker_train_configuration(config_id: int, db: Session = Depends(depende
     return config
 
 
+@router.get("/executions/all", response_model=List[DockerTrainSavedExecution])
+def get_all_docker_train_executions(skip: int = 0, limit: int = 100, db: Session = Depends(dependencies.get_db)):
+    db_executions = docker_trains.get_executions(db, skip=skip, limit=limit)
+    return db_executions
+
+
 @router.get("/{train_id}/executions", response_model=List[DockerTrainSavedExecution])
-def get_docker_train_executions(train_id: str, db: Session = Depends(dependencies.get_db)):
-    executions = docker_trains.get_train_executions(db, train_id)
+def get_docker_train_executions(train_id: str, skip: int = 0, limit: int = 100, db: Session = Depends(dependencies.get_db)):
+    executions = docker_trains.get_train_executions(db, train_id,)
     return executions

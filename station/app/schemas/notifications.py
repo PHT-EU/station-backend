@@ -8,9 +8,12 @@ class DBSchema(BaseModel):
         orm_mode = True
 
 class NotificationBase(BaseModel):
-    topic: str
-    message: str
+    topic: Optional[str] = None
+    message: Optional[str] = None
     target_user: Optional[str] = "all"
+    title: Optional[str] = None
+    is_read: Optional[bool] = None
+    type: Optional[str] = None
 
 
 class NotificationCreate(NotificationBase):
@@ -18,13 +21,15 @@ class NotificationCreate(NotificationBase):
 
 
 class NotificationUpdate(NotificationBase):
-    is_read: bool
+    pass
 
 
-class Notification(DBSchema):
+class Notification(NotificationBase, DBSchema):
     id: int
     message: str
     topic: Optional[str] = "trains"
     target_user: Optional[str] = "all"
+    is_read: bool
+    created_at: datetime
 
 

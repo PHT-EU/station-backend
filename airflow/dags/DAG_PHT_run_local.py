@@ -14,11 +14,19 @@ from docker.errors import APIError
 
 from airflow.utils.dates import days_ago
 
-from station.app.models.local_trains import LocalTrain
-from station.app.models.docker_trains import DockerTrainConfig
-from station.app.models.datasets import DataSet
 from station.app.trains.local.build import build_train
 from station.clients.minio import MinioClient
+from station.clients.station import StationAPIClient
+
+
+def failure_callback(context):
+    print(f"FAILURE CALLBACK -- Task {context['task'].task_id} failed")
+    client = StationAPIClient.from_env()
+
+    response = client.local_trains.post_failure_notification(context['dag_run'].conf['train_id'],
+                                                             f"Train failed at task {context['task'].task_id}")
+    print(response)
+
 
 default_args = {
     'owner': 'airflow',
@@ -36,7 +44,7 @@ default_args = {
     # 'dag': dag,
     # 'sla': timedelta(hours=2),
     # 'execution_timeout': timedelta(seconds=300),
-    # 'on_failure_callback': some_function,
+    'on_failure_callback': failure_callback,
     # 'on_success_callback': some_other_function,
     # 'on_retry_callback': another_function,
     # 'sla_miss_callback': yet_another_function,
@@ -44,15 +52,19 @@ default_args = {
 }
 
 
-@dag(default_args=default_args, schedule_interval=None, start_date=days_ago(2), tags=['pht', 'local train'])
+@dag(
+    default_args=default_args,
+    schedule_interval=None,
+    start_date=days_ago(2),
+    tags=['pht', 'local train'],
+)
 def run_local_train():
-    @task()
+    @task(on_failure_callback=failure_callback)
     def get_local_train_config():
         context = get_current_context()
         train_id, env, volumes, master_image, custom_image = [context['dag_run'].conf.get(_, None) for _ in
-                                  ['train_id', 'env', 'volumes', 'master_image', 'custom_image']]
-
-
+                                                              ['train_id', 'env', 'volumes', 'master_image',
+                                                               'custom_image']]
 
         # check and process the volumes passed to the dag via the config
         if volumes:
@@ -74,13 +86,18 @@ def run_local_train():
         train_config = {
             "train_id": train_id,
             "env": env,
-            "volumes": volumes
+            "volumes": volumes,
+            "master_image": master_image,
+            "custom_image": custom_image
         }
 
         return train_config
 
-    @task()
+    @task(on_failure_callback=failure_callback)
     def build_train_image(train_config):
+
+        print("Building train image")
+        print("config", train_config)
 
         connection = BaseHook.get_connection("pg_station")
 
@@ -93,15 +110,9 @@ def run_local_train():
         session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         db = session_local()
 
+        client = StationAPIClient.from_env()
 
-        # get the train files from minio
-        minio_client = MinioClient(
-            minio_server=os.getenv("MINIO_SERVER"),
-            access_key=os.getenv("MINIO_ACCESS_KEY"),
-            secret_key=os.getenv("MINIO_SECRET_KEY"),
-        )
-
-        train_files_archive = minio_client.get_local_train_archive(train_id)
+        train_files_archive = client.local_trains.download_train_archive(train_id)
 
         image = build_train(
             db=db,
@@ -116,13 +127,43 @@ def run_local_train():
         db.close()
         return train_config
 
+    @task(on_failure_callback=failure_callback)
     def run_train(train_config):
-        env = train_config['env']
-        volumes = train_config['volumes']
+        client = docker.from_env()
+        environment = train_config.get("env", {})
+        volumes = train_config.get("volumes", {})
+        print("Volumes: ", volumes)
+        container = client.containers.run(
+            train_config['image'],
+            environment=environment,
+            volumes=volumes,
+            detach=True,
+            stderr=True,
+            stdout=True,
+        )
+
+        output = container.wait()
+
+        # print("Train Container ID: ", container.id)
+        print("Train Container Logs: ", container.logs().decode("utf-8"))
+        print("Train Container Exit Code: ", output['StatusCode'])
+
+        return train_config
+
+    @task(on_failure_callback=failure_callback)
+    def update_train_status(train_config):
+        client = StationAPIClient.from_env()
+        context = get_current_context()
+        print(dict(context))
+        print(client.base_url)
+        print(train_config)
+        response = client.local_trains.update_train_status(train_config['train_id'], "completed")
+        print(response)
 
     train_config = get_local_train_config()
     train_config = build_train_image(train_config)
-    run_train(train_config)
+    train_config = run_train(train_config)
+    update_train_status(train_config)
 
 
 local_train_dag = run_local_train()

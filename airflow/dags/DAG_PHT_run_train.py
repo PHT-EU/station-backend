@@ -1,3 +1,4 @@
+import json
 import sys
 import os
 import os.path
@@ -52,7 +53,7 @@ def run_pht_train():
             tag = "latest"
         img = repository + ":" + tag
 
-        # check an process the volumes passed to the dag via the config
+        # check and process the volumes passed to the dag via the config
         if volumes:
             assert isinstance(volumes, dict)
             # if a volume in the dictionary follows the docker format pass it as is
@@ -85,7 +86,7 @@ def run_pht_train():
     def pull_docker_image(train_state):
         client = docker.from_env()
 
-        registry_address = os.getenv("HARBOR_API_URL").split("//")[-1]
+        registry_address = os.getenv("HARBOR_URL").split("//")[-1]
         print(registry_address)
         client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
                      registry=registry_address)
@@ -110,7 +111,7 @@ def run_pht_train():
 
         # try to extract th query json if it exists under the specified path
         try:
-            query = extract_query_json(train_state["img"])
+            query = json.loads(extract_query_json(train_state["img"]))
             train_state["query"] = query
         except Exception as e:
             print(e)
@@ -130,7 +131,10 @@ def run_pht_train():
     def pre_run_protocol(train_state):
         config = TrainConfig(**train_state["config"])
         sp = SecurityProtocol(os.getenv("STATION_ID"), config=config)
-        sp.pre_run_protocol(train_state["img"], os.getenv("PRIVATE_KEY_PATH"))
+
+        private_key_password = os.getenv("PRIVATE_KEY_PASSWORD", None)
+        sp.pre_run_protocol(train_state["img"], os.getenv("PRIVATE_KEY_PATH"),
+                            private_key_password=private_key_password)
 
         return train_state
 
@@ -200,7 +204,7 @@ def run_pht_train():
         client = docker.from_env()
         environment = train_state.get("env", {})
         volumes = train_state.get("volumes", {})
-        print("Volumes", volumes)
+        print("Volumes", train_state["volumes"])
         print("Env dict: ", environment)
 
         try:
@@ -254,8 +258,11 @@ def run_pht_train():
 
         config = TrainConfig(**train_state["config"])
         sp = SecurityProtocol(os.getenv("STATION_ID"), config=config)
+        private_key_password = os.getenv("PRIVATE_KEY_PASSWORD", None)
         sp.post_run_protocol(img=train_state["img"],
-                             private_key_path=os.getenv("PRIVATE_KEY_PATH"))
+                             private_key_path=os.getenv("PRIVATE_KEY_PATH"),
+                             private_key_password=private_key_password
+                             )
 
         return train_state
 
@@ -312,7 +319,7 @@ def run_pht_train():
     def push_train_image(train_state):
         client = docker.from_env()
 
-        registry_address = os.getenv("HARBOR_API_URL").split("//")[-1]
+        registry_address = os.getenv("HARBOR_URL").split("//")[-1]
 
         client.login(username=os.getenv("HARBOR_USER"), password=os.getenv("HARBOR_PW"),
                      registry=registry_address)

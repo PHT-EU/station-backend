@@ -1,4 +1,3 @@
-import pprint
 from builtins import str
 
 from sqlalchemy.orm import Session
@@ -70,6 +69,14 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             trains = db.query(DockerTrain).filter(DockerTrain.is_active == active).all()
         return trains
 
+    def delete_by_train_id(self, db: Session, train_id: str) -> DockerTrain:
+        db_train = self.get_by_train_id(db, train_id)
+        if not db_train:
+            raise HTTPException(status_code=404, detail=f"Train {train_id} not found")
+        db.delete(db_train)
+        db.commit()
+        return db_train
+
     def add_if_not_exists(self, db: Session, train_id: str, created_at: str = datetime.now(), updated_at: str = None):
         db_train = self.get_by_train_id(db, train_id)
         if not db_train:
@@ -113,9 +120,13 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
         executions = db_train.executions
         return executions
 
+    def get_executions(self, db: Session, skip: int = 0, limit: int = 100) -> List[DockerTrainExecution]:
+        return db.query(DockerTrainExecution).order_by(DockerTrainExecution.start.desc()).offset(skip).limit(limit).all()
+
     def synchronize_central(self, db: Session) -> List[DockerTrain]:
         client = CentralApiClient(
             api_url=settings.config.central_ui.api_url,
+
             robot_id=settings.config.central_ui.robot_id,
             robot_secret=settings.config.central_ui.robot_secret
         )
@@ -200,7 +211,6 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             central_path = central_path[:-4]
         proposal_link = f"{central_path}/proposals/{proposal_id}"
         return proposal_link
-
 
 
 docker_trains = CRUDDockerTrain(DockerTrain)

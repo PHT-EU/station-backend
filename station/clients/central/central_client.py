@@ -12,7 +12,10 @@ class CentralApiClient(BaseClient):
     def __init__(self, api_url: str, robot_id: str, robot_secret: str):
 
         super().__init__(
-            base_url=api_url, robot_id=robot_id, robot_secret=robot_secret, auth_url=f"{api_url}/token"
+            base_url=api_url,
+            robot_id=robot_id,
+            robot_secret=robot_secret,
+            auth_url=f"{api_url}/token"
         )
 
         self.api_url = api_url
