@@ -13,6 +13,7 @@ class NotificationBase(BaseModel):
     target_user: Optional[str] = "all"
     title: Optional[str] = None
     is_read: Optional[bool] = None
+    type: Optional[str] = None
 
 
 class NotificationCreate(NotificationBase):

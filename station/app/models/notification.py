@@ -12,4 +12,5 @@ class Notification(Base):
     title = Column(String, nullable=True)
     message = Column(String)
     is_read = Column(Boolean, default=False)
+    type = Column(String, default="info")
     created_at = Column(DateTime, default=datetime.now())
