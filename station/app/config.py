@@ -445,7 +445,7 @@ class Settings:
         Returns:
 
         """
-        env_fernet_key = os.getenv(StationEnvironmentVariables.FERNET_KEY.value)
+        env_fernet_key = os.getenv(str(StationEnvironmentVariables.FERNET_KEY.value))
 
         if not env_fernet_key and not self.config.fernet_key:
             # if fernet key is given in production raise an error

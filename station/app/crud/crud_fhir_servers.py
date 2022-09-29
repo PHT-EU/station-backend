@@ -24,7 +24,6 @@ class CRUDFHIRServers(CRUDBase[FHIRServer, FHIRServerCreate, FHIRServerUpdate]):
         Encrypt sensitive values in the FHIRServerCreate/FHIRServerUpdate object
         Args:
             obj_in:
-
         Returns:
             the same object with encrypted sensitive values
         """
