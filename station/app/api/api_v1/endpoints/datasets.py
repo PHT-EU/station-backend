@@ -1,12 +1,12 @@
 from io import BytesIO
 from typing import Any, List
-from zipfile import ZipFile
 
-import pandas as pd
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from station.app.api import dependencies
 from fastapi.responses import StreamingResponse
+
+from station.app.schemas.users import User
+from station.app.api import dependencies
 
 from station.app.schemas.datasets import DataSet, DataSetCreate, DataSetUpdate, DataSetStatistics, MinioFile
 from station.app.datasets import statistics
@@ -18,7 +18,14 @@ router = APIRouter()
 
 
 @router.post("", response_model=DataSet)
-def create_new_data_set(create_msg: DataSetCreate, db: Session = Depends(dependencies.get_db)) -> DataSet:
+def create_new_data_set(
+        create_msg: DataSetCreate,
+        db: Session = Depends(dependencies.get_db),
+        user: User = Depends(dependencies.get_current_user)
+
+) -> DataSet:
+
+    print("user", user)
     dataset = datasets.get_by_name(db, name=create_msg.name)
     if dataset:
         raise HTTPException(status_code=400, detail=f"Dataset with name {create_msg.name} already exists.")

@@ -21,12 +21,16 @@ def get_robot_token(robot_id: str = None, robot_secret: str = None, token_url: s
     """
     # todo token caching
 
+    logger.debug("Getting robot token")
+
     if not token_url:
         token_url = settings.config.auth.token_url
     if not robot_id:
         robot_id = settings.config.auth.robot_id
     if not robot_secret:
         robot_secret = settings.config.auth.robot_secret.get_secret_value()
+
+    print(robot_id, robot_secret, token_url)
 
     # try to read the token from cache and return it if it exists
     cached_token = redis_cache.get(TokenCacheKeys.robot_token.value)
@@ -47,6 +51,7 @@ def get_robot_token(robot_id: str = None, robot_secret: str = None, token_url: s
         # parse values from response and set cache
         token = response.get("access_token")
         ttl = response.get("expires_in")
+
         redis_cache.set(TokenCacheKeys.robot_token.value, token, ttl)
 
         return token
@@ -71,6 +76,7 @@ def validate_user_token(token: str, robot_token: str, token_url: str = None) -> 
     r = requests.get(url, headers=headers)
     r.raise_for_status()
     response = r.json()
+    print("user response",response)
     if response.get("target").get("kind") == "user":
         user = User(**response.get("target").get("entity"),
                     permissions=response.get("target").get("permissions"))
@@ -97,14 +103,18 @@ def get_current_user(token: HTTPAuthorizationCredentials = Depends(HTTPBearer())
     if token_url is None:
         token_url = settings.config.auth.token_url
     try:
+        print("validating user")
         user = validate_user_token(token=token.credentials, robot_token=robot_token, token_url=token_url)
+
         return user
     except HTTPError as e:
+        logger.error(f"Error validating user token: {e}")
         if e.response.status_code == 401:
             raise HTTPException(status_code=401, detail="Invalid token")
         elif e.response.status_code == 400:
             # attempt refresh robot token
             try:
+
                 robot_token = get_robot_token(robot_id=settings.config.auth.robot_id,
                                               robot_secret=settings.config.auth.robot_secret.get_secret_value(),
                                               token_url=token_url)

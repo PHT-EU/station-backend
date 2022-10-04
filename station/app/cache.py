@@ -79,4 +79,4 @@ class Cache:
         return json_string
 
 
-redis_cache = None
+redis_cache = Cache(settings.config.redis.host)

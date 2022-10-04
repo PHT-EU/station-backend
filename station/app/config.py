@@ -346,6 +346,7 @@ class Settings:
         self._setup_airflow()
         self._setup_fernet()
         self._setup_station_auth()
+        self._setup_redis()
         self._setup_registry_connection()
         self._setup_minio_connection()
 
@@ -464,11 +465,28 @@ class Settings:
             self.config.fernet_key = env_fernet_key
 
     def _setup_redis(self):
+        """
+        Configure the redis connection from environment variables or config file.
+        Returns:
+
+        """
+
+        logger.info(f"{Emojis.INFO}Setting up redis connection...")
         redis_config = self.config.redis.copy()
-        redis_config.host = os.getenv(StationEnvironmentVariables.REDIS_HOST.value) or redis_config.host
-        redis_config.port = os.getenv(StationEnvironmentVariables.REDIS_PORT.value) or redis_config.port
-        redis_config.db = os.getenv(StationEnvironmentVariables.REDIS_DB.value) or redis_config.db
-        redis_config.password = os.getenv(StationEnvironmentVariables.REDIS_PW.value) or redis_config.password
+
+        host = os.getenv(str(StationEnvironmentVariables.REDIS_HOST.value))
+        port = os.getenv(str(StationEnvironmentVariables.REDIS_PORT.value))
+        db = os.getenv(str(StationEnvironmentVariables.REDIS_DB.value))
+        password = os.getenv(str(StationEnvironmentVariables.REDIS_PW.value))
+
+        if host:
+            logger.debug(f"\t{Emojis.INFO}Overriding redis connections with env var specification.")
+            redis_config.host = host
+            redis_config.port = port or redis_config.port
+            redis_config.db = db
+            redis_config.password = password
+            self.config.redis = redis_config
+
 
     def _setup_station_auth(self):
         """
@@ -486,9 +504,11 @@ class Settings:
             secret=StationEnvironmentVariables.AUTH_ROBOT_SECRET
         )
 
+        print(env_auth_server, env_auth_port, env_auth_robot, env_auth_robot_secret)
+
         _auth_server = False
         # ensure there is an auth server specified in production mode
-        if not (env_auth_server and env_auth_robot and env_auth_robot_secret) or self.config.auth:
+        if not ((env_auth_server and env_auth_robot and env_auth_robot_secret) or self.config.auth):
             if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
                 raise ValueError(f"{Emojis.ERROR}   No station auth specified in config or env vars,"
                                  f" invalid configuration for production")
