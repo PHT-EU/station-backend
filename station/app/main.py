@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from dotenv import load_dotenv, find_dotenv
 from fastapi.middleware.cors import CORSMiddleware
 
 from station.app.api.api_v1.api import api_router
+from station.app.auth import authorized_user
 from station.app.logger import init_logging
 
 
@@ -34,4 +35,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(api_router, prefix="/api")
+app.include_router(
+    api_router,
+    prefix="/api",
+    dependencies=[Depends(authorized_user)],
+)

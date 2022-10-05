@@ -20,8 +20,9 @@ class UserPermission(BaseModel):
 class User(BaseModel):
     id: str
     name: str
-    email: str
+    email: Optional[str] = None
     active: bool
+    token: Optional[str] = None
     created_at: datetime.datetime
     updated_at: Optional[datetime.datetime] = None
     realm_id: str

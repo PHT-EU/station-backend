@@ -27,7 +27,8 @@ services:
       PORT: 3010
       ADMIN_USER: admin
       ADMIN_PASSWORD: start123
-      NODE_ENV: production
+      NODE_ENV: test
+      SELF_URL: http://auth:3010/
     command:
       - start
 

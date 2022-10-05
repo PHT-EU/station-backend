@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import requests
 from loguru import logger
@@ -6,7 +8,7 @@ from requests import HTTPError
 from enum import Enum
 
 from station.app.config import settings
-from station.app.schemas.users import User
+from station.app.schemas.users import User, UserPermission
 from station.app.cache import redis_cache
 
 
@@ -57,36 +59,29 @@ def get_robot_token(robot_id: str = None, robot_secret: str = None, token_url: s
         return token
 
 
-def validate_user_token(token: str, robot_token: str, token_url: str = None) -> User:
+def validate_user_token(token: str, user_url: str = None) -> User:
     """
     Validate a user token against the auth server and parse a user object from the response.
     Args:
         token: token to validate
-        robot_token: the robot token to request token validation
-        token_url: token url of the auth server
+        user_url: user url of the auth server
 
     Returns:
         User object parsed from the auth server response
     """
     # todo token caching
-    if token_url is None:
-        token_url = settings.config.auth.token_url
-    url = f"{token_url}/{token}"
-    headers = {"Authorization": f"Bearer {robot_token}"}
+    if user_url is None:
+        user_url = settings.config.auth.user_url
+
+    url = f"{user_url}/@me"
+    headers = {"Authorization": f"Bearer {token}"}
     r = requests.get(url, headers=headers)
     r.raise_for_status()
-    response = r.json()
-    print("user response",response)
-    if response.get("target").get("kind") == "user":
-        user = User(**response.get("target").get("entity"),
-                    permissions=response.get("target").get("permissions"))
-        return user
-    else:
-        raise NotImplementedError("Only user entities are supported.")
+    user = User(**r.json())
+    return user
 
 
-def get_current_user(token: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
-                     robot_token: str = Depends(get_robot_token),
+def get_current_user(token: str,
                      token_url: str = None) -> User:
     """
     Validate a user token against the auth server and parse a user object from the response.
@@ -99,12 +94,11 @@ def get_current_user(token: HTTPAuthorizationCredentials = Depends(HTTPBearer())
         User object parsed from the auth server response
     """
 
-    logger.debug(f"Validating user token {token.credentials}")
+    logger.debug(f"Validating bearer token")
     if token_url is None:
         token_url = settings.config.auth.token_url
     try:
-        print("validating user")
-        user = validate_user_token(token=token.credentials, robot_token=robot_token, token_url=token_url)
+        user = validate_user_token(token=token)
 
         return user
     except HTTPError as e:
@@ -119,7 +113,41 @@ def get_current_user(token: HTTPAuthorizationCredentials = Depends(HTTPBearer())
                                               robot_secret=settings.config.auth.robot_secret.get_secret_value(),
                                               token_url=token_url)
 
-                user = validate_user_token(token=token.credentials, robot_token=robot_token, token_url=token_url)
+                user = validate_user_token(token=token)
                 return user
             except HTTPError:
                 raise HTTPException(status_code=401, detail="Invalid token")
+
+
+def get_user_permissions(user: User, token_url: str = None) -> List[UserPermission]:
+    # todo token caching
+    logger.debug(f"Getting user permissions for {user.name}")
+    if token_url is None:
+        token_url = settings.config.auth.token_url
+    url = f"{token_url}/introspect"
+    headers = {"Authorization": f"Bearer {user.token}"}
+    r = requests.get(url, headers=headers)
+    r.raise_for_status()
+    permissions = [UserPermission(**p) for p in r.json().get("permissions")]
+    return permissions
+
+
+def authorized_user(token: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
+                    permissions: List[UserPermission] = None) -> User:
+    """
+    Authorize a user by checking if they are in the allowed users list.
+    Args:
+        token: Bearer token from http header
+        permissions: list of permissions to check
+
+    Returns:
+        User object if authorized
+
+    """
+    logger.debug(f"Authorizing user")
+    user = get_current_user(token=token.credentials)
+    if permissions:
+        user.permissions = get_user_permissions(user)
+        # todo validate permissions
+
+    return user

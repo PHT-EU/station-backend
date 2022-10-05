@@ -14,7 +14,7 @@ def get_station_config(db: Session = Depends(dependencies.get_db)):
 
 
 @router.get("/config/test")
-def test_station_config(user: User = Depends(dependencies.get_current_user)):
+def test_station_config(user: User = Depends(dependencies.authorized_user)):
     print(user)
 
 

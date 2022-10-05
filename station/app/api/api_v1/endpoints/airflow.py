@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from datetime import datetime
 
 from station.app.api import dependencies
+from station.app.schemas.users import User
 from station.clients.airflow.client import airflow_client
 from station.clients.airflow import docker_trains as airflow_docker_train
 from station.app.schemas.airflow import AirflowInformation, AirflowTaskLog, AirflowRun, AirflowRunMsg
@@ -14,12 +15,20 @@ router = APIRouter()
 
 
 @router.post("/{dag_id}/run", response_model=AirflowRun)
-def run(run_msg: AirflowRunMsg, dag_id: str, db: Session = Depends(dependencies.get_db)):
+def run(
+        run_msg: AirflowRunMsg,
+        dag_id: str,
+        db: Session = Depends(dependencies.get_db),
+        user: User = Depends(dependencies.authorized_user)
+):
     """
     Trigger a dag run and return the run_id of the run
     @param dag_id: ID of the DAG e.G. "run_local" , "run_pht_train" etc.
     @param run_msg: UID of the train
     @param db:  reference to the postgres database
+
+    Args:
+        user:
     """
 
     if dag_id == "run_local":
@@ -48,7 +57,10 @@ def run(run_msg: AirflowRunMsg, dag_id: str, db: Session = Depends(dependencies.
 
 
 @router.get("/logs/{dag_id}/{run_id}", response_model=AirflowInformation)
-def get_airflow_run_information(dag_id: str, run_id: str):
+def get_airflow_run_information(
+        dag_id: str,
+        run_id: str,
+        user: User = Depends(dependencies.authorized_user)):
     """
     Get information about one airflow DAG execution.
     @param dag_id: ID of the DAG e.G. "run_local" , "run_pht_train" etc.
@@ -76,7 +88,12 @@ def get_airflow_run_information(dag_id: str, run_id: str):
 
 
 @router.get("/logs/{dag_id}/{run_id}/{task_id}/{task_try_number}", response_model=AirflowTaskLog)
-def get_airflow_task_log(dag_id: str, run_id: str, task_id: str, task_try_number: int):
+def get_airflow_task_log(
+        dag_id: str,
+        run_id: str,
+        task_id: str,
+        task_try_number: int,
+        user: User = Depends(dependencies.authorized_user)):
     """
     Get log of a task in a DAG execution.
     @param dag_id: ID of the DAG e.G. "run_local" , "run_pht_train" etc.

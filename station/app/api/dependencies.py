@@ -1,7 +1,7 @@
 from typing import Generator
 from station.app.db.session import SessionLocal
 from station.app.config import settings
-from station.app.auth import get_current_user
+from station.app.auth import authorized_user
 
 import os
 from fastapi.security import HTTPBearer

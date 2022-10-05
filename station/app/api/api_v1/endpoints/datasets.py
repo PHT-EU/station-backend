@@ -21,8 +21,7 @@ router = APIRouter()
 def create_new_data_set(
         create_msg: DataSetCreate,
         db: Session = Depends(dependencies.get_db),
-        user: User = Depends(dependencies.get_current_user)
-
+        user: User = Depends(dependencies.authorized_user)
 ) -> DataSet:
 
     print("user", user)

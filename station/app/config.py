@@ -73,6 +73,10 @@ class AuthConfig(BaseModel):
         return f"http://{self.host}{f':{self.port}' if self.port else ''}/token"
 
     @property
+    def user_url(self) -> Union[AnyUrl, str]:
+        return f"http://{self.host}{f':{self.port}' if self.port else ''}/users"
+
+    @property
     def auth_url(self) -> Union[AnyUrl, str]:
         return f"http://{self.host}{f':{self.port}' if self.port else ''}"
 
@@ -503,8 +507,6 @@ class Settings:
             user=StationEnvironmentVariables.AUTH_ROBOT_ID,
             secret=StationEnvironmentVariables.AUTH_ROBOT_SECRET
         )
-
-        print(env_auth_server, env_auth_port, env_auth_robot, env_auth_robot_secret)
 
         _auth_server = False
         # ensure there is an auth server specified in production mode

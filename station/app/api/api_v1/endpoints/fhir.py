@@ -48,3 +48,4 @@ def fhir_server_summary(server_id: int, db: Session = Depends(dependencies.get_d
 def get_fhir_servers(limit: int = 100, skip: int = 0, db: Session = Depends(dependencies.get_db)):
     db_fhir_servers = fhir_servers.get_multi(db=db, skip=skip, limit=limit)
     return db_fhir_servers
+
