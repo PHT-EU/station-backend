@@ -132,8 +132,9 @@ def get_user_permissions(user: User, token_url: str = None) -> List[UserPermissi
     return permissions
 
 
-def authorized_user(token: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
-                    permissions: List[UserPermission] = None) -> User:
+# def authorized_user(token: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
+#                     permissions: List[UserPermission] = None) -> User:
+def authorized_user(token: HTTPAuthorizationCredentials = Depends(HTTPBearer())):
     """
     Authorize a user by checking if they are in the allowed users list.
     Args:
@@ -146,8 +147,8 @@ def authorized_user(token: HTTPAuthorizationCredentials = Depends(HTTPBearer()),
     """
     logger.debug(f"Authorizing user")
     user = get_current_user(token=token.credentials)
-    if permissions:
-        user.permissions = get_user_permissions(user)
-        # todo validate permissions
+    # if permissions:
+    #     user.permissions = get_user_permissions(user)
+    #     # todo validate permissions
 
     return user

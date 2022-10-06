@@ -2,6 +2,7 @@ import json
 import os
 import pprint
 import sys
+import time
 from typing import Tuple
 
 import click
@@ -59,7 +60,10 @@ def install(ctx, install_dir, host_path):
 
     # setup docker
     setup_docker()
-    download_docker_images(ctx)
+    # download service images
+    # download_docker_images(ctx)
+
+    # setup_auth_server
     _setup_auth_server(ctx)
 
     # render templates according to configuration and store output paths in configuration object
@@ -94,12 +98,12 @@ def _setup_auth_server(ctx):
     client = docker.from_env()
 
     auth_image = f"{PHTImages.AUTH.value}:{ctx.obj['version']}"
-    command = "setup"
+    command = "start"
 
     if ctx.obj.get("host_path"):
-        writable_dir = os.path.join(ctx.obj['host_path'], PHTDirectories.SERVICE_DATA_DIR.value, "auth")
+        writable_dir = os.path.join(ctx.obj['host_path'], str(PHTDirectories.SERVICE_DATA_DIR.value), "auth")
     else:
-        writable_dir = os.path.join(ctx.obj['install_dir'], PHTDirectories.SERVICE_DATA_DIR.value, "auth")
+        writable_dir = os.path.join(ctx.obj['install_dir'], str(PHTDirectories.SERVICE_DATA_DIR.value), "auth")
 
     auth_volumes = {
         str(writable_dir): {
@@ -107,7 +111,6 @@ def _setup_auth_server(ctx):
             "mode": "rw"
         }
     }
-    print(ctx.obj)
     environment = {
         "ADMIN_USER": "admin",
         "ADMIN_PASSWORD": ctx.obj['admin_password'],
@@ -124,18 +127,28 @@ def _setup_auth_server(ctx):
         # "TYPEORM_LOGGING": "true",
     }
 
+    print("starting container")
     container = client.containers.run(auth_image,
                                       command,
                                       remove=False,
                                       detach=True,
                                       environment=environment,
                                       volumes=auth_volumes)
-    exit_code = container.wait()
-    logs = container.logs()
-    print(logs.decode())
-    with open(
-            os.path.join(ctx.obj['install_dir'], PHTDirectories.SERVICE_DATA_DIR.value, "auth", "seed.json"), "r"
-    ) as f:
+    # exit_code = container.wait()
+    logs = client.containers.get(container.id).logs(stream=True, follow=True)
+
+    try:
+        while True:
+            line = next(logs).decode("utf-8")
+            if "Startup completed." in line:
+                time.sleep(5)
+                break
+    except StopIteration:
+        print(f'log stream ended for {container.id}')
+    except KeyboardInterrupt:
+        print('interrupted!')
+    # print(logs.decode())
+    with open(os.path.join(writable_dir, "seed.json"), "r") as f:
         seed = json.load(f)
 
     robot_id = seed["robotId"]
@@ -155,6 +168,8 @@ def _setup_auth_server(ctx):
             "robot_secret": robot_secret,
         }
         ctx.obj["auth"] = auth
+
+        client.containers.get(container.id).stop()
         click.echo(Icons.CHECKMARK.value)
 
 
@@ -165,7 +180,7 @@ def write_init_sql(ctx) -> str:
         db_config = ctx.obj['db']
         init_sql_path = os.path.join(
             ctx.obj['install_dir'],
-            PHTDirectories.SETUP_SCRIPT_DIR.value,
+            str(PHTDirectories.SETUP_SCRIPT_DIR.value),
             'init.sql'
         )
         with open(init_sql_path, 'w') as f:
@@ -193,7 +208,7 @@ def write_traefik_configs(ctx) -> Tuple[str, str]:
 
         traefik_path = os.path.join(
             ctx.obj['install_dir'],
-            PHTDirectories.CONFIG_DIR.value,
+            str(PHTDirectories.CONFIG_DIR.value),
             'traefik'
         )
 
@@ -211,8 +226,8 @@ def write_traefik_configs(ctx) -> Tuple[str, str]:
         click.echo(Icons.CHECKMARK.value)
         host_path = ctx.obj.get("host_path")
         if host_path:
-            traefik_config_path = os.path.join(host_path, PHTDirectories.CONFIG_DIR.value, "traefik", "traefik.yml")
-            router_config_path = os.path.join(host_path, PHTDirectories.CONFIG_DIR.value, "traefik", "config.yml")
+            traefik_config_path = os.path.join(host_path, str(PHTDirectories.CONFIG_DIR.value), "traefik", "traefik.yml")
+            router_config_path = os.path.join(host_path, str(PHTDirectories.CONFIG_DIR.value), "traefik", "config.yml")
         return str(traefik_config_path), str(router_config_path)
 
     except Exception as e:
@@ -240,13 +255,13 @@ def write_airflow_config(ctx) -> str:
 
         airflow_config_path = os.path.join(
             path,
-            PHTDirectories.CONFIG_DIR.value,
+            str(PHTDirectories.CONFIG_DIR.value),
             'airflow.cfg'
         )
 
         write_path = os.path.join(
             ctx.obj['install_dir'],
-            PHTDirectories.CONFIG_DIR.value,
+            str(PHTDirectories.CONFIG_DIR.value),
             'airflow.cfg'
         )
 
