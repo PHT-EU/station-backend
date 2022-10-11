@@ -1,3 +1,5 @@
+import io
+
 import pandas as pd
 from typing import Optional
 from pandas.api.types import is_numeric_dtype, is_bool_dtype
@@ -6,7 +8,7 @@ import plotly.io
 from plotly.graph_objects import Figure
 import json
 
-from station.app.schemas.datasets import DataSetStatistics, DataSetFigure
+from station.app.schemas.datasets import DataSetStatistics, DataSetFigure, MinioFile
 
 
 def get_dataset_statistics(dataframe: pd.DataFrame) -> Optional[DataSetStatistics]:
@@ -129,7 +131,6 @@ def process_categorical_column(dataframe: pd.DataFrame, columns_inf:dict, i: int
                 columns_inf[i]['value_counts'] = dict(dataframe[title].value_counts())
                 fig = px.pie(dataframe, names=title, title=title)
 
-
             # histogram if number of classes is greater than 10
             elif unique >= 6:
                 fig = px.histogram(dataframe, x=title, title=title)
@@ -153,3 +154,24 @@ def create_figure(fig: Figure) -> DataSetFigure:
     obj = json.loads(fig_json)
     figure = DataSetFigure(fig_data=obj)
     return figure
+
+
+def load_tabular(file: MinioFile, content: bytes) -> pd.DataFrame:
+    """
+    Load tabular data from file
+    :param file: File to load
+    :param content: Content of file
+    :return: Dataframe with data from file
+    """
+
+    extension = file.file_name.split(".")[-1]
+    if extension == 'csv':
+        dataframe = pd.read_csv(io.BytesIO(content))
+    elif extension == 'xlsx':
+        dataframe = pd.read_excel(io.BytesIO(content))
+    elif extension == 'json':
+        dataframe = pd.read_json(io.BytesIO(content))
+    else:
+        raise TypeError
+
+    return dataframe

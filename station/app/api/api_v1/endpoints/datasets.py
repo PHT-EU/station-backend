@@ -4,6 +4,7 @@ from typing import Any, List
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
+from loguru import logger
 
 from station.app.schemas.users import User
 from station.app.api import dependencies
@@ -122,7 +123,7 @@ async def download(data_set_id: Any, archive_type: str = "tar", db: Session = De
     if len(items) == 0:
         raise HTTPException(status_code=404, detail="No files found.")
     elif len(items) == 1:
-        data = minio_client.get_file(DataDirectories.DATASETS.value, items[0].full_path)
+        data = minio_client.get_file(str(DataDirectories.DATASETS.value), items[0].full_path)
         obj = BytesIO(data)
         return StreamingResponse(content=obj, media_type="application/octet-stream")
 
@@ -132,19 +133,32 @@ async def download(data_set_id: Any, archive_type: str = "tar", db: Session = De
 
 
 @router.get("/{data_set_id}/stats", response_model=DataSetStatistics)
-def get_data_set_statistics(data_set_id: Any, db: Session = Depends(dependencies.get_db)):
-    try:
-        dataframe = datasets.get_data(db, data_set_id)
-    except NotImplementedError:
-        raise HTTPException(status_code=422, detail="Method just specified for CSV-Data.")
-    if dataframe is None or dataframe.empty:
+def get_data_set_statistics(data_set_id: Any, file_name: str = None, db: Session = Depends(dependencies.get_db)):
+
+    db_dataset = datasets.get(db, data_set_id)
+    if not db_dataset:
         raise HTTPException(status_code=404, detail="Dataset not found.")
-    try:
-        stats = statistics.get_dataset_statistics(dataframe)
+
+    minio_client = MinioClient()
+    items = minio_client.get_minio_dir_items(DataDirectories.DATASETS, data_set_id)
+    if len(items) == 0 and not db_dataset.fhir_server:
+        raise HTTPException(status_code=404, detail="No files found in the dataset.")
+
+    if db_dataset.data_type in {"hybrid", "structured"}:
+        if file_name:
+            items = [item for item in items if item.file_name == file_name]
+            if len(items) == 0:
+                raise HTTPException(status_code=404, detail=f"File {file_name} not found.")
+        file_content = minio_client.get_file(DataDirectories.DATASETS, items[0].full_path)
+
         try:
+            df = statistics.load_tabular(items[0], file_content)
+            stats = statistics.get_dataset_statistics(df)
             dataset = datasets.add_stats(db, data_set_id, stats)
-        except:
-            raise HTTPException(status_code=500, detail="Upload to database did not work.")
-        return stats
-    except TypeError:
-        raise HTTPException(status_code=400, detail="Dataset has to be given as a dataframe.")
+            return stats
+
+        except TypeError as e:
+            raise HTTPException(status_code=400, detail=f"File {file_name} is not in a supported tabular format.")
+
+    else:
+        raise HTTPException(status_code=400, detail=f"Data type {db_dataset.data_type} is not supported yet.")

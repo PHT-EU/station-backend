@@ -1,3 +1,5 @@
+from typing import List, Union
+
 from sqlalchemy.orm import Session
 import pandas as pd
 import json
@@ -26,7 +28,7 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
 
         return db_obj
 
-    def get_data(self, db: Session, data_set_id):
+    def get_data(self, db: Session, data_set_id: str, file_name: Union[str, List[str]] = None):
         dataset = self.get(db, data_set_id)
         if dataset.data_type == "image":
             raise NotImplementedError
@@ -46,7 +48,7 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
         dataset = db.query(self.model).filter(self.model.name == name).first()
         return dataset
 
-    def add_stats(self, db:Session, data_set_id, stats):
+    def add_stats(self, db: Session, data_set_id, stats):
         dataset = self.get(db, data_set_id)
         stats = jsonable_encoder(stats)
         stats_json = json.dumps(stats)

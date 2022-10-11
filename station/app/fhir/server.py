@@ -28,8 +28,6 @@ def fhir_server_from_db(db: Session, fhir_server_id: int) -> FhirServer:
 
     if db_server.client_id:
         client_secret = settings.get_fernet().decrypt(db_server.client_secret.encode())
-        print(client_secret)
-        print(client_secret.decode("utf-8"))
         return FhirServer(
             api_address=db_server.api_address,
             fhir_server_type=db_server.type,

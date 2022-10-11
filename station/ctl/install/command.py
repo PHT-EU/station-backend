@@ -58,10 +58,10 @@ def install(ctx, install_dir, host_path):
 
     ctx.obj["registry"]["project"] = reg_credentials["external_name"]
 
-    # setup docker
+    # setup docker volumes and networks
     setup_docker()
-    # download service images
-    # download_docker_images(ctx)
+    # download docker images
+    download_docker_images(ctx)
 
     # setup_auth_server
     _setup_auth_server(ctx)
@@ -126,8 +126,6 @@ def _setup_auth_server(ctx):
         # "TYPEORM_SYNCHRONIZE": "false",
         # "TYPEORM_LOGGING": "true",
     }
-
-    print("starting container")
     container = client.containers.run(auth_image,
                                       command,
                                       remove=False,
@@ -141,6 +139,7 @@ def _setup_auth_server(ctx):
         while True:
             line = next(logs).decode("utf-8")
             if "Startup completed." in line:
+                # todo improve this
                 time.sleep(5)
                 break
     except StopIteration:
