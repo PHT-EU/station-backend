@@ -25,7 +25,6 @@ def create_new_data_set(
         user: User = Depends(dependencies.authorized_user)
 ) -> DataSet:
 
-    print("user", user)
     dataset = datasets.get_by_name(db, name=create_msg.name)
     if dataset:
         raise HTTPException(status_code=400, detail=f"Dataset with name {create_msg.name} already exists.")
