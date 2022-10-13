@@ -148,12 +148,19 @@ def get_data_set_statistics(data_set_id: Any, file_name: str = None, db: Session
             items = [item for item in items if item.file_name == file_name]
             if len(items) == 0:
                 raise HTTPException(status_code=404, detail=f"File {file_name} not found.")
-        file_content = minio_client.get_file(DataDirectories.DATASETS, items[0].full_path)
 
         try:
+            stats = statistics.load_stats(db_dataset.summary, file_name)
+            logger.info(f"Loaded stats for {file_name}")
+            return stats
+        except ValueError as e:
+            logger.info(f"Could not load existing stats for {db_dataset.id} {file_name}. {e}")
+        try:
+            logger.info(f"Calculating stats for {db_dataset.id} {file_name}")
+            file_content = minio_client.get_file(DataDirectories.DATASETS, items[0].full_path)
             df = statistics.load_tabular(items[0], file_content)
             stats = statistics.get_dataset_statistics(df)
-            dataset = datasets.add_stats(db, data_set_id, stats)
+            dataset = datasets.add_stats(db, data_set_id, stats, items[0].file_name)
             return stats
 
         except TypeError as e:

@@ -1,14 +1,17 @@
 import io
 
 import pandas as pd
-from typing import Optional
+from typing import Optional, Union
 from pandas.api.types import is_numeric_dtype, is_bool_dtype
 import plotly.express as px
 import plotly.io
 from plotly.graph_objects import Figure
 import json
+import orjson
+from loguru import logger
 
 from station.app.schemas.datasets import DataSetStatistics, DataSetFigure, MinioFile
+from station.app.models.datasets import DataSet
 
 
 def get_dataset_statistics(dataframe: pd.DataFrame) -> Optional[DataSetStatistics]:
@@ -164,7 +167,8 @@ def load_tabular(file: MinioFile, content: bytes) -> pd.DataFrame:
     :return: Dataframe with data from file
     """
 
-    extension = file.file_name.split(".")[-1]
+    extension = file.file_name.split(".")[-1].lower()
+    print("extension: ", extension)
     if extension == 'csv':
         dataframe = pd.read_csv(io.BytesIO(content))
     elif extension == 'xlsx':
@@ -175,3 +179,30 @@ def load_tabular(file: MinioFile, content: bytes) -> pd.DataFrame:
         raise TypeError
 
     return dataframe
+
+
+def load_stats(stats_json: Union[str, dict] = None, file_name: str = None) -> DataSetStatistics:
+    """
+    Load statistics from json string
+    :param stats_json: json string containing statistics
+    :param file_name: name of file containing statistics
+    :return: DataSetStatistics object
+    """
+
+    if stats_json is None:
+        raise ValueError("No statistics available")
+
+    if isinstance(stats_json, str):
+        stats_json = json.loads(stats_json)
+    else:
+        if file_name:
+            file_stats = stats_json.get(file_name)
+            if file_stats is None:
+                logger.warning(f"Statistics for file {file_name} not found")
+                raise ValueError("No statistics available")
+            else:
+                stats = DataSetStatistics(**file_stats)
+                return stats
+        else:
+            stats = DataSetStatistics(**stats_json)
+            return stats

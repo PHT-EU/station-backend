@@ -95,6 +95,7 @@ class DataSetNumericalColumn(DataSetColumn):
 
 
 class DataSetStatistics(BaseModel):
+    created_at: Optional[datetime] = datetime.now()
     n_items: Optional[int] = 0
     n_features: Optional[int] = 0
     column_information: Optional[List[Annotated[Union[DataSetCategoricalColumn,

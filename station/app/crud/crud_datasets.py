@@ -1,5 +1,6 @@
 from typing import List, Union
 
+import orjson
 from sqlalchemy.orm import Session
 import pandas as pd
 import json
@@ -48,11 +49,20 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
         dataset = db.query(self.model).filter(self.model.name == name).first()
         return dataset
 
-    def add_stats(self, db: Session, data_set_id, stats):
+    def add_stats(self, db: Session, data_set_id: str, stats: DataSetStatistics, file_name: str = None):
         dataset = self.get(db, data_set_id)
-        stats = jsonable_encoder(stats)
-        stats_json = json.dumps(stats)
-        dataset.summary = stats_json
+
+        if file_name:
+            if dataset.summary:
+                stored_stats = json.loads(dataset.summary)
+            else:
+                stored_stats = {}
+            stored_stats[file_name] = stats
+            dataset.summary = jsonable_encoder(stored_stats)
+        else:
+            stats = jsonable_encoder(stats)
+            stats_json = json.dumps(stats)
+            dataset.summary = stats_json
         db.commit()
         db.refresh(dataset)
         return dataset
