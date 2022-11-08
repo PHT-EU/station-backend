@@ -1,12 +1,16 @@
+import uuid
+
 from sqlalchemy import Boolean, Column, Integer, String, DateTime
 from datetime import datetime
+
+from sqlalchemy.dialects.postgresql import UUID
 
 from station.app.db.base_class import Base
 
 
 class FHIRServer(Base):
     __tablename__ = "fhir_servers"
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, index=True, default=uuid.uuid4)
     api_address = Column(String)
     name = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.now())

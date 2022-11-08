@@ -37,7 +37,8 @@ def setup_server(domain: str, name: str, port: str = None):
         detach=True,
         name=name,
         network=DockerNetworks.STATION.value,
-        ports={port: "8080"} if port else None)
+        ports={port: "8080"} if port else None
+    )
 
 
 def _setup_volume(client: docker.DockerClient, name: str) -> List[str]:

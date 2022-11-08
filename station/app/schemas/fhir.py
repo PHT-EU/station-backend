@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Any
 
 from pydantic import BaseModel, root_validator
 from datetime import datetime
@@ -53,7 +53,7 @@ class FHIRServerUpdate(FHIRServerBase):
 
 
 class FHIRServer(FHIRServerBase):
-    id: int
+    id: Any
     created_at: datetime
     updated_at: Optional[datetime] = None
 
