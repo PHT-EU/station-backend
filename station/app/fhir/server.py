@@ -4,7 +4,7 @@ from fhir_kindling import FhirServer
 from station.app.config import settings
 
 
-def fhir_server_from_db(db: Session, fhir_server_id: int) -> FhirServer:
+def fhir_server_from_db(db: Session, fhir_server_id: str) -> FhirServer:
     db_server = fhir_servers.get(db, id=fhir_server_id)
 
     assert db_server
