@@ -2,6 +2,9 @@ from typing import Optional, Any
 
 from pydantic import BaseModel, root_validator
 from datetime import datetime
+from fhir_kindling.fhir_server.server_responses import ServerSummary
+
+from station.app.schemas.datasets import FigureData
 
 
 class FHIRServerBase(BaseModel):
@@ -59,3 +62,12 @@ class FHIRServer(FHIRServerBase):
 
     class Config:
         orm_mode = True
+
+
+class ServerStatistics(BaseModel):
+    """
+    Statistics for a FHIR Server
+    """
+    summary: ServerSummary
+    created_at: datetime
+    figure: Optional[dict] = None

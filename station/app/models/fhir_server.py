@@ -24,3 +24,4 @@ class FHIRServer(Base):
     active = Column(Boolean, default=True)
     type = Column(String, nullable=True)
     proposal_id = Column(String, nullable=True)
+    summary = Column(String, nullable=True)
