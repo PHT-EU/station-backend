@@ -147,8 +147,18 @@ def _setup_auth_server(ctx):
     except KeyboardInterrupt:
         print('interrupted!')
     # print(logs.decode())
-    with open(os.path.join(writable_dir, "seed.json"), "r") as f:
-        seed = json.load(f)
+    retry_delays = [1, 5, 10]
+    for i, delay in enumerate(retry_delays):
+        try:
+            with open(os.path.join(writable_dir, "seed.json"), "r") as f:
+                seed = json.load(f)
+            break
+        except FileNotFoundError:
+            if i == len(retry_delays) - 1:
+                raise FileNotFoundError("Seed file not found")
+            else:
+                click.echo(f"Seed file not found. Retrying in {delay} seconds..")
+                time.sleep(delay)
 
     robot_id = seed["robotId"]
     robot_secret = seed["robotSecret"]
