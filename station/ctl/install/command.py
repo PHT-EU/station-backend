@@ -40,6 +40,7 @@ def install(ctx, install_dir, host_path):
                       f"Would you like to fix the configuration now?", abort=True)
         station_config = fix_config(ctx.obj, ctx.obj, validation_results)
         ctx.obj = station_config
+        render_config(ctx.obj, ctx.obj["config_path"])
 
     else:
         click.echo(Icons.CHECKMARK.value)
@@ -148,16 +149,17 @@ def _setup_auth_server(ctx):
         print('interrupted!')
     # print(logs.decode())
     retry_delays = [1, 5, 10]
+    seed_path = os.path.join(writable_dir, "seed.json")
     for i, delay in enumerate(retry_delays):
         try:
-            with open(os.path.join(writable_dir, "seed.json"), "r") as f:
+            with open(seed_path, "r") as f:
                 seed = json.load(f)
             break
         except FileNotFoundError:
             if i == len(retry_delays) - 1:
                 raise FileNotFoundError("Seed file not found")
             else:
-                click.echo(f"Seed file not found. Retrying in {delay} seconds..")
+                click.echo(f"Seed file not found at {seed_path}. Retrying in {delay} seconds..")
                 time.sleep(delay)
 
     robot_id = seed["robotId"]
