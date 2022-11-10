@@ -194,6 +194,7 @@ def load_stats(stats_json: Union[str, dict] = None, file_name: str = None) -> Da
 
     if isinstance(stats_json, str):
         stats_json = json.loads(stats_json)
+        return DataSetStatistics(**stats_json)
     else:
         if file_name:
             file_stats = stats_json.get(file_name)
