@@ -13,6 +13,7 @@ def setup():
     load_dotenv(find_dotenv())
     settings.setup()
     setup_db(dev=os.getenv("ENVIRONMENT") != "production")
+    redis_cache = Cache(settings.config.redis.host)
 
     # minio
     minio_client = MinioClient()
