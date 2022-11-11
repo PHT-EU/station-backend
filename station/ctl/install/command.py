@@ -149,7 +149,7 @@ def _setup_auth_server(ctx):
         print('interrupted!')
     # print(logs.decode())
     retry_delays = [1, 5, 10]
-    seed_path = os.path.join(writable_dir, "seed.json")
+    seed_path = os.path.join(ctx.obj['install_dir'], str(PHTDirectories.SERVICE_DATA_DIR.value), "auth", "seed.json")
     for i, delay in enumerate(retry_delays):
         try:
             with open(seed_path, "r") as f:
