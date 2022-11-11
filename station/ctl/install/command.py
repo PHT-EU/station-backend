@@ -244,7 +244,7 @@ def write_traefik_configs(ctx) -> Tuple[str, str]:
     except Exception as e:
         click.echo(Icons.CROSS.value)
         click.echo(f'Error: {e}', err=True)
-        sys.exit(1)
+        raise e
 
 
 def write_airflow_config(ctx) -> str:

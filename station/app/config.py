@@ -490,7 +490,10 @@ class Settings:
             redis_config.db = db
             redis_config.password = password
             self.config.redis = redis_config
-
+        if not self.config.redis:
+            self.config.redis = RedisSettings()
+            logger.info(f"\t{Emojis.INFO}No redis connection specified in config or env vars. Using default."
+                        f" Host: {self.config.redis.host}, Port: {self.config.redis.port}")
 
     def _setup_station_auth(self):
         """
