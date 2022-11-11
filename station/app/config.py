@@ -485,6 +485,8 @@ class Settings:
 
         if host:
             logger.debug(f"\t{Emojis.INFO}Overriding redis connections with env var specification.")
+            if not redis_config:
+                redis_config = RedisSettings()
             redis_config.host = host
             redis_config.port = port or redis_config.port
             redis_config.db = db
