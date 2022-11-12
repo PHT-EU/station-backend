@@ -19,11 +19,12 @@ class PHTImages(Enum):
 
 
 class ServiceImages(Enum):
-    MINIO = "minio/minio:latest"
+    MINIO = "minio/minio:RELEASE.2022-11-11T03-44-20Z"
     POSTGRES = "postgres:13"
     REDIS = "redislabs/rejson:latest"
     TRAEFIK = "traefik:v2.8"
     BLAZE = "samply/blaze:latest"
+
 
 
 class DefaultValues(Enum):

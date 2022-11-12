@@ -43,7 +43,7 @@ class AirflowSettings(BaseModel):
 
 
 class MinioSettings(BaseModel):
-    host: Union[AnyHttpUrl, AnyUrl, str]
+    host: Optional[Union[AnyHttpUrl, AnyUrl, str]] = "minio"
     port: Optional[int] = 9000
     access_key: str
     secret_key: Union[SecretStr, str]
