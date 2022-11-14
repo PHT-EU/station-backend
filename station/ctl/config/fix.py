@@ -132,6 +132,7 @@ def _fix_private_key(config: dict) -> str:
     # if a host path is given append the name of the private key to this path
     host_path = config.get("host_path", None)
     if host_path:
+
         private_key_path = os.path.join(host_path, private_key_path)
         click.echo(f"Private key will be saved at: {private_key_path} on the host machine")
     else:

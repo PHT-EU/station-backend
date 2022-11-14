@@ -8,13 +8,14 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 
 
-
 def password_generator() -> str:
     return ''.join([random.choice(string.ascii_letters + string.digits) for _ in range(32)])
 
 
-def generate_private_key(name: str, password: str = None) -> Tuple[str, rsa.RSAPrivateKey, rsa.RSAPublicKey]:
-
+def generate_private_key(name: str,
+                         path: str = None,
+                         password: str = None
+                         ) -> Tuple[str, rsa.RSAPrivateKey, rsa.RSAPublicKey]:
     private_key = rsa.generate_private_key(65537, key_size=2048, backend=default_backend())
     # encrypt key with password when given
     if password:
@@ -32,13 +33,17 @@ def generate_private_key(name: str, password: str = None) -> Tuple[str, rsa.RSAP
     if name.split(".")[-1] != "pem":
         name += ".pem"
 
-    with open(name, 'wb') as f:
+    # if a path is given append the name of the private key to this path
+    if path:
+        private_key_path = os.path.join(path, name)
+    with open(private_key_path, 'wb') as f:
         f.write(pem)
 
     # generate public key and store it under the same name as .pub
     pub_name = name.split(".")[0] + ".pub"
-
-    with open(pub_name, 'wb') as f:
+    if path:
+        pub_key_path = os.path.join(path, pub_name)
+    with open(pub_key_path, 'wb') as f:
         f.write(private_key.public_key().public_bytes(
             encoding=serialization.Encoding.PEM,
             format=serialization.PublicFormat.SubjectPublicKeyInfo
