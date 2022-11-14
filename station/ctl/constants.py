@@ -67,6 +67,6 @@ class ServiceDirectories(Enum):
 
 
 class Icons(Enum):
-    CHECKMARK = "✔"
-    CROSS = "✖"
+    CHECKMARK = "✅"
+    CROSS = "❌"
     WARNING = "⚠"
