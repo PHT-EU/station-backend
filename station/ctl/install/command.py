@@ -198,10 +198,10 @@ def write_init_sql(ctx) -> str:
             f.write(templates.render_init_sql(db_user=db_config["admin_user"]))
 
         click.echo(Icons.CHECKMARK.value)
+        # if host path is given, return the path to the init sql file on the host
         if ctx.obj.get("host_path"):
             return os.path.join(ctx.obj['host_path'], str(PHTDirectories.SETUP_SCRIPT_DIR.value), 'init.sql')
-        else
-            return str(init_sql_path)
+        return str(init_sql_path)
 
     except Exception as e:
         click.echo(Icons.CROSS.value)
