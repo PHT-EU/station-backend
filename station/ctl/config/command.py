@@ -53,6 +53,12 @@ def render_config(config: dict, path: str):
 
     env = get_template_env()
     template = env.get_template('station_config.yml.tmpl')
+    # write out the correct path to key file on host when rendering the template from docker container
+    if config.get("host_path"):
+        key_name = config["central"]["private_key"].split("/")[-1]
+        key_path = os.path.join(config["host_path"], key_name)
+        config["central"]["private_key"] = key_path
+
     out_config = template.render(
         station_id=config['station_id'],
         version=config['version'],
