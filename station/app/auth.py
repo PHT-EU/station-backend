@@ -70,8 +70,8 @@ def validate_user_token(token: str, user_url: str = None) -> User:
     # todo token caching
     if user_url is None:
         user_url = settings.config.auth.user_url
-
     url = f"{user_url}/@me"
+    logger.debug(f"Validating user token against {url}")
     headers = {"Authorization": f"Bearer {token}"}
     r = requests.get(url, headers=headers)
     r.raise_for_status()
