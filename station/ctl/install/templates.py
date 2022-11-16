@@ -143,8 +143,14 @@ def render_compose(config: dict, env: Environment = None) -> str:
             "traefik.http.services.minio-console.loadbalancer.server.port=9001"
         ]
     }
+
+    if config.get("host_path"):
+        key_name = config["central"]["private_key"].split("/")[-1]
+        key_path = os.path.join(config["host_path"], key_name)
+    else:
+        key_path = config["central"]["private_key"]
     airflow_config = {
-        "private_key": config["central"]["private_key"],
+        "private_key": key_path,
         "config_path": config["airflow_config_path"],
         "env": {
             "STATION_ID": config["registry"]["project"],
