@@ -14,7 +14,7 @@ class CentralSettings(BaseSettings):
 
 
 class HttpSettings(BaseSettings):
-    port: Union[int, str]
+    port: Optional[Union[int, str]] = 80
 
 
 class Cert(BaseModel):
@@ -23,9 +23,9 @@ class Cert(BaseModel):
 
 
 class HttpsSettings(BaseSettings):
-    port: Union[int, str]
+    port: Optional[Union[int, str]] = 443
     domain: str
-    certs: List[Cert]
+    certs: Optional[List[Cert]] = None
 
 
 class TraefikDashboardSettings(BaseSettings):

@@ -105,7 +105,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
             StationEnvironmentVariables.MINIO_ACCESS_KEY.value: config["minio"]["admin_user"],
             StationEnvironmentVariables.MINIO_SECRET_KEY.value: config["minio"]["admin_password"],
             StationEnvironmentVariables.REDIS_HOST.value: "redis",
-            StationEnvironmentVariables.AUTH_SERVER_HOST.value: f'https://{config["https"]["domain"]}/auth',
+            StationEnvironmentVariables.AUTH_SERVER_HOST.value: f'http://auth',
             StationEnvironmentVariables.AUTH_SERVER_PORT.value: 3010,
             StationEnvironmentVariables.AUTH_ROBOT_ID.value: config["auth"]["robot_id"],
             StationEnvironmentVariables.AUTH_ROBOT_SECRET.value: config["auth"]["robot_secret"],

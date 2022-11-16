@@ -32,8 +32,6 @@ def get_robot_token(robot_id: str = None, robot_secret: str = None, token_url: s
     if not robot_secret:
         robot_secret = settings.config.auth.robot_secret.get_secret_value()
 
-    print(robot_id, robot_secret, token_url)
-
     # try to read the token from cache and return it if it exists
     cached_token = redis_cache.get(TokenCacheKeys.robot_token.value)
     if cached_token:
