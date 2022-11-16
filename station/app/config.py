@@ -66,14 +66,14 @@ class AuthConfig(BaseModel):
     robot_id: str
     robot_secret: SecretStr
     host: Optional[Union[AnyHttpUrl, AnyUrl, str]] = "station-auth"
-    port: Optional[int] = 3010
+    port: Optional[int] = None
 
     @property
-    def token_url(self) -> Union[AnyUrl, str]:
+    def token_url(self) -> str:
         return f"http://{self.host}{f':{self.port}' if self.port else ''}/token"
 
     @property
-    def user_url(self) -> Union[AnyUrl, str]:
+    def user_url(self) -> str:
         return f"http://{self.host}{f':{self.port}' if self.port else ''}/users"
 
     @property
