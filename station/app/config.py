@@ -70,14 +70,20 @@ class AuthConfig(BaseModel):
 
     @property
     def token_url(self) -> str:
+        if self.host.startswith("http") or self.host.startswith("https"):
+            return f"{self.host}{f':{self.port}' if self.port else ''}/token"
         return f"http://{self.host}{f':{self.port}' if self.port else ''}/token"
 
     @property
     def user_url(self) -> str:
+        if self.host.startswith("http") or self.host.startswith("https"):
+            return f"{self.host}{f':{self.port}' if self.port else ''}/users"
         return f"http://{self.host}{f':{self.port}' if self.port else ''}/users"
 
     @property
     def auth_url(self) -> Union[AnyUrl, str]:
+        if self.host.startswith("http") or self.host.startswith("https"):
+            return f"{self.host}{f':{self.port}' if self.port else ''}"
         return f"http://{self.host}{f':{self.port}' if self.port else ''}"
 
 
