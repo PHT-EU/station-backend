@@ -48,7 +48,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./airflow/dags:/root/airflow/dags
-      - ./S_2_sk.pem:/opt/private_key.pem
+      - ./test-key.pem:/opt/private_key.pem
       - ./station_data:/opt/station_data
     depends_on:
       - postgres
@@ -77,8 +77,8 @@ services:
       - ./station_data:/data
 
     environment:
-      - MINIO_ACCESS_KEY=minio_admin
-      - MINIO_SECRET_KEY=minio_admin
+      - MINIO_ROOT_USER=minio_admin
+      - MINIO_ROOT_PASSWORD=minio_admin
       - MINIO_SERVER_URL=http://127.0.0.1:9000
       - MINIO_BROWSER_REDIRECT_URL=http://127.0.0.1:9001
 
