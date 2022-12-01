@@ -6,7 +6,7 @@ from yaml import safe_load, safe_dump
 
 from pydantic import SecretStr
 
-from station.app.config import Settings, AuthConfig, RegistrySettings, MinioSettings, CentralUISettings, StationConfig
+from station.app.settings import Settings, AuthConfig, RegistrySettings, MinioSettings, CentralUISettings, StationConfig
 from station.app.env import StationEnvironmentVariables
 
 

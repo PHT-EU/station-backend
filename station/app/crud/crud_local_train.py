@@ -16,6 +16,8 @@ from station.app.trains.local.minio import train_data
 from station.app.trains.local.update import update_configuration_status
 from station.clients.minio import MinioClient
 from station.ctl.constants import DataDirectories
+from station.app.config import clients
+
 
 
 class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):

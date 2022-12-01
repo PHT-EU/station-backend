@@ -1,6 +1,6 @@
 import os
 import s3fs
-from station.app.config import settings
+from station.app.settings import settings
 
 
 def get_s3_filesystem(minio_url: str = None, access_key: str = None, secret_key: str = None) -> s3fs.S3FileSystem:

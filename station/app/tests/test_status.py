@@ -4,7 +4,7 @@ from dotenv import load_dotenv, find_dotenv
 
 from station.app.main import app
 from station.app.api.dependencies import get_db
-from station.app.config import settings
+from station.app.settings import settings
 
 from .test_db import override_get_db
 

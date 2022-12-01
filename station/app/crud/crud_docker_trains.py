@@ -126,7 +126,6 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
     def synchronize_central(self, db: Session) -> List[DockerTrain]:
         client = CentralApiClient(
             api_url=settings.config.central_ui.api_url,
-
             robot_id=settings.config.central_ui.robot_id,
             robot_secret=settings.config.central_ui.robot_secret
         )

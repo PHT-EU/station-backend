@@ -6,7 +6,7 @@ from station.app.main import app
 from station.app.api.dependencies import get_db
 from station.app.crud.crud_fhir_servers import fhir_servers
 from station.app.schemas.fhir import FHIRServerCreate
-from station.app.config import settings
+from station.app.settings import settings
 
 from .test_db import override_get_db, TestingSessionLocal
 

@@ -4,7 +4,6 @@ from sqlalchemy.orm import Session
 from .base import CRUDBase, CreateSchemaType, ModelType, UpdateSchemaType
 from station.app.schemas.fhir import FHIRServerCreate, FHIRServerUpdate
 from station.app.models.fhir_server import FHIRServer
-from station.app.config import settings
 
 
 class CRUDFHIRServers(CRUDBase[FHIRServer, FHIRServerCreate, FHIRServerUpdate]):
@@ -28,7 +27,7 @@ class CRUDFHIRServers(CRUDBase[FHIRServer, FHIRServerCreate, FHIRServerUpdate]):
             the same object with encrypted sensitive values
         """
 
-        from station.app.config import settings
+        from station.app.settings import settings
         fernet = settings.get_fernet()
 
         if obj_in.client_secret:

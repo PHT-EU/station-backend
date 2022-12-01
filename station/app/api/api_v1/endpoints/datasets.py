@@ -14,6 +14,7 @@ from station.app.datasets import statistics
 from station.app.crud import datasets
 from station.clients.minio import MinioClient
 from station.ctl.constants import DataDirectories
+from station.app.config import clients
 
 router = APIRouter()
 
@@ -22,9 +23,7 @@ router = APIRouter()
 def create_new_data_set(
         create_msg: DataSetCreate,
         db: Session = Depends(dependencies.get_db),
-        user: User = Depends(dependencies.authorized_user)
 ) -> DataSet:
-
     dataset = datasets.get_by_name(db, name=create_msg.name)
     if dataset:
         raise HTTPException(status_code=400, detail=f"Dataset with name {create_msg.name} already exists.")
@@ -84,8 +83,8 @@ async def upload_data_set_file(dataset_id: str,
         if not file.filename:
             raise HTTPException(status_code=400, detail="No filename provided.")
 
-    minio_client = MinioClient()
-    await minio_client.save_dataset_files(db_dataset.id, files)
+    # minio_client = MinioClient()
+    await clients.minio_client.save_dataset_files(db_dataset.id, files)
 
 
 @router.get("/{data_set_id}/files", response_model=List[MinioFile])
@@ -94,8 +93,7 @@ async def get_data_set_files(data_set_id: str, file_name: str = None, db: Sessio
     if not db_dataset:
         raise HTTPException(status_code=404, detail=f"Dataset {data_set_id} not found.")
 
-    minio_client = MinioClient()
-    items = minio_client.get_minio_dir_items(DataDirectories.DATASETS, data_set_id)
+    items = clients.minio_client.get_minio_dir_items(DataDirectories.DATASETS, data_set_id)
     if file_name:
         pass
     return items
@@ -107,8 +105,7 @@ async def delete_file_from_dataset(data_set_id: str, file_name: str, db: Session
     if not db_dataset:
         raise HTTPException(status_code=404, detail=f"Dataset {data_set_id} not found.")
 
-    minio_client = MinioClient()
-    minio_client.delete_file(DataDirectories.DATASETS.value, file_name)
+    clients.minio_client.delete_file(DataDirectories.DATASETS.value, file_name)
 
 
 @router.get("/{data_set_id}/download", response_class=StreamingResponse)
@@ -116,30 +113,27 @@ async def download(data_set_id: Any, archive_type: str = "tar", db: Session = De
     db_dataset = datasets.get(db, data_set_id)
     if not db_dataset:
         raise HTTPException(status_code=404, detail="Dataset not found.")
-    minio_client = MinioClient()
-    items = minio_client.get_minio_dir_items(DataDirectories.DATASETS, data_set_id)
+    items = clients.minio_client.get_minio_dir_items(DataDirectories.DATASETS, data_set_id)
 
     if len(items) == 0:
         raise HTTPException(status_code=404, detail="No files found.")
     elif len(items) == 1:
-        data = minio_client.get_file(str(DataDirectories.DATASETS.value), items[0].full_path)
+        data = clients.minio_client.get_file(str(DataDirectories.DATASETS.value), items[0].full_path)
         obj = BytesIO(data)
         return StreamingResponse(content=obj, media_type="application/octet-stream")
 
     else:
-        archive = minio_client.make_dataset_archive(data_set_id, items=items, archive_type=archive_type)
+        archive = clients.minio_client.make_dataset_archive(data_set_id, items=items, archive_type=archive_type)
         return StreamingResponse(content=archive, media_type="application/zip")
 
 
 @router.get("/{data_set_id}/stats", response_model=DataSetStatistics)
 def get_data_set_statistics(data_set_id: Any, file_name: str = None, db: Session = Depends(dependencies.get_db)):
-
     db_dataset = datasets.get(db, data_set_id)
     if not db_dataset:
         raise HTTPException(status_code=404, detail="Dataset not found.")
 
-    minio_client = MinioClient()
-    items = minio_client.get_minio_dir_items(DataDirectories.DATASETS, data_set_id)
+    items = clients.minio_client.get_minio_dir_items(DataDirectories.DATASETS, data_set_id)
     if len(items) == 0 and not db_dataset.fhir_server:
         raise HTTPException(status_code=404, detail="No files found in the dataset.")
 
@@ -157,7 +151,7 @@ def get_data_set_statistics(data_set_id: Any, file_name: str = None, db: Session
             logger.info(f"Could not load existing stats for {db_dataset.id} {file_name}. {e}")
         try:
             logger.info(f"Calculating stats for {db_dataset.id} {file_name}")
-            file_content = minio_client.get_file(DataDirectories.DATASETS, items[0].full_path)
+            file_content = clients.minio_client.get_file(DataDirectories.DATASETS, items[0].full_path)
             df = statistics.load_tabular(items[0], file_content)
             stats = statistics.get_dataset_statistics(df)
             dataset = datasets.add_stats(db, data_set_id, stats, items[0].file_name)

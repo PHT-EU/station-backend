@@ -1,6 +1,5 @@
 from typing import Generator
 from station.app.db.session import SessionLocal
-from station.app.config import settings
 from station.app.auth import authorized_user
 
 import os

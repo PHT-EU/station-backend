@@ -93,8 +93,6 @@ def get_current_user(token: str,
     """
 
     logger.debug(f"Validating bearer token")
-    logger.debug(settings)
-
     if not settings.is_initialized:
         logger.error("Found uninitialized setting.... Initializing settings")
         settings.setup()

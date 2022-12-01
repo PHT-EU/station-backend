@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException
 
 from station.app.api import dependencies
-from station.clients.airflow import docker_trains as airflow_docker_train
+from station.app.trains.docker import airflow
 from station.app.schemas.docker_trains import DockerTrain, DockerTrainCreate, DockerTrainConfig, \
     DockerTrainConfigCreate, DockerTrainConfigUpdate, DockerTrainExecution, DockerTrainState, DockerTrainSavedExecution
 from station.app.crud.crud_docker_trains import docker_trains
@@ -53,7 +53,7 @@ def get_train_by_train_id(train_id: str, db: Session = Depends(dependencies.get_
 def run_docker_train(train_id: str, run_config: DockerTrainExecution = None,
                      db: Session = Depends(dependencies.get_db)):
 
-    execution = airflow_docker_train.run_train(db, train_id, run_config)
+    execution = airflow.run_train(db, train_id, run_config)
     return execution
 
 

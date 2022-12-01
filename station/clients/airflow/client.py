@@ -9,6 +9,7 @@ from station.app.schemas.station_status import HealthStatus
 
 class AirflowClient:
     def __init__(self, airflow_api_url: str = None, airflow_user: str = None, airflow_password: str = None):
+
         self.airflow_url = airflow_api_url if airflow_api_url else os.getenv("AIRFLOW_API_URL", "localhost:8080/api/v1")
         self.airflow_user = airflow_user if airflow_user else os.getenv("AIRFLOW_USER", "admin")
         self.airflow_pw = airflow_password if airflow_password else os.getenv("AIRFLOW_PW", "admin")

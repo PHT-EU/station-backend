@@ -1,34 +1,24 @@
-import os
-
 import uvicorn
 from dotenv import load_dotenv, find_dotenv
 from station.app.db.setup_db import setup_db, reset_db
+from station.app.settings import StationRuntimeEnvironment
 from station.app.config import settings
-from station.app.config import StationRuntimeEnvironment
-from station.app import cache
-from station.clients.minio import MinioClient
-from station.clients import harbor_client
 
 
 def setup():
     load_dotenv(find_dotenv())
-    settings.setup()
+    # settings.setup()
     setup_db(dev=False, reset=False)
     # minio
-    minio_client = MinioClient()
-    minio_client.setup_buckets()
+    # minio_client = MinioClient()
+    # minio_client.setup_buckets()
 
 
 if __name__ == '__main__':
     load_dotenv(find_dotenv())
     setup()
-    harbor_client.harbor_client = harbor_client.HarborClient(
-        api_url=settings.config.registry.api_url,
-        username=settings.config.registry.user,
-        password=settings.config.registry.password,
-    )
 
-    cache.redis_cache = cache.Cache(settings.config.redis.host)
+    # cache.redis_cache = cache.Cache(settings.config.redis.host)
 
     # Configure logging behaviour
     log_config = uvicorn.config.LOGGING_CONFIG

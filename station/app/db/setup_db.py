@@ -9,7 +9,6 @@ from station.app.config import settings
 
 # TODO use alembic
 def setup_db(dev=False, reset=False):
-    global SQLALCHEMY_DATABASE_URL
     SQLALCHEMY_DATABASE_URL = settings.config.db.dsn
 
     if reset:

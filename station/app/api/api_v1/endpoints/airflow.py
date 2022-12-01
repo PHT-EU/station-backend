@@ -4,7 +4,8 @@ from datetime import datetime
 
 from station.app.api import dependencies
 from station.app.schemas.users import User
-from station.clients.airflow.client import airflow_client
+# from station.clients.airflow.client import airflow_client
+from station.app.config import clients
 from station.clients.airflow import docker_trains as airflow_docker_train
 from station.app.schemas.airflow import AirflowInformation, AirflowTaskLog, AirflowRun, AirflowRunMsg
 from station.app.schemas.docker_trains import DockerTrainExecution
@@ -68,7 +69,7 @@ def get_airflow_run_information(
     @return:
     """
 
-    run_info = airflow_client.get_run_information(dag_id, run_id)
+    run_info = clients.airflow_client.get_run_information(dag_id, run_id)
 
     for instance in run_info["tasklist"]["task_instances"][:]:
         try:
@@ -102,7 +103,7 @@ def get_airflow_task_log(
     @param task_try_number: specific try number for log request
     @return:
     """
-    run_info_data = airflow_client.get_task_log(dag_id, run_id, task_id, task_try_number)
+    run_info_data = clients.airflow_client.get_task_log(dag_id, run_id, task_id, task_try_number)
     if not run_info_data:
         raise HTTPException(status_code=404, detail=f"{task_id} not found.")
     return {"run_info": run_info_data}

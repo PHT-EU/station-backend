@@ -9,7 +9,7 @@ from station.app.crud.local_train_master_image import local_train_master_image
 from station.app.crud.crud_datasets import datasets
 from station.app.crud.crud_train_configs import docker_train_config
 
-from station.app.config import settings
+from station.app.settings import settings
 from station.clients.airflow.docker_trains import process_dataset, process_db_config
 from station.clients.airflow.client import airflow_client
 from station.app.schemas.local_trains import LocalTrainExecution

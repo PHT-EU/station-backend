@@ -4,7 +4,6 @@ from pydantic import SecretStr
 
 import redis
 
-from station.app.config import settings
 
 
 class RedisJSONOps(str, Enum):
@@ -14,11 +13,9 @@ class RedisJSONOps(str, Enum):
 
 class Cache:
 
-    def __init__(self, host=None, port=6379, password=None, db=None):
-        if host:
-            self.redis = redis.Redis(decode_responses=True, host=host, port=port, password=password, db=db)
-        else:
-            self.redis = redis.Redis(decode_responses=True, **settings.config.redis.dict())
+    def __init__(self, host="redis", port=6379, password=None, db=None):
+        self.redis = redis.Redis(decode_responses=True, host=host, port=port, password=password, db=db)
+
     def set(self, key: str, value: str, ttl: int = 3600) -> None:
         """
         Set a key/value pair in the cache. With ttl.

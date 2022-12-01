@@ -4,11 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from station.app.api.api_v1.api import api_router
 from station.app.auth import authorized_user
-from station.app.logger import init_logging
 
 
 load_dotenv(find_dotenv())
-
 
 app = FastAPI(
     title="PHT Station", docs_url="/api/docs", redoc_url="/api/redoc", openapi_url="/api/v1/openapi.json"

@@ -6,7 +6,7 @@ from dotenv import load_dotenv, find_dotenv
 
 from station.app.schemas.local_trains import LocalTrainMasterImageBase
 from station.app.schemas.station_status import HealthStatus
-from station.app.config import settings
+from station.app.settings import settings
 
 
 class HarborClient:

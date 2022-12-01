@@ -9,7 +9,7 @@ import plotly.graph_objects as go
 import plotly.io
 
 from station.app.crud.crud_fhir_servers import fhir_servers
-from station.app.config import settings
+from station.app.settings import settings
 from station.app.schemas.datasets import FigureData
 from station.app.schemas.fhir import ServerStatistics
 

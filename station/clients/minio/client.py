@@ -12,8 +12,9 @@ from minio import Minio
 from fastapi import File, UploadFile
 from typing import List, Union, Dict
 from loguru import logger
+from pydantic import SecretStr
 
-from station.app.config import settings
+from station.app.settings import settings
 from station.app.schemas.datasets import MinioFile
 from station.app.schemas.station_status import HealthStatus
 from station.ctl.constants import DataDirectories
@@ -31,21 +32,23 @@ class MinioClient:
         """
         # Initialize class fields based on constructor values or environment variables
 
-        if settings.config.minio.port:
-            minio_url = f"{settings.config.minio.host}:{settings.config.minio.port}"
-        else:
-            minio_url = settings.config.minio.host
-        minio_user = settings.config.minio.access_key
-        minio_pass = settings.config.minio.secret_key
+        # if settings.config.minio.port:
+        #     minio_url = f"{settings.config.minio.host}:{settings.config.minio.port}"
+        # else:
+        #     minio_url = settings.config.minio.host
+        # minio_user = settings.config.minio.access_key
+        # minio_pass = settings.config.minio.secret_key
 
-        self.minio_server = minio_server if minio_server else minio_url
-        self.access_key = access_key if access_key else minio_user
-        self.secret_key = secret_key if secret_key else minio_pass.get_secret_value()
+        self.minio_server = minio_server
+        self.access_key = access_key
+        self.secret_key = secret_key
 
-        if settings.config.environment == "production":
-            assert self.minio_server
-            assert self.access_key
-            assert self.secret_key
+        if isinstance(self.secret_key, SecretStr):
+            self.secret_key = self.secret_key.get_secret_value()
+
+        assert self.minio_server
+        assert self.access_key
+        assert self.secret_key
 
         # Initialize minio client
         self.client = Minio(
