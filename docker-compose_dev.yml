@@ -67,6 +67,7 @@ services:
       - STATION_PASSWORD=start123
       - AIRFLOW_USER=admin
       - AIRFLOW_PASSWORD=Nk5jMb4WiAT1qrkns2bbeEGp6lcIqqfL
+      - HARBOR_URL=harbor.personalhealthtrain.de
     ports:
       - "8080:8080"
 

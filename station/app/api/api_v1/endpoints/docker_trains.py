@@ -1,5 +1,5 @@
 import json
-from typing import List
+from typing import List, Union
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -37,8 +37,11 @@ def register_train(create_msg: DockerTrainCreate, db: Session = Depends(dependen
 
 
 @router.get("/{train_id}", response_model=DockerTrain)
-def get_train_by_train_id(train_id: str, db: Session = Depends(dependencies.get_db)):
-    db_train = docker_trains.get_by_train_id(db, train_id)
+def get_train_by_train_id(train_id: Union[int, str], db: Session = Depends(dependencies.get_db)):
+    if isinstance(train_id, str):
+        db_train = docker_trains.get_by_train_id(db, train_id)
+    else:
+        db_train = docker_trains.get(db, id=train_id)
     if not db_train:
         raise HTTPException(status_code=404, detail=f"Train with id '{train_id}' not found.")
     return db_train
