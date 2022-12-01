@@ -6,6 +6,8 @@ from station.clients.minio.client import MinioClient
 from station.app.schemas import station_status as status_schema
 from loguru import logger
 
+from station.app.config import clients
+
 import psutil
 
 # todo singleton minio client
@@ -21,7 +23,6 @@ def service_health_check():
     """
     Get the health status of all connected services
     """
-    minio_client = get_minio_client()
     service_status = []
     services = {
         "airflow": airflow_client.health_check(),
@@ -34,18 +35,6 @@ def service_health_check():
             status=health
         ))
     return service_status
-
-def get_minio_client():
-    """
-    Get a MinIo Client
-    """
-    try:
-        minio_client = MinioClient()
-        return minio_client
-    except:
-        logger.warning("Unable to create connection to MinIO. No client could be created.")
-        return None
-
 
 def get_hardware_resources_status():
     # get memory statistics

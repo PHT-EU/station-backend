@@ -82,8 +82,6 @@ class MinioSettings(BaseModel):
         return f"{self.host}{':' + str(self.port) if self.port else ''}"
 
 
-
-
 class CentralUISettings(BaseModel):
     api_url: Optional[AnyHttpUrl] = None
     robot_id: Optional[str] = None

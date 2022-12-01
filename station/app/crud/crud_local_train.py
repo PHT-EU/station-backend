@@ -12,12 +12,10 @@ from station.app.crud.base import CRUDBase, ModelType, CreateSchemaType, UpdateS
 from station.app.models.local_trains import LocalTrain, LocalTrainExecution, LocalTrainState, LocalTrainMasterImage
 from station.app.schemas.local_trains import LocalTrainCreate, LocalTrainUpdate, LocalTrainRunConfig, \
     LocalTrainConfigurationStep
-from station.app.trains.local.minio import train_data
 from station.app.trains.local.update import update_configuration_status
 from station.clients.minio import MinioClient
 from station.ctl.constants import DataDirectories
 from station.app.config import clients
-
 
 
 class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
@@ -63,8 +61,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         """
         # TODO remove query results when exist
         # remove files stored in minio
-        minio_client = MinioClient()
-        minio_client.delete_folder(bucket=str(DataDirectories.LOCAL_TRAINS.value), directory=train_id)
+        clients.minio_client.delete_folder(bucket=str(DataDirectories.LOCAL_TRAINS.value), directory=train_id)
 
         # remove sql database entries for LocalTrainExecution
         obj = db.query(LocalTrainExecution).filter(LocalTrainExecution.train_id == train_id).all()
@@ -91,8 +88,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         update_train.updated_at = datetime.now()
         db.commit()
         state = update_train.state
-        minio_client = MinioClient()
-        files = minio_client.get_minio_dir_items(DataDirectories.LOCAL_TRAINS.value, db_obj.id)
+        files = clients.minio_client.get_minio_dir_items(DataDirectories.LOCAL_TRAINS.value, db_obj.id)
         configuration_state = update_configuration_status(update_train, files)
         state.configuration_state = configuration_state
         db.commit()

@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, File, UploadFile, HTTPException
 from fastapi.responses import StreamingResponse
 
 from station.app.api import dependencies
+from station.app.config import clients
 
 from station.app.schemas import local_trains
 
@@ -105,8 +106,7 @@ async def upload_train_files(train_id: str,
         raise HTTPException(status_code=400, detail="Train image is not configured. Select an image first before up"
                                                     "loading files.")
 
-    minio_client = MinioClient()
-    resp = await minio_client.save_local_train_files(db_train.id, files)
+    resp = await clients.minio_client.save_local_train_files(db_train.id, files)
 
     state.configuration_status = local_trains.LocalTrainConfigurationStep.files_uploaded.value
     db.commit()
@@ -119,8 +119,7 @@ async def get_train_files(train_id: str, file_name: str = None, db: Session = De
     if not db_train:
         raise HTTPException(status_code=404, detail=f"Local train ({train_id}) not found.")
 
-    minio_client = MinioClient()
-    items = minio_client.get_minio_dir_items(DataDirectories.LOCAL_TRAINS.value, str(db_train.id))
+    items = clients.minio_client.get_minio_dir_items(DataDirectories.LOCAL_TRAINS.value, str(db_train.id))
     if file_name:
         pass
     return items
@@ -131,6 +130,5 @@ async def get_train_archive(train_id: str, db: Session = Depends(dependencies.ge
     db_train = local_train.get(db, train_id)
     if not db_train:
         raise HTTPException(status_code=404, detail=f"Local train ({train_id}) not found.")
-    minio_client = MinioClient()
-    resp = minio_client.get_local_train_archive(str(db_train.id))
+    resp = clients.minio_client.get_local_train_archive(str(db_train.id))
     return StreamingResponse(content=resp, media_type="application/octet-stream")
