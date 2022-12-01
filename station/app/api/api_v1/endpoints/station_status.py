@@ -1,8 +1,4 @@
 from fastapi import APIRouter
-
-from station.clients.airflow.client import airflow_client
-from station.clients.harbor_client import harbor_client
-from station.clients.minio.client import MinioClient
 from station.app.schemas import station_status as status_schema
 from loguru import logger
 
@@ -10,9 +6,6 @@ from station.app.config import clients
 
 import psutil
 
-# todo singleton minio client
-# TODO resolve connection error to MinIO
-#minio_client = MinioClient()
 router = APIRouter()
 """
 The station status  endpoint returns the status of local and global components  (fhir  airflow harbo minio
@@ -25,9 +18,9 @@ def service_health_check():
     """
     service_status = []
     services = {
-        "airflow": airflow_client.health_check(),
-        "harbor": harbor_client.health_check(),
-#        "minio": minio_client.health_check(),
+        "airflow": clients.airflow.health_check(),
+        "harbor": clients.harbor.health_check(),
+        "minio": clients.minio.health_check(),
     }
     for service, health in services.items():
         service_status.append(status_schema.ServiceStatus(
@@ -35,6 +28,7 @@ def service_health_check():
             status=health
         ))
     return service_status
+
 
 def get_hardware_resources_status():
     # get memory statistics

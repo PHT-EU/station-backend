@@ -69,7 +69,7 @@ def get_airflow_run_information(
     @return:
     """
 
-    run_info = clients.airflow_client.get_run_information(dag_id, run_id)
+    run_info = clients.airflow.get_run_information(dag_id, run_id)
 
     for instance in run_info["tasklist"]["task_instances"][:]:
         try:
@@ -103,7 +103,7 @@ def get_airflow_task_log(
     @param task_try_number: specific try number for log request
     @return:
     """
-    run_info_data = clients.airflow_client.get_task_log(dag_id, run_id, task_id, task_try_number)
+    run_info_data = clients.airflow.get_task_log(dag_id, run_id, task_id, task_try_number)
     if not run_info_data:
         raise HTTPException(status_code=404, detail=f"{task_id} not found.")
     return {"run_info": run_info_data}

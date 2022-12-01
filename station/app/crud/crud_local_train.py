@@ -61,7 +61,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         """
         # TODO remove query results when exist
         # remove files stored in minio
-        clients.minio_client.delete_folder(bucket=str(DataDirectories.LOCAL_TRAINS.value), directory=train_id)
+        clients.minio.delete_folder(bucket=str(DataDirectories.LOCAL_TRAINS.value), directory=train_id)
 
         # remove sql database entries for LocalTrainExecution
         obj = db.query(LocalTrainExecution).filter(LocalTrainExecution.train_id == train_id).all()
@@ -88,7 +88,7 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         update_train.updated_at = datetime.now()
         db.commit()
         state = update_train.state
-        files = clients.minio_client.get_minio_dir_items(DataDirectories.LOCAL_TRAINS.value, db_obj.id)
+        files = clients.minio.get_minio_dir_items(DataDirectories.LOCAL_TRAINS.value, db_obj.id)
         configuration_state = update_configuration_status(update_train, files)
         state.configuration_state = configuration_state
         db.commit()

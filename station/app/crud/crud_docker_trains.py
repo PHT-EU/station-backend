@@ -12,7 +12,7 @@ from .base import CRUDBase, ModelType
 from station.app.models.docker_trains import DockerTrain, DockerTrainConfig, DockerTrainState, DockerTrainExecution
 from station.app.schemas.docker_trains import DockerTrainCreate, DockerTrainUpdate, DockerTrainConfigCreate
 from station.app.schemas.docker_trains import DockerTrainState as DockerTrainStateSchema
-from station.app.config import settings
+from station.app.config import settings, clients
 
 # TODO improve handling of proposals
 from ...clients.central.central_client import CentralApiClient
@@ -124,12 +124,8 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
         return db.query(DockerTrainExecution).order_by(DockerTrainExecution.start.desc()).offset(skip).limit(limit).all()
 
     def synchronize_central(self, db: Session) -> List[DockerTrain]:
-        client = CentralApiClient(
-            api_url=settings.config.central_ui.api_url,
-            robot_id=settings.config.central_ui.robot_id,
-            robot_secret=settings.config.central_ui.robot_secret
-        )
-        central_trains = client.get_trains(settings.config.station_id)
+
+        central_trains = clients.central.get_trains(settings.config.station_id)
         train_objects = []
         for train in central_trains["data"]:
             if train["approval_status"] == "approved":
