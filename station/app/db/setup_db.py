@@ -1,14 +1,21 @@
 import uuid
 
-from station.app.db.session import engine, SessionLocal
+from station.app.db.session import engine, SessionLocal, SQLALCHEMY_DATABASE_URL
 from station.app.db.base import Base
 
 from station.app.models import docker_trains
+from station.app.config import settings
 
 
 # TODO use alembic
-def setup_db(dev=False):
-    Base.metadata.create_all(bind=engine)
+def setup_db(dev=False, reset=False):
+    global SQLALCHEMY_DATABASE_URL
+    SQLALCHEMY_DATABASE_URL = settings.config.db.dsn
+
+    if reset:
+        reset_db(dev=False)
+    else:
+        Base.metadata.create_all(bind=engine)
     if dev:
         seed_db_for_testing()
 

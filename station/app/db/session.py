@@ -1,11 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import os
-from dotenv import load_dotenv, find_dotenv
 
-load_dotenv(find_dotenv())
-
-# SQLALCHEMY_DATABASE_URL = "sqlite:///./app.db"
+from station.app.config import settings
 
 if os.getenv("STATION_DB"):
     SQLALCHEMY_DATABASE_URL = os.getenv('STATION_DB')

@@ -27,7 +27,7 @@ class CRUDLocalTrainMasterImage(
 
     def sync_with_harbor(self, db: Session):
         harbor_client = HarborClient(
-            harbor_url=settings.config.registry.address,
+            api_url=settings.config.registry.address,
             username=settings.config.registry.user,
             password=settings.config.registry.password,
         )

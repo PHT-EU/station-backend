@@ -6,14 +6,15 @@ from dotenv import load_dotenv, find_dotenv
 
 from station.app.schemas.local_trains import LocalTrainMasterImageBase
 from station.app.schemas.station_status import HealthStatus
+from station.app.config import settings
 
 
 class HarborClient:
 
-    def __init__(self, harbor_url: str = None, username: str = None, password: str = None):
+    def __init__(self, api_url: str = None, username: str = None, password: str = None):
         # Setup and verify connection parameters either based on arguments or .env vars
 
-        self.domain = harbor_url if harbor_url else os.getenv("HARBOR_URL")
+        self.domain = api_url if api_url else os.getenv("HARBOR_URL")
         self.api_url = self.domain
         if not self.api_url.startswith("https://"):
             self.api_url = "https://" + self.api_url
@@ -96,4 +97,4 @@ class HarborClient:
         return HealthStatus.error
 
 
-harbor_client = HarborClient()
+harbor_client = None

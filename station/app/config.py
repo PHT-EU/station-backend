@@ -32,6 +32,19 @@ class RegistrySettings(BaseModel):
     password: SecretStr
     project: Optional[str] = None
 
+    @property
+    def api_url(self) -> str:
+        """
+        Returns the API URL of the registry.
+        """
+        if isinstance(self.address, str):
+            if self.address.startswith("https://"):
+                return self.address + "/api/v2.0"
+            else:
+                return "https://" + self.address + "/api/v2.0"
+        else:
+            return self.address + "/api/v2.0"
+
 
 class AirflowSettings(BaseModel):
     host: Optional[Union[AnyHttpUrl, str]] = "airflow"
@@ -96,6 +109,25 @@ class StationRuntimeEnvironment(str, Enum):
     TESTING = "testing"
 
 
+class DatabaseSettings(BaseModel):
+    admin_user: str
+    admin_password: str
+    host: Optional[str] = "postgres"
+    port: Optional[int] = 5432
+    database: Optional[str] = "pht_station"
+
+    @property
+    def dsn(self) -> PostgresDsn:
+        return PostgresDsn(
+            scheme="postgresql+psycopg2",
+            user=self.admin_user,
+            password=self.admin_password,
+            url=self.host,
+            port=self.port,
+            path=f"/{self.database}"
+        )
+
+
 class StationConfig(BaseModel):
     """
     Object containing the configuration of the station.
@@ -104,7 +136,7 @@ class StationConfig(BaseModel):
     station_data_dir: Optional[str]
     host: Optional[Union[AnyHttpUrl, str]] = os.getenv(StationEnvironmentVariables.STATION_API_HOST.value, "0.0.0.0")
     port: Optional[int] = os.getenv(StationEnvironmentVariables.STATION_API_PORT.value, 8000)
-    db: Optional[SecretStr] = "sqlite:///./app.db"
+    db: DatabaseSettings
     environment: Optional[StationRuntimeEnvironment] = StationRuntimeEnvironment.DEVELOPMENT
     fernet_key: Optional[SecretStr] = None
     registry: RegistrySettings
@@ -137,8 +169,16 @@ class StationConfig(BaseModel):
             config_dict["db"]["admin_password"],
             config_dict["db"].get("host", "postgres"),
             config_dict["db"].get("port", 5432),
-            config_dict["db"].get("name", "pht_station"),
+            config_dict["db"].get("database", "pht_station"),
 
+        )
+
+        db = DatabaseSettings(
+            admin_user=config_dict["db"]["admin_user"],
+            admin_password=config_dict["db"]["admin_password"],
+            host=config_dict["db"].get("host", "postgres"),
+            port=config_dict["db"].get("port", 5432),
+            database=config_dict["db"].get("database", "pht_station"),
         )
 
         registry_settings = RegistrySettings(
@@ -180,9 +220,9 @@ class StationConfig(BaseModel):
         return StationConfig(
             station_id=config_dict["station_id"],
             station_data_dir=config_dict["station_data_dir"],
-            host=os.getenv(StationEnvironmentVariables.STATION_API_HOST.value, "0.0.0.0"),
-            port=os.getenv(StationEnvironmentVariables.STATION_API_PORT.value, 8000),
-            db=db_conn,
+            host=os.getenv(str(StationEnvironmentVariables.STATION_API_HOST.value), "0.0.0.0"),
+            port=os.getenv(str(StationEnvironmentVariables.STATION_API_PORT.value), 8000),
+            db=db,
             environment=StationRuntimeEnvironment(config_dict["environment"]),
             fernet_key=config_dict["api"]["fernet_key"],
             registry=registry_settings,
@@ -220,11 +260,13 @@ class Settings:
     """
     config: StationConfig
     config_path: Optional[str]
+    is_initialized: bool
 
     def __init__(self, config_path: str = None, config: StationConfig = None):
         load_dotenv(find_dotenv())
         self._config_file = False
         self.config = None
+        self.is_initialized = False
         if config:
             self.config = config
         elif config_path:
@@ -255,6 +297,7 @@ class Settings:
         self._setup_station_environment()
 
         logger.info(f"Station backend setup successful {Emojis.SUCCESS}")
+        self.is_initialized = True
         return self.config
 
     def get_fernet(self) -> Fernet:
@@ -291,6 +334,7 @@ class Settings:
         else:
             logger.info(f"\t{Emojis.SUCCESS}   Config file found at {self.config_path} loading... ")
             config = StationConfig.from_file(self.config_path)
+            print(config)
             self.config = config
             logger.info(f"{Emojis.SUCCESS.value} Config loaded.")
 
@@ -390,11 +434,11 @@ class Settings:
         if station_data_dir:
             self.config.station_data_dir = station_data_dir
 
-        if "sqlite" in self.config.db.lower():
-            if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
-                raise ValueError(f"{Emojis.ERROR}   SQLite database not supported for production mode.")
-            else:
-                logger.warning(f"{Emojis.WARNING}   SQLite database only supported in development mode.")
+        # if "sqlite" in self.config.db.dsn.lower():
+        #     if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
+        #         raise ValueError(f"{Emojis.ERROR}   SQLite database not supported for production mode.")
+        #     else:
+        #         logger.warning(f"{Emojis.WARNING}   SQLite database only supported in development mode.")
 
     def _setup_central_api_connection(self):
         self._validate_config_item(
@@ -779,15 +823,12 @@ class Settings:
             "password": password,
             "schema": schema,
         }
-        print(conn)
 
         # Check whether connection with connection_id already exists, if not create it
         url_get = self.config.airflow.api_url + f"connections/{connection_id}"
         url_post = self.config.airflow.api_url + "connections"
         auth = HTTPBasicAuth(self.config.airflow.user, self.config.airflow.password.get_secret_value())
         r = requests.get(url=url_get, auth=auth, verify=False)
-
-        print(r.content)
 
         if r.status_code != 200:
             logger.debug(

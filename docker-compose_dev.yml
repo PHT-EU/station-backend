@@ -53,7 +53,7 @@ services:
     depends_on:
       - postgres
     env_file:
-      - .env
+      - .env.old
     environment:
       - AIRFLOW__WEBSERVER__X_FRAME_ENABLED=True
       - MINIO_HOST=minio:9000

@@ -55,10 +55,10 @@ class ExtendedServiceSettings(ServiceSettings):
 
 
 class DBSettings(ExtendedServiceSettings):
-    pass
+    database: Optional[str] = "pht_station"
 
 
-class AirflowSettings(ServiceSettings):
+class AirflowSettings(ExtendedServiceSettings):
     pass
 
 
