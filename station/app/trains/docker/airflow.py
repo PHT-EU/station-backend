@@ -13,7 +13,7 @@ from station.app.schemas import docker_trains as dts
 from station.app.models import docker_trains as dtm
 from loguru import logger
 
-from station.app.settings import settings
+from station.app.config import settings
 from station.app.config import clients
 
 
@@ -46,6 +46,7 @@ def run_train(db: Session, train_id: Any, execution_params: dts.DockerTrainExecu
 
     # Execute the train using the airflow rest api
     try:
+        print(clients.airflow.airflow_url)
         run_id = clients.airflow.trigger_dag("run_pht_train", config=config_dict)
         db_train = update_train_after_run(db, db_train, run_id, config_id, dataset_id=execution_params.dataset_id)
         last_execution = db_train.executions[-1]

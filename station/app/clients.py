@@ -17,13 +17,14 @@ class StationClients:
         self.settings = settings
 
     def initialize(self):
+        logger.info("Initializing clients")
         if not self.settings.is_initialized:
             logger.warning("Station settings are not initialized. Please call settings.setup() before initializing clients.")
             self.settings.setup()
         self.airflow = AirflowClient(
             airflow_api_url=self.settings.config.airflow.api_url,
             airflow_user=self.settings.config.airflow.user,
-            airflow_password=self.settings.config.airflow.password,
+            airflow_password=self.settings.config.airflow.password.get_secret_value(),
         )
         self.harbor = HarborClient(
             api_url=self.settings.config.registry.api_url,

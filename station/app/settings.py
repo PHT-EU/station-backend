@@ -61,11 +61,13 @@ class AirflowSettings(BaseModel):
         """
         if isinstance(self.host, str):
             if self.host.startswith("http://"):
-                return self.host + "/api/v1/"
+                url = self.host + f":{self.port}" if self.port else ""
             else:
-                return "http://" + self.host + "/api/v1/"
-        else:
-            return self.host + "/api/v1/"
+                url = "http://" + self.host + f":{self.port}" if self.port else ""
+            api_url = url + "/api/v1/"
+            return api_url
+        elif isinstance(self.host, AnyHttpUrl):
+            return "http://" + self.host.host + f":{self.port}" if self.port else "" + "/api/v1/"
 
 
 class MinioSettings(BaseModel):
