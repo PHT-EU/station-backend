@@ -14,7 +14,7 @@ from docker.errors import APIError
 
 from airflow.utils.dates import days_ago
 
-from station.app.trains.local.build import build_train
+from station.trains.local.build import build_train
 from station.clients.minio import MinioClient
 from station.clients.station import StationAPIClient
 

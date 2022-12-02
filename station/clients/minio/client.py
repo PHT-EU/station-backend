@@ -9,6 +9,7 @@ from zipfile import ZipFile
 import pendulum
 import starlette
 from minio import Minio
+from minio.error import S3Error
 from fastapi import File, UploadFile
 from typing import List, Union, Dict
 from loguru import logger
@@ -320,5 +321,10 @@ class MinioClient:
         for d in DataDirectories:
             try:
                 self.client.make_bucket(d.value)
+            except S3Error as se:
+                if se.code == "BucketAlreadyOwnedByYou":
+                    pass
+                else:
+                    raise se
             except Exception as e:
-                print(e)
+                raise e

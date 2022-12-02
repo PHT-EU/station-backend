@@ -12,6 +12,7 @@ from requests.auth import HTTPBasicAuth
 from yaml import safe_dump, safe_load
 from urllib.parse import urlparse
 from station.app.env import StationEnvironmentVariables
+import re
 
 from dotenv import load_dotenv, find_dotenv
 
@@ -788,7 +789,8 @@ class Settings:
         # no config but environment variables are found
         elif not _airflow_config and (env_airflow_api_url and env_airflow_user and env_airflow_secret):
             logger.debug(f"{Emojis.INFO}No airflow config found, creating new one from env vars.")
-            airflow_config.api_url = env_airflow_api_url
+            airflow_config.host = env_airflow_api_url.split("://")[1]
+            airflow_config.port = re.search(r":\d+", env_airflow_api_url).group(0).replace(":", "")
             airflow_config.user = env_airflow_user
             airflow_config.password = env_airflow_secret
             if env_airflow_port:

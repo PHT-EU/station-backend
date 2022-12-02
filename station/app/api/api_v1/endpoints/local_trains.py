@@ -16,7 +16,7 @@ from station.app.crud.local_train_master_image import local_train_master_image
 from station.app.schemas.datasets import MinioFile
 from station.clients.minio import MinioClient
 from station.ctl.constants import DataDirectories
-from station.app.trains.local.airflow import run_local_train
+from station.trains.local.airflow import run_local_train
 
 router = APIRouter()
 

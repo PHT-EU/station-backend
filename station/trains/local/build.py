@@ -6,11 +6,9 @@ from docker.models.images import Image
 from sqlalchemy.orm import Session
 from train_lib.docker_util.docker_ops import add_archive
 
-from station.app.trains.local.docker import make_docker_file
-from station.clients.minio import MinioClient
+from station.trains.local.docker import make_docker_file
 from station.app.models.local_trains import LocalTrain, LocalTrainMasterImage
 from station.app.crud.crud_local_train import CRUDLocalTrain
-from station.app.crud.local_train_master_image import CRUDLocalTrainMasterImage
 from loguru import logger
 
 

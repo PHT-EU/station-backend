@@ -1,19 +1,13 @@
-import uuid
-import os
-import asyncio
 from datetime import datetime
 from typing import Union, Dict, Any
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
-from fastapi import UploadFile, HTTPException
 
 from station.app.crud.base import CRUDBase, ModelType, CreateSchemaType, UpdateSchemaType
-from station.app.models.local_trains import LocalTrain, LocalTrainExecution, LocalTrainState, LocalTrainMasterImage
-from station.app.schemas.local_trains import LocalTrainCreate, LocalTrainUpdate, LocalTrainRunConfig, \
-    LocalTrainConfigurationStep
-from station.app.trains.local.update import update_configuration_status
-from station.clients.minio import MinioClient
+from station.app.models.local_trains import LocalTrain, LocalTrainExecution, LocalTrainState
+from station.app.schemas.local_trains import LocalTrainCreate, LocalTrainUpdate, LocalTrainConfigurationStep
+from station.trains.local.update import update_configuration_status
 from station.ctl.constants import DataDirectories
 from station.app.config import clients
 
