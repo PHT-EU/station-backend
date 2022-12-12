@@ -17,7 +17,7 @@ services:
       - "5432:5432"
 
   auth:
-    image: ghcr.io/tada5hi/authelion-server:latest
+    image: ghcr.io/tada5hi/authup-server:latest
     container_name: pht-station-auth
     volumes:
       - ./service_data/auth:/usr/src/app/writable
@@ -28,7 +28,7 @@ services:
       ADMIN_USER: admin
       ADMIN_PASSWORD: start123
       NODE_ENV: test
-      SELF_URL: http://auth:3010/
+      PUBLIC_URL: http://auth:3010/
     command:
       - start
 

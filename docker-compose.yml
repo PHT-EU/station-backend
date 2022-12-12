@@ -37,7 +37,7 @@ services:
       - traefik.http.routers.traefik=true
 
   auth:
-    image: ghcr.io/tada5hi/authelion-server:latest
+    image: ghcr.io/tada5hi/authup-server:latest
     container_name: pht-station-auth
     restart: unless-stopped
     volumes:
@@ -47,8 +47,8 @@ services:
     environment:
       - ADMIN_PASSWORD=6CKzZlzmRFsnYTEAqabSphHHE6W4O0Xd
       - NODE_ENV=production
-      - SELF_URL=station.localhost/auth
-      - WEB_URL=station.localhost
+      - PUBLIC_URL=station.localhost/auth
+      - AUTHORIZATION_REDIRECT_URL=station.localhost
       - TYPEORM_CONNECTION=postgres
       - TYPEORM_HOST=postgres
       - TYPEORM_USERNAME=admin

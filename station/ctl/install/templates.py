@@ -70,8 +70,8 @@ def render_compose(config: dict, env: Environment = None) -> str:
         "env": {
             "ADMIN_PASSWORD": config["admin_password"],
             "NODE_ENV": "production",
-            "SELF_URL": auth_url,
-            "WEB_URL": auth_url,
+            "PUBLIC_URL": auth_url,
+            "AUTHORIZE_REDIRECT_URL": auth_url,
         },
         "labels": [
             "traefik.enable=true",
