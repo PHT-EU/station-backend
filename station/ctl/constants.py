@@ -14,7 +14,7 @@ class DockerNetworks(Enum):
 class PHTImages(Enum):
     API = "ghcr.io/pht-medic/station-api"
     UI = "ghcr.io/pht-medic/station-ui"
-    AUTH = "ghcr.io/tada5hi/authelion-server"
+    AUTH = "ghcr.io/tada5hi/authup-server"
     AIRFLOW = "ghcr.io/pht-medic/airflow"
 
 
