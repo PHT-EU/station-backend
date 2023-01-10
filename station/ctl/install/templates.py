@@ -215,7 +215,7 @@ def render_traefik_configs(
         https_port: int = 443,
         https_enabled: bool = True,
         domain: str = None,
-        certs: List[dict] = None,
+        certs: dict = None,
         env: Environment = None) -> Tuple[str, str]:
     """
     Render static config files for the traefik proxy.
@@ -248,10 +248,9 @@ def render_traefik_configs(
 
     certs = [
         {
-            "cert": f"/etc/certs/{cert['cert'].split('/')[-1]}",
-            "key": f"/etc/certs/{cert['key'].split('/')[-1]}",
+            "cert": f"/etc/certs/{certs['cert'].split('/')[-1]}",
+            "key": f"/etc/certs/{certs['key'].split('/')[-1]}",
         }
-        for cert in certs
     ]
 
     # render traefik router config
