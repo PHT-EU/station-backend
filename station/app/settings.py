@@ -790,7 +790,8 @@ class Settings:
         elif not _airflow_config and (env_airflow_api_url and env_airflow_user and env_airflow_secret):
             logger.debug(f"{Emojis.INFO}No airflow config found, creating new one from env vars.")
             airflow_config.host = env_airflow_api_url.split("://")[1]
-            airflow_config.port = re.search(r":\d+", env_airflow_api_url).group(0).replace(":", "")
+            if re.search(r":\d+", env_airflow_api_url):
+                airflow_config.port = re.search(r":\d+", env_airflow_api_url).group(0).replace(":", "")
             airflow_config.user = env_airflow_user
             airflow_config.password = env_airflow_secret
             if env_airflow_port:
