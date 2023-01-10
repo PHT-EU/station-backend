@@ -1,4 +1,5 @@
 from pathlib import Path
+import click
 
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -19,9 +20,10 @@ def copy_certificates(ctx):
     Returns:
 
     """
-    certs_path = ctx.obj['https']['certs']
-    key_path = certs_path['key']
-    cert_path = certs_path['cert']
+    click.echo("Copying certificates to installation directory")
+    certs = ctx.obj['https']['certs'][0]
+    key_path = certs['key']
+    cert_path = certs['cert']
     with open(key_path, "rb") as f:
         key = f.read()
     with open(cert_path, "rb") as f:
