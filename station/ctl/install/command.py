@@ -14,6 +14,7 @@ from station.ctl.config import validate_config, fix_config
 from station.ctl.config.command import render_config
 from station.ctl.config.validators import ConfigItemValidationStatus
 from station.ctl.constants import Icons, PHTDirectories, PHTImages
+from station.ctl.install.certs import copy_certificates
 from station.ctl.install.docker import setup_docker, download_docker_images
 from station.ctl.install import templates
 from station.ctl.install.fs import check_create_pht_dirs
@@ -66,6 +67,9 @@ def install(ctx, install_dir, host_path):
 
     # setup_auth_server
     _setup_auth_server(ctx)
+
+    # copy certificates to install dir
+    copy_certificates(ctx)
 
     # render templates according to configuration and store output paths in configuration object
     ctx.obj["init_sql_path"] = write_init_sql(ctx)

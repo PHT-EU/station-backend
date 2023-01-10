@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography import x509
@@ -6,6 +8,30 @@ from cryptography.hazmat.primitives import hashes
 
 import datetime
 
+
+
+def copy_certificates(ctx):
+    """
+    Copy certificates from the paths specified in the config to the installation directory
+    Args:
+        ctx: cli context
+
+    Returns:
+
+    """
+    certs_path = ctx.obj['https']['certs']
+    key_path = certs_path['key']
+    cert_path = certs_path['cert']
+    with open(key_path, "rb") as f:
+        key = f.read()
+    with open(cert_path, "rb") as f:
+        cert = f.read()
+
+    dest_path = Path(ctx.obj["install_dir"]) / "certs"
+    with open(dest_path / "key.pem", "wb") as f:
+        f.write(key)
+    with open(dest_path / "cert.pem", "wb") as f:
+        f.write(cert)
 
 def generate_certificates(domain: str, key_path: str, cert_path: str, key_password: str = None):
     # Generate our key
