@@ -125,7 +125,7 @@ def _fix_private_key(config: dict) -> str:
             return path
     name = click.prompt('Name your private key file')
     passphrase = click.prompt('Enter your passphrase. If given, it will be used to encrypt the private key', default="")
-    private_key_path, private_key, public_key = generate_private_key(name, passphrase)
+    private_key_path, private_key, public_key = generate_private_key(name, config.get("install_dir"), passphrase)
     if passphrase:
         config["central"]["private_key_password"] = passphrase
 
