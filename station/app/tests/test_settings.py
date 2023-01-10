@@ -6,7 +6,8 @@ from yaml import safe_load, safe_dump
 
 from pydantic import SecretStr
 
-from station.app.settings import Settings, AuthConfig, RegistrySettings, MinioSettings, CentralUISettings, StationConfig
+from station.app.settings import Settings, AuthConfig, RegistrySettings, MinioSettings, CentralUISettings, \
+    StationConfig, AirflowSettings
 from station.app.env import StationEnvironmentVariables
 
 
@@ -179,6 +180,30 @@ def test_config_file():
     file_config = StationConfig.from_file("station_config.yml")
     assert file_config.station_id == "your_station_id"
     assert file_config.registry.user == "test"
+
+
+def test_airflow_settings():
+
+    airflow_settings = AirflowSettings(
+        host="airflow",
+        port=8080,
+        user="airflow",
+        password="airflow",
+    )
+    assert airflow_settings.host == "airflow"
+
+    assert airflow_settings.api_url == "http://airflow:8080/api/v1/"
+
+
+    airflow_settings = AirflowSettings(
+        host="http://airflow.example.com",
+        user="airflow",
+        password="airflow",
+    )
+
+    assert airflow_settings.api_url == "http://airflow.example.com/api/v1/"
+
+
 
 # def test_settings():
 #     settings = Settings(config_path="station_config.yml")

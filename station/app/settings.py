@@ -50,7 +50,7 @@ class RegistrySettings(BaseModel):
 class AirflowSettings(BaseModel):
     host: Optional[Union[AnyHttpUrl, str]] = "airflow"
     # api_url: Optional[str] = "http://localhost:8080/api/v1/"
-    port: Optional[int] = 8080
+    port: Optional[int] = None
     user: Optional[str] = "admin"
     password: Union[SecretStr, str]
     station_db_dsn: Optional[PostgresDsn] = None
@@ -61,14 +61,23 @@ class AirflowSettings(BaseModel):
         Returns the API URL of Airflow.
         """
         if isinstance(self.host, str):
-            if self.host.startswith("http://"):
-                url = self.host + f":{self.port}" if self.port else ""
+            if self.host.startswith("http://") or self.host.startswith("https://"):
+                url = self.host + (f":{self.port}" if self.port else "")
             else:
-                url = "http://" + self.host + f":{self.port}" if self.port else ""
+                url = f"http://{self.host}" + f":{self.port}" if self.port else ""
+
             api_url = url + "/api/v1/"
-            return api_url
         elif isinstance(self.host, AnyHttpUrl):
-            return "http://" + self.host.host + f":{self.port}" if self.port else "" + "/api/v1/"
+            url = "http://" + self.host.host + f":{self.port}" if self.port else ""
+            api_url = url + self.host.path if self.host.path else ""
+        else:
+            raise ValueError("Airflow host is not a valid URL.")
+        if not api_url.endswith("/api/v1/"):
+            if api_url.endswith("/"):
+                api_url += "api/v1/"
+            else:
+                api_url += "/api/v1/"
+        return api_url
 
 
 class MinioSettings(BaseModel):
@@ -835,7 +844,7 @@ class Settings:
     def _create_station_db_connection(self):
 
         connection_id = "pg_station"
-        self.config.airflow.station_db_dsn = self.config.db
+        self.config.airflow.station_db_dsn = self.config.db.dsn
         if isinstance(self.config.db, str):
             credentials, host = self.config.db.split("://")[1].split("@")
         elif isinstance(self.config.db, SecretStr):
