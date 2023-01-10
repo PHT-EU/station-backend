@@ -1,3 +1,4 @@
+import os
 import random
 import string
 from typing import Tuple
@@ -36,6 +37,8 @@ def generate_private_key(name: str,
     # if a path is given append the name of the private key to this path
     if path:
         private_key_path = os.path.join(path, name)
+    else:
+        private_key_path = os.getcwd().join(name)
     with open(private_key_path, 'wb') as f:
         f.write(pem)
 
@@ -43,6 +46,8 @@ def generate_private_key(name: str,
     pub_name = name.split(".")[0] + ".pub"
     if path:
         pub_key_path = os.path.join(path, pub_name)
+    else:
+        pub_key_path = os.getcwd().join(pub_name)
     with open(pub_key_path, 'wb') as f:
         f.write(private_key.public_key().public_bytes(
             encoding=serialization.Encoding.PEM,
