@@ -30,10 +30,9 @@ https:
   # Set the domain name for tls certificate either based on the existing certificate or to be used for self-signed certs
   domain: "{{ https.domain }}"
   # list of paths to certificate files (cert/key)
-  certs:{% for cert in https.certs %}
-    - cert: {{ cert.cert }}
-      key: {{ cert.key }}
-    {% endfor -%}
+  certs:
+    cert: {{ https.certs.cert }}
+    key: {{ https.certs.key }}
 {% endif %}
 
 # Configure the port for the traefik dashboard, can be disabled by settings disabled: true for the dashboard
