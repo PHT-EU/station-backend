@@ -150,6 +150,16 @@ class DatabaseSettings(BaseModel):
             path=f"/{self.database}"
         )
 
+    @classmethod
+    def from_dsn(cls, dsn: PostgresDsn):
+        return cls(
+            admin_user=dsn.user,
+            admin_password=dsn.password,
+            host=dsn.host,
+            port=dsn.port,
+            database=dsn.path
+        )
+
 
 class StationConfig(BaseModel):
     """
@@ -445,7 +455,7 @@ class Settings:
         station_db = os.getenv(StationEnvironmentVariables.STATION_DB.value)
         if station_db:
             logger.debug(f"\t{Emojis.INFO}Overriding station db with env var specification.")
-            self.config.db = parse_obj_as(PostgresDsn, station_db)
+            self.config.db = DatabaseSettings.from_dsn(parse_obj_as(PostgresDsn, station_db))
         else:
             if self.config.environment == "production":
                 raise ValueError(f"{Emojis.ERROR} Connection string to station database needs to be specified in"
