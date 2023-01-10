@@ -6,7 +6,7 @@ from enum import Enum
 
 import requests
 from cryptography.fernet import Fernet
-from pydantic import BaseModel, AnyHttpUrl, SecretStr, AnyUrl, PostgresDsn
+from pydantic import BaseModel, AnyHttpUrl, SecretStr, AnyUrl, PostgresDsn, parse_obj_as
 from loguru import logger
 from requests.auth import HTTPBasicAuth
 from yaml import safe_dump, safe_load
@@ -445,7 +445,7 @@ class Settings:
         station_db = os.getenv(StationEnvironmentVariables.STATION_DB.value)
         if station_db:
             logger.debug(f"\t{Emojis.INFO}Overriding station db with env var specification.")
-            self.config.db = station_db
+            self.config.db = parse_obj_as(PostgresDsn, station_db)
         else:
             if self.config.environment == "production":
                 raise ValueError(f"{Emojis.ERROR} Connection string to station database needs to be specified in"

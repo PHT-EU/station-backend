@@ -62,7 +62,7 @@ def install(ctx, install_dir, host_path):
     # setup docker volumes and networks
     setup_docker()
     # download docker images
-    download_docker_images(ctx)
+    # download_docker_images(ctx)
 
     # setup_auth_server
     _setup_auth_server(ctx)
