@@ -13,9 +13,15 @@ def setup_docker():
 
         try:
             volume = client.volumes.get(vol.value)
+            if click.prompt(f"\nVolume {vol.value} already exists. Do you want to reset it? [y/N]", default='N') == 'y':
+                volume.remove()
+                client.volumes.create(name=vol.value)
+                click.echo(f"Volume was reset {vol.value}")
+
         except docker.errors.NotFound:
             try:
                 client.volumes.create(name=vol.value)
+                click.echo(constants.Icons.CHECKMARK.value)
 
             except Exception as e:
                 click.echo(f"{constants.Icons.CROSS.value} Failed to create volume: \n {e}")
@@ -24,8 +30,6 @@ def setup_docker():
         except Exception as e:
             click.echo(f"{constants.Icons.CROSS.value} Failed to create volume: \n {e}")
             raise e
-
-    click.echo(constants.Icons.CHECKMARK.value)
 
     click.echo('Creating docker networks... ', nl=False)
     for net in constants.DockerNetworks:
