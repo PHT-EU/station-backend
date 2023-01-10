@@ -19,7 +19,7 @@ def config(ctx, file):
     """Validate and/or fix the configuration file"""
 
     if not file:
-        click.echo("No configuration file specified. Looking for a config file in the current directory...", nl=False)
+        click.echo("No configuration file specified. Looking for a config file in the current directory... ", nl=False)
         station_config, file = find_config(os.getcwd())
         click.echo(f"{Icons.CHECKMARK.value}")
     else:

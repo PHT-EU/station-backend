@@ -9,8 +9,6 @@ from cryptography.hazmat.primitives import hashes
 
 import datetime
 
-
-
 def copy_certificates(ctx):
     """
     Copy certificates from the paths specified in the config to the installation directory

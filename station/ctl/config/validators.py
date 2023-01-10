@@ -292,81 +292,58 @@ def validate_web_config(config: dict, strict: bool = True, host_path: str = None
                 )
             )
         else:
-            # if certificates are not a list of object return an error
-            if not isinstance(certs, list):
+
+            # validate certificate
+            if not isinstance(certs, dict):
                 validation_results.append(
                     ConfigItemValidationResult(
                         status=ConfigItemValidationStatus.INVALID,
                         level=ConfigIssueLevel.ERROR,
                         field="certs",
                         display_field="https.certs",
-                        message="https.certs must be a list of cert/key objects",
-                        fix_hint="Change https.certs to a list of cert/key objects"
+                        message="HTTPS certificates must be a dictionary",
+                        fix_hint="Change https.certs to a dictionary"
                     )
                 )
-            # validate each certificate
+
             else:
-                for i, cert in enumerate(certs):
-                    if not isinstance(cert, dict):
-                        validation_results.append(
-                            ConfigItemValidationResult(
-                                status=ConfigItemValidationStatus.INVALID,
-                                level=ConfigIssueLevel.ERROR,
-                                field=f"certs[{i}]",
-                                display_field=f"https.certs[{i}]",
-                                message="Cert entry is not a valid cert/key object",
-                                fix_hint=f"Change https.certs[{i}] to a valid cert/key object"
-                            )
-                        )
-                    else:
-                        # check that each cert has a cert and key
-                        cert_path: str = cert.get("cert")
-                        key_path: str = cert.get("key")
 
-                        if not cert_path and key_path:
-                            message = "Certificate path is missing from https.certs[{}]".format(i)
-                            status = ConfigItemValidationStatus.MISSING
-                        elif not key_path and cert_path:
-                            status = ConfigItemValidationStatus.MISSING
-                            message = "Key path is missing from https.certs[{}]".format(i)
-                        elif not cert_path and not key_path:
-                            status = ConfigItemValidationStatus.MISSING
-                            message = "Certificate and key paths are missing from https.certs[{}]".format(i)
+                def _validate_certs_val(val_result, path):
+                    valid, message = _validate_file_path(path)
+                    if not valid:
+                        val_result.status = ConfigItemValidationStatus.INVALID
+                        val_result.message = message
+                        val_result.level = ConfigIssueLevel.ERROR
+                        val_result.fix_hint = f"Change {val_result.field} to a valid file"
 
-                        # check that paths given for certificates and keys are valid
-                        else:
-                            if host_path:
-                                if cert_path:
-                                    cert_path = "/mnt/station/certs/" + cert_path.split("/")[-1]
-                                if key_path:
-                                    key_path = "/mnt/station/certs/" + key_path.split("/")[-1]
+                cert = _validate_config_value(certs, "cert", prefix="https.certs")
 
-                            if not os.path.isfile(cert_path) and not os.path.isfile(key_path):
-                                status = ConfigItemValidationStatus.INVALID
-                                message = 'Cert file "{}" and key file "{}" do not exist'.format(
-                                    cert_path,
-                                    key_path
-                                )
-                            elif not os.path.isfile(cert_path):
-                                status = ConfigItemValidationStatus.INVALID
-                                message = f"Certificate path ({cert_path}) does not exist"
-                            elif not os.path.isfile(key_path):
-                                status = ConfigItemValidationStatus.INVALID
-                                message = f"Key path ({key_path}) does not exist"
-                            else:
-                                status = ConfigItemValidationStatus.VALID
-                                message = "Certificate and key paths are valid"
+                install_dir = config.get("install_dir", os.getcwd())
+                cert_path = os.path.join(install_dir, "certs", cert.value)
 
-                        validation_results.append(
-                            ConfigItemValidationResult(
-                                status=status,
-                                level=ConfigIssueLevel.ERROR,
-                                field=f"certs[{i}]",
-                                display_field=f"https.certs[{i}]",
-                                message=message,
-                                fix_hint=f"Change https.certs[{i}] to a valid cert/key object pointing to valid files"
-                            )
-                        )
+                _validate_certs_val(cert, cert_path)
+
+                if cert.status == ConfigItemValidationStatus.MISSING:
+                    cert.level = ConfigIssueLevel.ERROR if strict else ConfigIssueLevel.WARN
+                    cert.fix_hint = "Add a valid https certificate to config file when using https"
+                elif cert.status == ConfigItemValidationStatus.INVALID:
+                    cert.level = ConfigIssueLevel.ERROR
+                    cert.fix_hint = "Change https.certs.cert to a valid certificate file path"
+
+                validation_results.append(cert)
+
+                # validate key
+                key = _validate_config_value(certs, "key", prefix="https.certs")
+                key_path = os.path.join(install_dir, "certs", key.value)
+                _validate_certs_val(key, key_path)
+                if key.status == ConfigItemValidationStatus.MISSING:
+                    key.level = ConfigIssueLevel.ERROR if strict else ConfigIssueLevel.WARN
+                    key.fix_hint = "Add a valid https key to config file when using https"
+                elif key.status == ConfigItemValidationStatus.INVALID:
+                    key.level = ConfigIssueLevel.ERROR
+                    key.fix_hint = "Change https.certs.key to a valid key file path"
+
+                validation_results.append(key)
 
     return validation_results
 
@@ -530,6 +507,7 @@ def _validate_config_value(
         display_field=display_field,
         message=message,
         generator=generator,
+        value=field_value
     )
 
     return result

@@ -30,6 +30,9 @@ def install(ctx, install_dir, host_path):
     # validate configuration before installing
     click.echo('Validating configuration... ', nl=False)
     ctx.obj["host_path"] = host_path
+    if not install_dir:
+        install_dir = os.getcwd()
+    ctx.obj['install_dir'] = install_dir
     validation_results, table = validate_config(ctx.obj, host_path=host_path)
     issues = [result for result in validation_results if result.status != ConfigItemValidationStatus.VALID]
 
@@ -46,10 +49,6 @@ def install(ctx, install_dir, host_path):
     else:
         click.echo(Icons.CHECKMARK.value)
 
-    if not install_dir:
-        install_dir = os.getcwd()
-
-    ctx.obj['install_dir'] = install_dir
     host_path = ctx.obj.get("host_path")
     click.echo('Installing station software to {}'.format(host_path if host_path else install_dir))
     # ensure file system is set up
@@ -69,7 +68,7 @@ def install(ctx, install_dir, host_path):
     _setup_auth_server(ctx)
 
     # copy certificates to install dir
-    copy_certificates(ctx)
+    # copy_certificates(ctx)
 
     # render templates according to configuration and store output paths in configuration object
     ctx.obj["init_sql_path"] = write_init_sql(ctx)
