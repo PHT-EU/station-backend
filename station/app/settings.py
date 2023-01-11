@@ -834,6 +834,7 @@ class Settings:
         try:
             self._create_station_db_connection()
         except Exception as e:
+            logger.error(f"{Emojis.ERROR}   Could not create airflow connection to station database: {e}")
             if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
                 raise ValueError(f"{Emojis.ERROR.value}   Unable to add database connection to airflow")
             else:
