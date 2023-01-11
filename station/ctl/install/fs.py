@@ -1,8 +1,9 @@
 import os
 from enum import Enum
+
 import click
 
-from station.ctl.constants import PHTDirectories, ServiceDirectories, DataDirectories
+from station.ctl.constants import DataDirectories, PHTDirectories, ServiceDirectories
 
 
 def check_create_pht_dirs(path):

@@ -1,13 +1,12 @@
 import os
-import pprint
 from typing import List
 
 import click
 from rich.console import Console
 from rich.table import Table
 
-from station.ctl.config import load_config, find_config, validate_config, fix_config
-from station.ctl.config.validators import ConfigItemValidationStatus, ConfigIssueLevel, ConfigItemValidationResult
+from station.ctl.config import find_config, fix_config, load_config, validate_config
+from station.ctl.config.validators import ConfigIssueLevel, ConfigItemValidationResult, ConfigItemValidationStatus
 from station.ctl.constants import Icons
 from station.ctl.util import get_template_env
 

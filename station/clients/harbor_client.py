@@ -1,12 +1,10 @@
-import requests
 import os
-from typing import Union, List
+from typing import List, Union
 
-from dotenv import load_dotenv, find_dotenv
+import requests
 
 from station.app.schemas.local_trains import LocalTrainMasterImageBase
 from station.app.schemas.station_status import HealthStatus
-from station.app.settings import settings
 
 
 class HarborClient:

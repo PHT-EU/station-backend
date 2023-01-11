@@ -1,10 +1,10 @@
+import tarfile
 from io import BytesIO
-from typing import Union, List
-
-from docker.models.images import Image
+from typing import List, Union
 
 from train_lib.docker_util.docker_ops import add_archive
-import tarfile
+
+from docker.models.images import Image
 
 
 def make_docker_file(master_image: str,

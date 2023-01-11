@@ -1,17 +1,16 @@
 import os.path
 import re
 import sys
-from typing import List, Any
+from typing import Any, List
 
 import click
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 from station.clients.central.central_client import CentralApiClient
-
-from station.ctl.config.validators import ConfigItemValidationResult, ConfigItemValidationStatus
 from station.ctl.config.generators import generate_private_key
-from station.ctl.constants import Icons, PHTDirectories, CERTS_REGEX
+from station.ctl.config.validators import ConfigItemValidationResult, ConfigItemValidationStatus
+from station.ctl.constants import CERTS_REGEX, Icons, PHTDirectories
 from station.ctl.install.certs import generate_certificates
 
 

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, JSON
+from sqlalchemy import JSON, Column, Integer
 
 from station.app.db.base_class import Base
 

@@ -1,6 +1,7 @@
-import docker
-import time
 import os
+import time
+
+import docker
 
 
 class DockerClient:

@@ -1,14 +1,15 @@
-from typing import Any
-import requests
-from sqlalchemy.orm import Session
-import importlib.util
 import importlib.machinery
+import importlib.util
 import os
 import tempfile
+from typing import Any
 
-from station.clients.minio import MinioClient
+import requests
 from conductor_lib.src.torch import LightningTrainModel
+from sqlalchemy.orm import Session
+
 from station.app.crud import federated_trains
+from station.clients.minio import MinioClient
 
 
 class ModelLoader:

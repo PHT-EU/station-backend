@@ -1,9 +1,10 @@
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
-from .base import CRUDBase, CreateSchemaType, ModelType, Optional
-from fastapi.encoders import jsonable_encoder
 from station.app.models.discovery import DataSetSummary
 from station.app.schemas.discovery import SummaryCreate, SummaryUpdate
+
+from .base import CreateSchemaType, CRUDBase, ModelType, Optional
 
 
 class CRUDDiscoveries(CRUDBase[DataSetSummary, SummaryCreate, SummaryUpdate]):

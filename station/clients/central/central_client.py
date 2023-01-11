@@ -1,8 +1,6 @@
 from typing import Any
-import urllib.parse
 
 import requests
-import pendulum
 
 from station.clients.base import BaseClient
 

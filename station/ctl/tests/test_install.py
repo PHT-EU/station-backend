@@ -2,19 +2,15 @@ import os
 from collections import namedtuple
 
 import pytest
-from dotenv import load_dotenv, find_dotenv
 import yaml
-import re
+from dotenv import find_dotenv, load_dotenv
 
 from station.clients.central.central_client import CentralApiClient
-from station.ctl.install.fs import create_pht_dirs
-
-from station.ctl.util import get_template_env
-from station.ctl.install import templates
 from station.ctl.constants import PHTDirectories
-from station.ctl.install import docker
-from station.ctl.install import certs
+from station.ctl.install import certs, docker, templates
 from station.ctl.install.command import _setup_auth_server
+from station.ctl.install.fs import create_pht_dirs
+from station.ctl.util import get_template_env
 
 
 @pytest.fixture

@@ -1,10 +1,11 @@
+from typing import List
+
 from sqlalchemy.orm import Session
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
-from .base import CRUDBase
 
 from station.app.models.notification import Notification
 from station.app.schemas.notifications import NotificationCreate, NotificationUpdate
 
+from .base import CRUDBase
 
 
 class CRUDNotifications(CRUDBase[Notification, NotificationCreate, NotificationUpdate]):

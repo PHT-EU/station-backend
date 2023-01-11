@@ -28,6 +28,7 @@ services:
       ADMIN_USER: admin
       ADMIN_PASSWORD: start123
       NODE_ENV: test
+      ROBOT_ENABLED: true
       PUBLIC_URL: http://auth:3010/
     command:
       - start

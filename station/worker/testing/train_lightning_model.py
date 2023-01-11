@@ -1,8 +1,7 @@
-from conductor_lib.src.torch import LightningTrainModel
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
+from conductor_lib.src.torch import LightningTrainModel
 from torchvision import transforms
 
 

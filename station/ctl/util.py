@@ -1,5 +1,6 @@
 import os
-from jinja2 import Environment, PackageLoader, FileSystemLoader
+
+from jinja2 import Environment, FileSystemLoader, PackageLoader
 
 
 def get_template_env():

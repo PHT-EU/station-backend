@@ -1,8 +1,9 @@
-from pydantic import BaseModel
 from typing import List, Optional
 
-from station.app.schemas.trains import Train
+from pydantic import BaseModel
+
 from station.app.schemas.docker_trains import DockerTrain
+from station.app.schemas.trains import Train
 
 
 class Trains(BaseModel):

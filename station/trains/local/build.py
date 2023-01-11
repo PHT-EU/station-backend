@@ -1,15 +1,15 @@
-import os
 from io import BytesIO
-from typing import Union, List
-import docker
-from docker.models.images import Image
+from typing import List, Union
+
+from loguru import logger
 from sqlalchemy.orm import Session
 from train_lib.docker_util.docker_ops import add_archive
 
-from station.trains.local.docker import make_docker_file
-from station.app.models.local_trains import LocalTrain, LocalTrainMasterImage
+import docker
+from docker.models.images import Image
 from station.app.crud.crud_local_train import CRUDLocalTrain
-from loguru import logger
+from station.app.models.local_trains import LocalTrain
+from station.trains.local.docker import make_docker_file
 
 
 def build_train(

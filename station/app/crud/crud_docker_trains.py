@@ -1,21 +1,19 @@
 from builtins import str
-
-from sqlalchemy.orm import Session
+from datetime import datetime
 from typing import List, Tuple, Union
+
+from dateutil import parser
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
-from dateutil import parser
-from datetime import datetime
+from sqlalchemy.orm import Session
 
-from .base import CRUDBase, ModelType
-
-from station.app.models.docker_trains import DockerTrain, DockerTrainConfig, DockerTrainState, DockerTrainExecution
-from station.app.schemas.docker_trains import DockerTrainCreate, DockerTrainUpdate, DockerTrainConfigCreate
+from station.app.config import clients, settings
+from station.app.models.docker_trains import DockerTrain, DockerTrainConfig, DockerTrainExecution, DockerTrainState
+from station.app.schemas.docker_trains import DockerTrainConfigCreate, DockerTrainCreate, DockerTrainUpdate
 from station.app.schemas.docker_trains import DockerTrainState as DockerTrainStateSchema
-from station.app.config import settings, clients
 
 # TODO improve handling of proposals
-from ...clients.central.central_client import CentralApiClient
+from .base import CRUDBase, ModelType
 
 
 class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate]):

@@ -1,5 +1,5 @@
-from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 from station.app.api import dependencies
 from station.app.schemas.users import User
@@ -14,8 +14,8 @@ def get_station_config(db: Session = Depends(dependencies.get_db)):
 
 
 @router.get("/config/test")
-def test_station_config(user: User = Depends(dependencies.authorized_user)):
-    print(user)
+def test_station_config():
+    pass
 
 
 @router.put("/config")

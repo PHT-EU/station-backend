@@ -1,16 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 from datetime import datetime
 
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
 from station.app.api import dependencies
-from station.app.schemas.users import User
+
 # from station.clients.airflow.client import airflow_client
 from station.app.config import clients
-from station.clients.airflow import docker_trains as airflow_docker_train
-from station.app.schemas.airflow import AirflowInformation, AirflowTaskLog, AirflowRun, AirflowRunMsg
-from station.app.schemas.docker_trains import DockerTrainExecution
-from station.app.crud.crud_local_train import local_train
 from station.app.crud.crud_docker_trains import docker_trains
+from station.app.schemas.airflow import AirflowInformation, AirflowRun, AirflowRunMsg, AirflowTaskLog
+from station.app.schemas.docker_trains import DockerTrainExecution
+from station.app.schemas.users import User
+from station.clients.airflow import docker_trains as airflow_docker_train
+
 
 router = APIRouter()
 
@@ -20,7 +22,6 @@ def run(
         run_msg: AirflowRunMsg,
         dag_id: str,
         db: Session = Depends(dependencies.get_db),
-        user: User = Depends(dependencies.authorized_user)
 ):
     """
     Trigger a dag run and return the run_id of the run
@@ -60,8 +61,8 @@ def run(
 @router.get("/logs/{dag_id}/{run_id}", response_model=AirflowInformation)
 def get_airflow_run_information(
         dag_id: str,
-        run_id: str,
-        user: User = Depends(dependencies.authorized_user)):
+        run_id: str
+):
     """
     Get information about one airflow DAG execution.
     @param dag_id: ID of the DAG e.G. "run_local" , "run_pht_train" etc.
@@ -93,8 +94,8 @@ def get_airflow_task_log(
         dag_id: str,
         run_id: str,
         task_id: str,
-        task_try_number: int,
-        user: User = Depends(dependencies.authorized_user)):
+        task_try_number: int
+):
     """
     Get log of a task in a DAG execution.
     @param dag_id: ID of the DAG e.G. "run_local" , "run_pht_train" etc.

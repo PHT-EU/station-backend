@@ -1,15 +1,22 @@
-import json
 from typing import List, Union
-from sqlalchemy.orm import Session
+
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
 from station.app.api import dependencies
-from station.app.trains.docker import airflow
-from station.app.schemas.docker_trains import DockerTrain, DockerTrainCreate, DockerTrainConfig, \
-    DockerTrainConfigCreate, DockerTrainConfigUpdate, DockerTrainExecution, DockerTrainState, DockerTrainSavedExecution
 from station.app.crud.crud_docker_trains import docker_trains
 from station.app.crud.crud_train_configs import docker_train_config
-from station.clients.harbor_client import harbor_client
+from station.app.schemas.docker_trains import (
+    DockerTrain,
+    DockerTrainConfig,
+    DockerTrainConfigCreate,
+    DockerTrainConfigUpdate,
+    DockerTrainCreate,
+    DockerTrainExecution,
+    DockerTrainSavedExecution,
+    DockerTrainState,
+)
+from station.app.trains.docker import airflow
 
 router = APIRouter()
 

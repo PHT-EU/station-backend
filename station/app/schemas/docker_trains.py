@@ -1,6 +1,7 @@
-from pydantic import BaseModel, validator
 from datetime import datetime
-from typing import List, Optional, Union, Any, Dict
+from typing import Any, Dict, List, Optional, Union
+
+from pydantic import BaseModel, validator
 
 
 class DBSchema(BaseModel):

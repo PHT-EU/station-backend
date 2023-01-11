@@ -1,4 +1,4 @@
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
+from typing import Any, Generic, List, Type, TypeVar, Union
 
 import requests
 import requests.auth

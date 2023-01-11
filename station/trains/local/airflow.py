@@ -1,18 +1,16 @@
-from sqlalchemy.orm import Session
-from pydantic import BaseModel
 from typing import Optional
 
 from fhir_kindling.fhir_query.query_parameters import FHIRQueryParameters
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
 
-from station.app.crud.crud_local_train import local_train
-from station.app.crud.local_train_master_image import local_train_master_image
 from station.app.crud.crud_datasets import datasets
+from station.app.crud.crud_local_train import local_train
 from station.app.crud.crud_train_configs import docker_train_config
-
-from station.app.settings import settings
-from station.clients.airflow.docker_trains import process_dataset, process_db_config
-from station.clients.airflow.client import airflow_client
+from station.app.crud.local_train_master_image import local_train_master_image
 from station.app.schemas.local_trains import LocalTrainExecution
+from station.clients.airflow.client import airflow_client
+from station.clients.airflow.docker_trains import process_dataset, process_db_config
 
 
 class FHIRConfig(BaseModel):

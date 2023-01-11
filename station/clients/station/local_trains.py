@@ -1,10 +1,9 @@
 from io import BytesIO
-import tarfile
 
 import requests
 
-from station.clients.resource_client import ResourceClient
 from station.app.schemas.local_trains import LocalTrain, LocalTrainCreate, LocalTrainUpdate
+from station.clients.resource_client import ResourceClient
 
 
 class LocalTrainClient(ResourceClient[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):

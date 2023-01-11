@@ -1,12 +1,12 @@
 from pathlib import Path
-from typing import Optional, Union, List, Iterable, Dict
+from typing import Dict, Iterable, List, Optional, Union
 
-from pytorch_lightning import LightningModule, LightningDataModule, Callback
+import pytorch_lightning as pl
+from pytorch_lightning import Callback, LightningDataModule, LightningModule
 from pytorch_lightning.accelerators import Accelerator
 from pytorch_lightning.loggers import LightningLoggerBase
 from pytorch_lightning.profiler import BaseProfiler
 from torch.utils.data import DataLoader
-import pytorch_lightning as pl
 from torchvision.transforms import Compose, ToTensor
 
 from station.worker.loader import BaseLoader

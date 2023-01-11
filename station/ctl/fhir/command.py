@@ -1,4 +1,5 @@
 import click
+
 from station.ctl.fhir import manage
 from station.ctl.fhir.setup import setup_cli
 

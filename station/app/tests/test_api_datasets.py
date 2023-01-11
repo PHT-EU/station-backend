@@ -1,8 +1,7 @@
 from fastapi.testclient import TestClient
 
-
-from station.app.main import app
 from station.app.api.dependencies import get_db
+from station.app.main import app
 
 from .test_db import override_get_db
 

@@ -1,6 +1,6 @@
-from pydantic import BaseSettings, BaseModel, AnyHttpUrl
+from typing import List, Optional, Union
 
-from typing import Optional, Union, List
+from pydantic import AnyHttpUrl, BaseModel, BaseSettings
 
 from station.ctl.config.validators import ApplicationEnvironment
 

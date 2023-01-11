@@ -1,20 +1,19 @@
+import functools
 import json
 import os
-import functools
-from typing import Union, Optional, Tuple
+import re
 from enum import Enum
+from typing import Optional, Tuple, Union
 
 import requests
 from cryptography.fernet import Fernet
-from pydantic import BaseModel, AnyHttpUrl, SecretStr, AnyUrl, PostgresDsn, parse_obj_as
+from dotenv import find_dotenv, load_dotenv
 from loguru import logger
+from pydantic import AnyHttpUrl, AnyUrl, BaseModel, PostgresDsn, SecretStr, parse_obj_as
 from requests.auth import HTTPBasicAuth
 from yaml import safe_dump, safe_load
-from urllib.parse import urlparse
-from station.app.env import StationEnvironmentVariables
-import re
 
-from dotenv import load_dotenv, find_dotenv
+from station.app.env import StationEnvironmentVariables
 
 
 class Emojis(str, Enum):

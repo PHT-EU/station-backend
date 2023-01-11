@@ -1,12 +1,13 @@
-from sqlalchemy.orm import Session
-from typing import Union, Dict, Any
 from datetime import datetime
+from typing import Any, Dict, Union
 
-from .base import CRUDBase, ModelType, UpdateSchemaType
+from sqlalchemy.orm import Session
 
+from station.app.crud import docker_trains
 from station.app.models.docker_trains import DockerTrain, DockerTrainConfig
 from station.app.schemas.docker_trains import DockerTrainConfigCreate, DockerTrainConfigUpdate
-from station.app.crud import docker_trains
+
+from .base import CRUDBase, ModelType, UpdateSchemaType
 
 
 class CRUDDockerTrainConfig(CRUDBase[DockerTrainConfig, DockerTrainConfigCreate, DockerTrainConfigUpdate]):

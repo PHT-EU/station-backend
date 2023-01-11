@@ -1,9 +1,9 @@
 import uuid
+from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, root_validator
-from datetime import datetime
-from typing import Optional, Dict, List, Union, Any
 
 
 class DBSchema(BaseModel):

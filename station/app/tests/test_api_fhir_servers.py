@@ -1,14 +1,14 @@
 import pytest
+from dotenv import find_dotenv, load_dotenv
 from fastapi.testclient import TestClient
-from dotenv import load_dotenv, find_dotenv
 
-from station.app.main import app
 from station.app.api.dependencies import get_db
 from station.app.crud.crud_fhir_servers import fhir_servers
+from station.app.main import app
 from station.app.schemas.fhir import FHIRServerCreate
 from station.app.settings import settings
 
-from .test_db import override_get_db, TestingSessionLocal
+from .test_db import TestingSessionLocal, override_get_db
 
 app.dependency_overrides[get_db] = override_get_db
 

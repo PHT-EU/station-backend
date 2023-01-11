@@ -1,8 +1,8 @@
-import requests
 import os
-from dotenv import find_dotenv, load_dotenv
-from requests.auth import HTTPBasicAuth
+
+import requests
 from loguru import logger
+from requests.auth import HTTPBasicAuth
 
 from station.app.schemas.station_status import HealthStatus
 

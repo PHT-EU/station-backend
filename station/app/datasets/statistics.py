@@ -1,17 +1,15 @@
 import io
+import json
+from typing import Optional, Union
 
 import pandas as pd
-from typing import Optional, Union
-from pandas.api.types import is_numeric_dtype, is_bool_dtype
 import plotly.express as px
 import plotly.io
-from plotly.graph_objects import Figure
-import json
-import orjson
 from loguru import logger
+from pandas.api.types import is_bool_dtype, is_numeric_dtype
+from plotly.graph_objects import Figure
 
-from station.app.schemas.datasets import DataSetStatistics, DataSetFigure, MinioFile
-from station.app.models.datasets import DataSet
+from station.app.schemas.datasets import DataSetFigure, DataSetStatistics, MinioFile
 
 
 def get_dataset_statistics(dataframe: pd.DataFrame) -> Optional[DataSetStatistics]:

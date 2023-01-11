@@ -1,8 +1,7 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 import os
 
-from station.app.settings import settings
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 if os.getenv("STATION_DB"):
     SQLALCHEMY_DATABASE_URL = os.getenv('STATION_DB')

@@ -3,9 +3,9 @@ from typing import List, Tuple
 
 from jinja2 import Environment
 
-from station.ctl.util import get_template_env
-from station.ctl.constants import PHTImages, ServiceImages, PHTDirectories
 from station.app.env import StationEnvironmentVariables
+from station.ctl.constants import PHTDirectories, PHTImages, ServiceImages
+from station.ctl.util import get_template_env
 
 
 def render_compose(config: dict, env: Environment = None) -> str:

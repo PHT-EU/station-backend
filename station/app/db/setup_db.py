@@ -1,10 +1,9 @@
 import uuid
 
-from station.app.db.session import engine, SessionLocal, SQLALCHEMY_DATABASE_URL
-from station.app.db.base import Base
-
-from station.app.models import docker_trains
 from station.app.config import settings
+from station.app.db.base import Base
+from station.app.db.session import SessionLocal, engine
+from station.app.models import docker_trains
 
 
 # TODO use alembic

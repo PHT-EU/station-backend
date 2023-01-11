@@ -1,5 +1,6 @@
-from airflow.decorators import dag, task
 import pendulum
+
+from airflow.decorators import dag, task
 
 default_args = {
     'owner': 'airflow',

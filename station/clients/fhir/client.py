@@ -1,7 +1,7 @@
-from requests.auth import HTTPBasicAuth
-import requests
 import os
 
+import requests
+from requests.auth import HTTPBasicAuth
 from train_lib.clients.fhir import build_query_string
 from train_lib.clients.fhir.fhir_client import BearerAuth
 

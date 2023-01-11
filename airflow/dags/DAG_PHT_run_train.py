@@ -1,22 +1,19 @@
 import json
-import sys
 import os
 import os.path
+import sys
+
+from train_lib.clients import PHTFhirClient
+from train_lib.docker_util.docker_ops import extract_query_json, extract_train_config
+from train_lib.security.protocol import SecurityProtocol
+from train_lib.security.train_config import TrainConfig
 
 import docker
 import docker.types
 from airflow.decorators import dag, task
 from airflow.operators.python import get_current_context
-
-from docker.errors import APIError
-
 from airflow.utils.dates import days_ago
-
-from train_lib.docker_util.docker_ops import extract_train_config, extract_query_json
-from train_lib.security.protocol import SecurityProtocol
-from train_lib.clients import PHTFhirClient
-from train_lib.docker_util.validate_master_image import validate_train_image
-from train_lib.security.train_config import TrainConfig
+from docker.errors import APIError
 
 default_args = {
     'owner': 'airflow',

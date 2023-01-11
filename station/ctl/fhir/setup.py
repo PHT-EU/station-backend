@@ -1,10 +1,10 @@
-from typing import List
 import re
+from typing import List
 
-import docker
 import click
 
-from station.ctl.constants import ServiceImages, DockerNetworks, Icons
+import docker
+from station.ctl.constants import DockerNetworks, Icons, ServiceImages
 
 
 def setup_cli(ctx: click.Context, name: str):

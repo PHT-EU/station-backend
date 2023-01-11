@@ -1,5 +1,6 @@
-from rich.console import Console
 import re
+
+from rich.console import Console
 
 from station.ctl.config import validate_config
 from station.ctl.constants import CERTS_REGEX

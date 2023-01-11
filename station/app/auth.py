@@ -1,15 +1,15 @@
+from enum import Enum
 from typing import List
 
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import requests
-from loguru import logger
 from fastapi import Depends, HTTPException
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from loguru import logger
 from requests import HTTPError
-from enum import Enum
 
+from station.app.cache import redis_cache
 from station.app.config import settings
 from station.app.schemas.users import User, UserPermission
-from station.app.cache import redis_cache
 
 
 class TokenCacheKeys(str, Enum):

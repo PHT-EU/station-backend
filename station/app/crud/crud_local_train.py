@@ -1,15 +1,15 @@
 from datetime import datetime
-from typing import Union, Dict, Any
+from typing import Any, Dict, Union
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
-from station.app.crud.base import CRUDBase, ModelType, CreateSchemaType, UpdateSchemaType
-from station.app.models.local_trains import LocalTrain, LocalTrainExecution, LocalTrainState
-from station.app.schemas.local_trains import LocalTrainCreate, LocalTrainUpdate, LocalTrainConfigurationStep
-from station.trains.local.update import update_configuration_status
-from station.ctl.constants import DataDirectories
 from station.app.config import clients
+from station.app.crud.base import CreateSchemaType, CRUDBase, ModelType, UpdateSchemaType
+from station.app.models.local_trains import LocalTrain, LocalTrainExecution, LocalTrainState
+from station.app.schemas.local_trains import LocalTrainConfigurationStep, LocalTrainCreate, LocalTrainUpdate
+from station.ctl.constants import DataDirectories
+from station.trains.local.update import update_configuration_status
 
 
 class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):

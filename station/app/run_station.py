@@ -1,10 +1,10 @@
 import uvicorn
-from dotenv import load_dotenv, find_dotenv
+from dotenv import find_dotenv, load_dotenv
 
 from station.app.cache import Cache
-from station.app.db.setup_db import setup_db, reset_db
+from station.app.config import clients, settings
+from station.app.db.setup_db import setup_db
 from station.app.settings import StationRuntimeEnvironment
-from station.app.config import settings, clients, cache
 
 
 def setup():

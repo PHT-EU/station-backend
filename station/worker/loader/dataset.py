@@ -1,12 +1,13 @@
 from abc import ABC
-from typing import Iterator, Generator, List
+from typing import Generator, Iterator, List
+
+import numpy as np
 import torch
-from torch.utils.data import Dataset, IterableDataset, DataLoader
-from torch.utils.data.dataset import T_co
 from minio import datatypes
 from PIL import Image
-from torchvision.transforms import Compose, ToTensor, CenterCrop
-import numpy as np
+from torch.utils.data import DataLoader, Dataset, IterableDataset
+from torch.utils.data.dataset import T_co
+from torchvision.transforms import CenterCrop, Compose, ToTensor
 
 from station.clients.minio import MinioClient
 

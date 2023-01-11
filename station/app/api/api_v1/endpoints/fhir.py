@@ -1,12 +1,12 @@
 from typing import List
-from sqlalchemy.orm import Session
+
 from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 from station.app.api import dependencies
-from fhir_kindling.fhir_server.server_responses import ServerSummary
-from station.app.schemas.fhir import FHIRServer, FHIRServerCreate, FHIRServerUpdate, ServerStatistics
 from station.app.crud.crud_fhir_servers import fhir_servers
-from station.app.fhir.server import fhir_server_from_db, get_server_statistics
+from station.app.fhir.server import get_server_statistics
+from station.app.schemas.fhir import FHIRServer, FHIRServerCreate, FHIRServerUpdate, ServerStatistics
 
 router = APIRouter()
 

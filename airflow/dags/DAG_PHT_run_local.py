@@ -1,22 +1,14 @@
-import sys
-import os
-import os.path
-
-import docker
-from airflow.decorators import dag, task
-from airflow.operators.python import get_current_context
-from airflow.hooks.base import BaseHook
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from docker.errors import APIError
-
+import docker
+from airflow.decorators import dag, task
+from airflow.hooks.base import BaseHook
+from airflow.operators.python import get_current_context
 from airflow.utils.dates import days_ago
-
-from station.trains.local.build import build_train
-from station.clients.minio import MinioClient
 from station.clients.station import StationAPIClient
+from station.trains.local.build import build_train
 
 
 def failure_callback(context):

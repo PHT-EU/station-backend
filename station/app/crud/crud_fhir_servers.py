@@ -1,9 +1,11 @@
-from typing import Any, Union, Dict, List
+from typing import Any, Dict, Union
+
 from sqlalchemy.orm import Session
 
-from .base import CRUDBase, CreateSchemaType, ModelType, UpdateSchemaType
-from station.app.schemas.fhir import FHIRServerCreate, FHIRServerUpdate
 from station.app.models.fhir_server import FHIRServer
+from station.app.schemas.fhir import FHIRServerCreate, FHIRServerUpdate
+
+from .base import CreateSchemaType, CRUDBase, ModelType, UpdateSchemaType
 
 
 class CRUDFHIRServers(CRUDBase[FHIRServer, FHIRServerCreate, FHIRServerUpdate]):

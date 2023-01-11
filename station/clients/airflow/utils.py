@@ -1,11 +1,10 @@
-import logging
-import os, requests
+
+from sqlalchemy.orm import sessionmaker
+
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.settings import Session
-from sqlalchemy.orm import sessionmaker
-from station.app.db.setup_db import *
 from station.app.db.session import *
-
+from station.app.db.setup_db import *
 
 
 def create_session(connection_id: str) -> Session:

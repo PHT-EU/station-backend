@@ -1,10 +1,9 @@
-from fastapi import FastAPI, Depends
-from dotenv import load_dotenv, find_dotenv
+from dotenv import find_dotenv, load_dotenv
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from station.app.api.api_v1.api import api_router
 from station.app.auth import authorized_user
-
 
 load_dotenv(find_dotenv())
 

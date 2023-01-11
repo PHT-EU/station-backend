@@ -1,14 +1,15 @@
-from typing import Any
-from sqlalchemy.orm import Session
-from dotenv import load_dotenv, find_dotenv
 import os
+from typing import Any
+
+from dotenv import find_dotenv, load_dotenv
+from sqlalchemy.orm import Session
 
 from station.app.crud import federated_trains
-from station.worker import SessionLocal
 from station.clients.conductor import ConductorRESTClient
 from station.clients.minio import MinioClient
+from station.worker import SessionLocal
 from station.worker.discovery import perform_discovery
-from station.worker.loader import MinioFolderDS, BaseLoader, ModelLoader
+from station.worker.loader import BaseLoader, MinioFolderDS, ModelLoader
 from station.worker.trainer import FederatedTrainer
 
 

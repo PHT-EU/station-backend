@@ -1,20 +1,17 @@
-from fastapi import HTTPException
-from sqlalchemy.orm import Session
-from typing import Any, Dict, Union, Tuple
 import os
 from datetime import datetime
+from typing import Any, Tuple, Union
 
+from fastapi import HTTPException
+from loguru import logger
+from sqlalchemy.orm import Session
 
+from station.app.config import clients, settings
+from station.app.crud.crud_datasets import datasets
 from station.app.crud.crud_docker_trains import docker_trains
 from station.app.crud.crud_train_configs import docker_train_config
-from station.app.crud.crud_datasets import datasets
-from station.clients.minio import MinioClient
-from station.app.schemas import docker_trains as dts
 from station.app.models import docker_trains as dtm
-from loguru import logger
-
-from station.app.config import settings
-from station.app.config import clients
+from station.app.schemas import docker_trains as dts
 
 
 def run_train(db: Session, train_id: Any, execution_params: dts.DockerTrainExecution) -> dts.DockerTrainSavedExecution:

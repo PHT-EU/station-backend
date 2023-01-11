@@ -1,13 +1,13 @@
+import os
 import re
 from enum import Enum
-from typing import Any, Callable, Tuple, Union, List, Optional
-import os
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 from cryptography.fernet import Fernet
 from pydantic import BaseModel
 
-from station.ctl.config.generators import password_generator, generate_fernet_key
-from station.ctl.constants import Icons, DefaultValues
+from station.ctl.config.generators import generate_fernet_key, password_generator
+from station.ctl.constants import DefaultValues
 
 
 class ApplicationEnvironment(str, Enum):

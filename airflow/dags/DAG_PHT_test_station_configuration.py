@@ -1,17 +1,16 @@
 import asyncio
 import os
 
-import docker
-from airflow.decorators import dag, task
-from airflow.operators.python import get_current_context
-from airflow.utils.dates import days_ago
-from train_lib.clients import PHTFhirClient
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from train_lib.clients import PHTFhirClient
+
+import docker
+import docker.types
+from airflow.decorators import dag, task
 
 # Operators; we need this to operate!
-from airflow.operators.bash import BashOperator
+from airflow.operators.python import get_current_context
 from airflow.utils.dates import days_ago
-import docker.types
 
 # These args will get passed on to each operator
 # You can override them on a per-task basis during operator initialization

@@ -1,8 +1,8 @@
-from docker import DockerClient
-import docker
-import docker.errors
 import click
 
+import docker
+import docker.errors
+from docker import DockerClient
 from station.ctl import constants
 
 

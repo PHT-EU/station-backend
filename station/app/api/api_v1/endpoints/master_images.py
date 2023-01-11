@@ -1,12 +1,11 @@
 from typing import List
 
-from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
 
 from station.app.api import dependencies
-
-from station.app.schemas import local_trains
 from station.app.crud.local_train_master_image import local_train_master_image
+from station.app.schemas import local_trains
 
 router = APIRouter()
 

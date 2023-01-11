@@ -1,10 +1,8 @@
-from typing import Optional, Any
-
-from pydantic import BaseModel, root_validator
 from datetime import datetime
-from fhir_kindling.fhir_server.server_responses import ServerSummary
+from typing import Any, Optional
 
-from station.app.schemas.datasets import FigureData
+from fhir_kindling.fhir_server.server_responses import ServerSummary
+from pydantic import BaseModel, root_validator
 
 
 class FHIRServerBase(BaseModel):

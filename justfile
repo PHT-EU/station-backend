@@ -1,3 +1,9 @@
+lint:
+    poetry run ruff . --fix
+
+format:
+    poetry run black .
+
 build-ctl:
   docker build -f "$(pwd)/docker/Dockerfile_ctl" . -t station-ctl:latest
 

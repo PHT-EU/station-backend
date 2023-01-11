@@ -1,16 +1,11 @@
-import uuid
-import os
-import asyncio
-from datetime import datetime
+
 from sqlalchemy.orm import Session
-from fastapi import UploadFile, HTTPException
 
-from station.app.crud.base import CRUDBase, ModelType
-
-from station.app.schemas import local_trains as schemas
-from station.app.models.local_trains import LocalTrainMasterImage
-from station.clients.harbor_client import HarborClient
 from station.app.config import settings
+from station.app.crud.base import CRUDBase
+from station.app.models.local_trains import LocalTrainMasterImage
+from station.app.schemas import local_trains as schemas
+from station.clients.harbor_client import HarborClient
 
 
 class CRUDLocalTrainMasterImage(

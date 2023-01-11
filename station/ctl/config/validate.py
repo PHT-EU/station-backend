@@ -1,11 +1,10 @@
-from typing import Tuple, List
+from typing import List, Tuple
 
-from rich.table import Table
 from rich.style import Style
-
-from station.ctl.config.validators import ConfigItemValidationResult, ConfigItemValidationStatus
+from rich.table import Table
 
 from station.ctl.config import validators
+from station.ctl.config.validators import ConfigItemValidationResult, ConfigItemValidationStatus
 
 YELLOW = Style(color="yellow")
 RED = Style(color="red")

@@ -1,20 +1,17 @@
 from io import BytesIO
 from typing import Any, List
 
-from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
 from loguru import logger
+from sqlalchemy.orm import Session
 
-from station.app.schemas.users import User
 from station.app.api import dependencies
-
-from station.app.schemas.datasets import DataSet, DataSetCreate, DataSetUpdate, DataSetStatistics, MinioFile
-from station.app.datasets import statistics
-from station.app.crud import datasets
-from station.clients.minio import MinioClient
-from station.ctl.constants import DataDirectories
 from station.app.config import clients
+from station.app.crud import datasets
+from station.app.datasets import statistics
+from station.app.schemas.datasets import DataSet, DataSetCreate, DataSetStatistics, DataSetUpdate, MinioFile
+from station.ctl.constants import DataDirectories
 
 router = APIRouter()
 

@@ -1,6 +1,6 @@
-import docker
 import click
 
+import docker
 from station.ctl.constants import Icons
 
 

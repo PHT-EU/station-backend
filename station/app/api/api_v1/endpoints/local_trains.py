@@ -1,20 +1,14 @@
-import io
-import tarfile
 from typing import List
 
-from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, File, UploadFile, HTTPException
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
+from sqlalchemy.orm import Session
 
 from station.app.api import dependencies
 from station.app.config import clients
-
-from station.app.schemas import local_trains
-
 from station.app.crud.crud_local_train import local_train
-from station.app.crud.local_train_master_image import local_train_master_image
+from station.app.schemas import local_trains
 from station.app.schemas.datasets import MinioFile
-from station.clients.minio import MinioClient
 from station.ctl.constants import DataDirectories
 from station.trains.local.airflow import run_local_train
 

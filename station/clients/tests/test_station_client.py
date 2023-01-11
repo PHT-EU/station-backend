@@ -7,7 +7,6 @@ from station.app.schemas.local_trains import LocalTrainCreate
 from station.clients.station import StationAPIClient
 
 
-
 @pytest.fixture
 def station_client():
     load_dotenv(find_dotenv())

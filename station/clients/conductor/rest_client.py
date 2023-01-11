@@ -1,8 +1,8 @@
+import os
 from typing import Any, Dict
 
 import requests
 from sqlalchemy.orm import Session
-import os
 
 
 class ConductorRESTClient:

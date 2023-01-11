@@ -1,9 +1,10 @@
-from station.clients.minio import MinioClient
-from conductor_lib.src.torch import LightningTrainModel
-from typing import Union
 import os
+from typing import Union
+
+from conductor_lib.src.torch import LightningTrainModel
 from torch.utils.data import DataLoader
 
+from station.clients.minio import MinioClient
 from station.worker.loader import BaseLoader
 
 

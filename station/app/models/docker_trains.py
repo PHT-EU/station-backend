@@ -1,7 +1,8 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, JSON
-from sqlalchemy.orm import relationship, backref
-from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
+
+from sqlalchemy import JSON, Boolean, Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 
 from station.app.db.base_class import Base
 

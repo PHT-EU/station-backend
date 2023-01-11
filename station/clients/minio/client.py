@@ -1,21 +1,17 @@
-import time
-from io import BytesIO
-from io import BufferedReader
-from io import TextIOWrapper
-
 import tarfile
+import time
+from io import BufferedReader, BytesIO, TextIOWrapper
+from typing import Dict, List, Union
 from zipfile import ZipFile
 
 import pendulum
 import starlette
+from fastapi import File, UploadFile
+from loguru import logger
 from minio import Minio
 from minio.error import S3Error
-from fastapi import File, UploadFile
-from typing import List, Union, Dict
-from loguru import logger
 from pydantic import SecretStr
 
-from station.app.settings import settings
 from station.app.schemas.datasets import MinioFile
 from station.app.schemas.station_status import HealthStatus
 from station.ctl.constants import DataDirectories

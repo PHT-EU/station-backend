@@ -1,12 +1,12 @@
 import os
 from typing import Union
-import pytorch_lightning as pl
 
+import pytorch_lightning as pl
 from torch.utils.data import DataLoader, Dataset
+from torchvision.transforms import Compose, ToTensor
 
 from station.clients.minio import MinioClient
 from station.worker.loader.dataset import MinioFolderDS
-from torchvision.transforms import Compose, ToTensor
 
 
 class BaseLoader:

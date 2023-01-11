@@ -1,6 +1,16 @@
 from fastapi import APIRouter
-from station.app.api.api_v1.endpoints import datasets, docker_trains, station, \
-    station_status, local_trains, airflow, fhir, notifications, master_images
+
+from station.app.api.api_v1.endpoints import (
+    airflow,
+    datasets,
+    docker_trains,
+    fhir,
+    local_trains,
+    master_images,
+    notifications,
+    station,
+    station_status,
+)
 
 api_router = APIRouter()
 

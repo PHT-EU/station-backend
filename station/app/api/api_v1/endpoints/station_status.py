@@ -1,10 +1,8 @@
+import psutil
 from fastapi import APIRouter
-from station.app.schemas import station_status as status_schema
-from loguru import logger
 
 from station.app.config import clients
-
-import psutil
+from station.app.schemas import station_status as status_schema
 
 router = APIRouter()
 """

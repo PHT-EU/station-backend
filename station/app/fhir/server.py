@@ -1,17 +1,15 @@
 import json
 from datetime import datetime
 
-
-from sqlalchemy.orm import Session
-from fhir_kindling.fhir_server.server_responses import ServerSummary
-from fhir_kindling import FhirServer
 import plotly.graph_objects as go
 import plotly.io
+from fhir_kindling import FhirServer
+from fhir_kindling.fhir_server.server_responses import ServerSummary
+from sqlalchemy.orm import Session
 
 from station.app.crud.crud_fhir_servers import fhir_servers
-from station.app.settings import settings
-from station.app.schemas.datasets import FigureData
 from station.app.schemas.fhir import ServerStatistics
+from station.app.settings import settings
 
 
 def fhir_server_from_db(db: Session, fhir_server_id: str, server=None) -> FhirServer:

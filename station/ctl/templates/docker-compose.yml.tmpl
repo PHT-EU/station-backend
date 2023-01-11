@@ -47,6 +47,7 @@ services:
     environment:{% for key, value in auth_config.env.items() %}
       - {{ key }}={{ value }}
       {%- endfor %}
+      - ROBOT_ENABLED=true
     labels:{% for label in auth_config.labels %}
       - {{ label }}
       {%- endfor %}
