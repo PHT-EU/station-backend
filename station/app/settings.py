@@ -792,7 +792,7 @@ class Settings:
         if _airflow_config and (env_airflow_api_url or env_airflow_port or env_airflow_user or env_airflow_secret):
             logger.debug(f"Overriding airflow config with env var specifications.")
             if env_airflow_api_url:
-                airflow_config.api_url = env_airflow_api_url
+                airflow_config.host = env_airflow_api_url
             if env_airflow_port:
                 airflow_config.port = env_airflow_port
             if env_airflow_user:
