@@ -62,11 +62,10 @@ class AirflowSettings(BaseModel):
         """
         if isinstance(self.host, str):
             if self.host.startswith("http://") or self.host.startswith("https://"):
-                url = self.host + (f":{self.port}" if self.port else "")
+                api_url = self.host + (f":{self.port}" if self.port else "")
             else:
-                url = f"http://{self.host}" + f":{self.port}" if self.port else ""
+                api_url = f"http://{self.host}" + f":{self.port}" if self.port else ""
 
-            api_url = url + "/api/v1/"
         elif isinstance(self.host, AnyHttpUrl):
             url = "http://" + self.host.host + f":{self.port}" if self.port else ""
             api_url = url + self.host.path if self.host.path else ""

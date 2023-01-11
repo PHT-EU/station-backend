@@ -203,7 +203,13 @@ def test_airflow_settings():
 
     assert airflow_settings.api_url == "http://airflow.example.com/api/v1/"
 
+    airflow_settings = AirflowSettings(
+        host="http://airflow.example.com/api/v1/",
+        user="airflow",
+        password="airflow",
+    )
 
+    assert airflow_settings.api_url == "http://airflow.example.com/api/v1/"
 
 # def test_settings():
 #     settings = Settings(config_path="station_config.yml")
