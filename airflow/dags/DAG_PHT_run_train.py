@@ -47,8 +47,8 @@ def run_pht_train():
     @task()
     def get_train_image_info():
         context = get_current_context()
-        repository, tag, env, volumes, gpu = [context['dag_run'].conf.get(_, None) for _ in
-                                              ['repository', 'tag', 'env', 'volumes', 'gpus']]
+        repository, tag, env, volumes, gpu ,check_results = [context['dag_run'].conf.get(_, None) for _ in
+                                              ['repository', 'tag', 'env', 'volumes', 'gpus', 'check_results']]
 
         if not tag:
             tag = "latest"
@@ -79,7 +79,8 @@ def run_pht_train():
             "img": img,
             "env": env,
             "volumes": volumes,
-            "gpus": gpu
+            "gpus": gpu,
+            "check_results": check_results
         }
 
         return train_state_dict
@@ -281,7 +282,10 @@ def run_pht_train():
 
     @task()
     def post_run_protocol(train_state):
-
+        #skip if check results is true
+        if train_state.get("check_results", True):
+            return train_state
+        # Check if a post run protocol is specified
         config = TrainConfig(**train_state["config"])
         sp = SecurityProtocol(os.getenv("STATION_ID"), config=config)
         private_key_password = os.getenv("PRIVATE_KEY_PASSWORD", None)
@@ -294,6 +298,10 @@ def run_pht_train():
 
     @task()
     def rebase(train_state):
+        # skip if check results is true
+        if train_state.get("check_results", True):
+            return train_state
+
         base_image = ':'.join([train_state["repository"], 'base'])
         client = docker.from_env(timeout=120)
         to_container = client.containers.create(base_image)
@@ -343,6 +351,10 @@ def run_pht_train():
 
     @task()
     def push_train_image(train_state):
+        # skip if check results is true
+        if train_state.get("check_results", True):
+            return train_state
+
         client = docker.from_env()
 
         registry_address = os.getenv("HARBOR_URL").split("//")[-1]
