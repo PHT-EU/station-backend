@@ -121,6 +121,7 @@ def _setup_auth_server(ctx):
         "NODE_ENV": "production",
         "PUBLIC_URL": "https://" + ctx.obj["https"]["domain"] + "/auth",
         "AUTHORIZATION_REDIRECT_URL": "https://" + ctx.obj["https"]["domain"],
+        "ROBOT_ENABLED": "true",
         # "TYPEORM_CONNECTION": "postgres",
         # "TYPEORM_HOST": "postgres",
         # "TYPEORM_USERNAME": ctx.obj["db"]["admin_user"],
