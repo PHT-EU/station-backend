@@ -41,10 +41,15 @@ class StationClients:
 
         self._minio.setup_buckets()
 
+        if isinstance(self.settings.config.central_ui.robot_secret, str):
+            robot_secret = self.settings.config.central_ui.robot_secret
+        else:
+            robot_secret = self.settings.config.central_ui.robot_secret.get_secret_value()
+
         self._central = CentralApiClient(
             api_url=self.settings.config.central_ui.api_url,
             robot_id=self.settings.config.central_ui.robot_id,
-            robot_secret=self.settings.config.central_ui.robot_secret.get_secret_value(),
+            robot_secret=robot_secret,
         )
 
         self.is_initialized = True
