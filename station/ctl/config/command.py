@@ -63,6 +63,7 @@ def render_config(config: dict, path: str):
         station_id=config['station_id'],
         version=config['version'],
         admin_password=config['admin_password'],
+        station_data_dir=config['station_data_dir'],
         environment=config['environment'],
         central=config['central'],
         http=config['http'],

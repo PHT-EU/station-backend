@@ -145,12 +145,12 @@ def _setup_auth_server(ctx):
             line = next(logs).decode("utf-8")
             if "Startup completed." in line:
                 # todo improve this
-                time.sleep(5)
+                time.sleep(1)
                 break
     except StopIteration:
-        print(f'log stream ended for {container.id}')
+        pass
     except KeyboardInterrupt:
-        print('interrupted!')
+        click.echo('Aborted!')
     # print(logs.decode())
     retry_delays = [1, 5, 10]
     seed_path = os.path.join(ctx.obj['install_dir'], str(PHTDirectories.SERVICE_DATA_DIR.value), "auth", "seed.json")
@@ -244,7 +244,8 @@ def write_traefik_configs(ctx) -> Tuple[str, str]:
         click.echo(Icons.CHECKMARK.value)
         host_path = ctx.obj.get("host_path")
         if host_path:
-            traefik_config_path = os.path.join(host_path, str(PHTDirectories.CONFIG_DIR.value), "traefik", "traefik.yml")
+            traefik_config_path = os.path.join(host_path, str(PHTDirectories.CONFIG_DIR.value), "traefik",
+                                               "traefik.yml")
             router_config_path = os.path.join(host_path, str(PHTDirectories.CONFIG_DIR.value), "traefik", "config.yml")
         return str(traefik_config_path), str(router_config_path)
 

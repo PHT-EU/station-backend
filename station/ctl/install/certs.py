@@ -9,6 +9,7 @@ from cryptography.hazmat.primitives import hashes
 
 import datetime
 
+
 def copy_certificates(ctx):
     """
     Copy certificates from the paths specified in the config to the installation directory
@@ -32,6 +33,7 @@ def copy_certificates(ctx):
         f.write(key)
     with open(dest_path / "cert.pem", "wb") as f:
         f.write(cert)
+
 
 def generate_certificates(domain: str, key_path: str, cert_path: str, key_password: str = None):
     # Generate our key

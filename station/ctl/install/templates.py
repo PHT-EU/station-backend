@@ -21,7 +21,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
     """
     if not env:
         env = get_template_env()
-    template = env.get_template('docker-compose.yml.tmpl')
+    template = env.get_template("docker-compose.yml.tmpl")
 
     service_images = {
         "db": ServiceImages.POSTGRES.value,
@@ -35,7 +35,6 @@ def render_compose(config: dict, env: Environment = None) -> str:
         "api": PHTImages.API.value,
         "ui": PHTImages.UI.value,
         "auth": PHTImages.AUTH.value,
-
     }
     host_path = config.get("host_path", None)
 
@@ -48,7 +47,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
         "env": {
             "POSTGRES_USER": config["db"]["admin_user"],
             "POSTGRES_PASSWORD": config["db"]["admin_password"],
-        }
+        },
     }
 
     certs_dir = str(os.path.join(install_dir, PHTDirectories.CERTS_DIR.value))
@@ -56,10 +55,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
     proxy_config = {
         "http_port": config["http"]["port"],
         "https_port": config["https"]["port"],
-        "labels": [
-            "traefik.enable=true",
-            "traefik.http.routers.traefik=true"
-        ],
+        "labels": ["traefik.enable=true", "traefik.http.routers.traefik=true"],
         "traefik_config": config["traefik_config_path"],
         "router_config": config["router_config_path"],
         "certs_dir": certs_dir,
@@ -79,14 +75,15 @@ def render_compose(config: dict, env: Environment = None) -> str:
             f'traefik.http.routers.auth.rule=Host("{config["https"]["domain"]}") && PathPrefix("/auth")',
             "traefik.http.services.auth.loadbalancer.server.port=3010",
             "traefik.http.middlewares.auth-stripprefix.stripprefix.prefixes=/auth",
-            "traefik.http.routers.auth.middlewares=auth-stripprefix@docker"
-
+            "traefik.http.routers.auth.middlewares=auth-stripprefix@docker",
         ],
         "data_dir": str(os.path.join(service_data_dir, "auth")),
     }
 
-    db_connection_string = f"postgresql+psycopg2://{config['db']['admin_user']}:{config['db']['admin_password']}" \
-                           f"@postgres/pht_station"
+    db_connection_string = (
+        f"postgresql+psycopg2://{config['db']['admin_user']}:{config['db']['admin_password']}"
+        f"@postgres/pht_station"
+    )
     registry_user = config["registry"]["user"]
     if "$" in registry_user:
         registry_user = registry_user.replace("$", "$$")
@@ -98,32 +95,56 @@ def render_compose(config: dict, env: Environment = None) -> str:
             StationEnvironmentVariables.FERNET_KEY.value: config["api"]["fernet_key"],
             StationEnvironmentVariables.ENVIRONMENT.value: config["environment"],
             StationEnvironmentVariables.AIRFLOW_API_URL.value: f'https://{config["https"]["domain"]}/airflow/api/v1/',
-            StationEnvironmentVariables.AIRFLOW_USER.value: config["airflow"]["admin_user"],
-            StationEnvironmentVariables.AIRFLOW_PW.value: config["airflow"]["admin_password"],
+            StationEnvironmentVariables.AIRFLOW_USER.value: config["airflow"][
+                "admin_user"
+            ],
+            StationEnvironmentVariables.AIRFLOW_PW.value: config["airflow"][
+                "admin_password"
+            ],
             StationEnvironmentVariables.MINIO_HOST.value: "minio",
             StationEnvironmentVariables.MINIO_PORT.value: "9000",
-            StationEnvironmentVariables.MINIO_ACCESS_KEY.value: config["minio"]["admin_user"],
-            StationEnvironmentVariables.MINIO_SECRET_KEY.value: config["minio"]["admin_password"],
+            StationEnvironmentVariables.MINIO_ACCESS_KEY.value: config["minio"][
+                "admin_user"
+            ],
+            StationEnvironmentVariables.MINIO_SECRET_KEY.value: config["minio"][
+                "admin_password"
+            ],
             StationEnvironmentVariables.REDIS_HOST.value: "redis",
-            StationEnvironmentVariables.AUTH_SERVER_HOST.value: f'http://auth',
+            StationEnvironmentVariables.AUTH_SERVER_HOST.value: f"http://auth",
             StationEnvironmentVariables.AUTH_SERVER_PORT.value: 3010,
             StationEnvironmentVariables.AUTH_ROBOT_ID.value: config["auth"]["robot_id"],
-            StationEnvironmentVariables.AUTH_ROBOT_SECRET.value: config["auth"]["robot_secret"],
-            StationEnvironmentVariables.REGISTRY_URL.value: config["registry"]["address"],
+            StationEnvironmentVariables.AUTH_ROBOT_SECRET.value: config["auth"][
+                "robot_secret"
+            ],
+            StationEnvironmentVariables.REGISTRY_URL.value: config["registry"][
+                "address"
+            ],
             StationEnvironmentVariables.REGISTRY_USER.value: registry_user,
-            StationEnvironmentVariables.REGISTRY_PW.value: config["registry"]["password"],
-            StationEnvironmentVariables.REGISTRY_PROJECT.value: config["registry"]["project"],
-            StationEnvironmentVariables.CENTRAL_API_URL.value: config["central"]["api_url"],
-            StationEnvironmentVariables.STATION_ROBOT_ID.value: config["central"]["robot_id"],
-            StationEnvironmentVariables.STATION_ROBOT_SECRET.value: config["central"]["robot_secret"],
-
+            StationEnvironmentVariables.REGISTRY_PW.value: config["registry"][
+                "password"
+            ],
+            StationEnvironmentVariables.REGISTRY_PROJECT.value: config["registry"][
+                "project"
+            ],
+            StationEnvironmentVariables.CENTRAL_API_URL.value: config["central"][
+                "api_url"
+            ],
+            StationEnvironmentVariables.STATION_ROBOT_ID.value: config["central"][
+                "robot_id"
+            ],
+            StationEnvironmentVariables.STATION_ROBOT_SECRET.value: config["central"][
+                "robot_secret"
+            ],
+            StationEnvironmentVariables.STATION_DATA_DIR.value: config[
+                "station_data_dir"
+            ],
         },
         "labels": [
             "traefik.enable=true",
             "traefik.http.routers.api.tls=true",
             f'traefik.http.routers.api.rule=Host("{config["https"]["domain"]}") && PathPrefix("/api")',
-            "traefik.http.services.api.loadbalancer.server.port=8000"
-        ]
+            "traefik.http.services.api.loadbalancer.server.port=8000",
+        ],
     }
 
     minio_config = {
@@ -140,8 +161,8 @@ def render_compose(config: dict, env: Environment = None) -> str:
             "traefik.http.routers.minio-console.tls=true",
             f'traefik.http.routers.minio-console.rule=Host("minio-console.{config["https"]["domain"]}")',
             "traefik.http.routers.minio-console.service=minio-console",
-            "traefik.http.services.minio-console.loadbalancer.server.port=9001"
-        ]
+            "traefik.http.services.minio-console.loadbalancer.server.port=9001",
+        ],
     }
 
     if config.get("host_path"):
@@ -159,17 +180,18 @@ def render_compose(config: dict, env: Environment = None) -> str:
             "HARBOR_URL": config["registry"]["address"],
             "HARBOR_USER": registry_user,
             "HARBOR_PW": config["registry"]["password"],
-
         },
         "labels": [
             "traefik.enable=true",
             "traefik.http.routers.airflow.tls=true",
             f'traefik.http.routers.airflow.rule=Host("{config["https"]["domain"]}") && PathPrefix("/airflow")',
-            "traefik.http.services.airflow.loadbalancer.server.port=8080"
-        ]
+            "traefik.http.services.airflow.loadbalancer.server.port=8080",
+        ],
     }
 
-    station_data_dir = str(os.path.join(config["install_dir"], PHTDirectories.STATION_DATA_DIR.value))
+    station_data_dir = str(
+        os.path.join(config["install_dir"], PHTDirectories.STATION_DATA_DIR.value)
+    )
 
     ui_config = {
         "env": {
@@ -181,14 +203,14 @@ def render_compose(config: dict, env: Environment = None) -> str:
             "traefik.http.routers.ui.tls=true",
             f'traefik.http.routers.ui.rule=Host("{config["https"]["domain"]}") && !PathPrefix("/api") '
             f'&& !PathPrefix("/auth") && !PathPrefix("/airflow") && !PathPrefix("/fhir-servers")',
-            "traefik.http.services.ui.loadbalancer.server.port=3000"
-        ]
+            "traefik.http.services.ui.loadbalancer.server.port=3000",
+        ],
     }
 
     return template.render(
         service_images=service_images,
         pht_images=pht_images,
-        version=config['version'],
+        version=config["version"],
         service_data_dir=service_data_dir,
         station_data_dir=station_data_dir,
         db_config=db_config,
@@ -201,22 +223,27 @@ def render_compose(config: dict, env: Environment = None) -> str:
     )
 
 
-def render_airflow_config(domain: str, sql_alchemy_conn: str, env: Environment = None) -> str:
+def render_airflow_config(
+    domain: str, sql_alchemy_conn: str, env: Environment = None
+) -> str:
     if not env:
         env = get_template_env()
 
-    template = env.get_template('airflow.cfg.tmpl')
+    template = env.get_template("airflow.cfg.tmpl")
     airflow_base_url = "https://" + domain + "/airflow"
-    return template.render(airflow_base_url=airflow_base_url, sql_alchemy_conn=sql_alchemy_conn)
+    return template.render(
+        airflow_base_url=airflow_base_url, sql_alchemy_conn=sql_alchemy_conn
+    )
 
 
 def render_traefik_configs(
-        http_port: int = 80,
-        https_port: int = 443,
-        https_enabled: bool = True,
-        domain: str = None,
-        certs: dict = None,
-        env: Environment = None) -> Tuple[str, str]:
+    http_port: int = 80,
+    https_port: int = 443,
+    https_enabled: bool = True,
+    domain: str = None,
+    certs: dict = None,
+    env: Environment = None,
+) -> Tuple[str, str]:
     """
     Render static config files for the traefik proxy.
 
@@ -255,10 +282,7 @@ def render_traefik_configs(
 
     # render traefik router config
     router_config = _make_traefik_router_config(
-        env=env,
-        https_enabled=https_enabled,
-        domain=domain,
-        certs=certs
+        env=env, https_enabled=https_enabled, domain=domain, certs=certs
     )
 
     return traefik_config, router_config
@@ -279,17 +303,18 @@ def render_init_sql(db_user: str, env: Environment = None) -> str:
     """
     if not env:
         env = get_template_env()
-    template = env.get_template('init.sql.tmpl')
+    template = env.get_template("init.sql.tmpl")
     return template.render(db_user=db_user)
 
 
 def _make_traefik_config(
-        env: Environment,
-        http_port: int = 80,
-        https_port: int = None,
-        https_enabled: bool = True,
-        domain: str = None,
-        dashboard: bool = False) -> str:
+    env: Environment,
+    http_port: int = 80,
+    https_port: int = None,
+    https_enabled: bool = True,
+    domain: str = None,
+    dashboard: bool = False,
+) -> str:
     """
     Render the general traefik config file.
 
@@ -303,21 +328,22 @@ def _make_traefik_config(
     Returns: string containing the content of the traefik config yaml file
 
     """
-    template = env.get_template('traefik/traefik.yml.tmpl')
+    template = env.get_template("traefik/traefik.yml.tmpl")
     return template.render(
         dashboard=dashboard,
         http_port=http_port,
         https_port=https_port,
         https_enabled=https_enabled,
-        domain=domain
+        domain=domain,
     )
 
 
 def _make_traefik_router_config(
-        env: Environment,
-        https_enabled: bool = True,
-        domain: str = None,
-        certs: List[dict] = None) -> str:
+    env: Environment,
+    https_enabled: bool = True,
+    domain: str = None,
+    certs: List[dict] = None,
+) -> str:
     """
     Render the traefik router config file. This file contains static router configuration for the traefik proxy.
     As well the specifications on which domains and respective certificates to use for https traffic.
@@ -330,9 +356,5 @@ def _make_traefik_router_config(
     Returns: string containing the content of the traefik router config yaml file
 
     """
-    template = env.get_template('traefik/config.yml.tmpl')
-    return template.render(
-        domain=domain,
-        https_enabled=https_enabled,
-        certs=certs
-    )
+    template = env.get_template("traefik/config.yml.tmpl")
+    return template.render(domain=domain, https_enabled=https_enabled, certs=certs)
