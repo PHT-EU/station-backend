@@ -102,7 +102,7 @@ def _setup_auth_server(ctx):
     client = docker.from_env()
 
     auth_image = f"{PHTImages.AUTH.value}:{ctx.obj['version']}"
-    command = "start"
+    command = "setup"
 
     if ctx.obj.get("host_path"):
         writable_dir = os.path.join(ctx.obj['host_path'], str(PHTDirectories.SERVICE_DATA_DIR.value), "auth")

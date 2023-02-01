@@ -68,6 +68,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
             "NODE_ENV": "production",
             "PUBLIC_URL": auth_url,
             "AUTHORIZE_REDIRECT_URL": auth_url,
+            "ROBOT_ENABLED": "true",
         },
         "labels": [
             "traefik.enable=true",

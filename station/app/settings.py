@@ -830,16 +830,17 @@ class Settings:
                                f"development mode")
                 self.config.airflow = AirflowSettings()
 
-        # Check whether connection to station database with connection_id already exists, if not create it
-        try:
-            self._create_station_db_connection()
-        except Exception as e:
-            logger.error(f"{Emojis.ERROR}   Could not create airflow connection to station database: {e}")
-            if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
-                raise ValueError(f"{Emojis.ERROR.value}   Unable to add database connection to airflow")
-            else:
-                logger.warning(f"Unable to add database connection to airflow. Is airflow running?")
-                logger.error(e)
+        # todo re-enable this when checked if it is necessary -> should probably just use api calls to station api
+        # # Check whether connection to station database with connection_id already exists, if not create it
+        # try:
+        #     self._create_station_db_connection()
+        # except Exception as e:
+        #     logger.error(f"{Emojis.ERROR}   Could not create airflow connection to station database: {e}")
+        #     if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
+        #         raise ValueError(f"{Emojis.ERROR.value}   Unable to add database connection to airflow")
+        #     else:
+        #         logger.warning(f"Unable to add database connection to airflow. Is airflow running?")
+        #         logger.error(e)
 
     def _create_station_db_connection(self):
 
