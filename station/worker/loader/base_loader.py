@@ -1,20 +1,22 @@
 import os
 from typing import Union
-import pytorch_lightning as pl
 
+import pytorch_lightning as pl
 from torch.utils.data import DataLoader, Dataset
+from torchvision.transforms import Compose, ToTensor
 
 from station.clients.minio import MinioClient
 from station.worker.loader.dataset import MinioFolderDS
-from torchvision.transforms import Compose, ToTensor
 
 
 class BaseLoader:
-    def __init__(self,
-                 data_set: Union[Dataset, str] = None,
-                 station_api: str = None,
-                 config: dict = None,
-                 transform: Compose = None):
+    def __init__(
+        self,
+        data_set: Union[Dataset, str] = None,
+        station_api: str = None,
+        config: dict = None,
+        transform: Compose = None,
+    ):
 
         self.station_api = station_api if station_api else os.getenv("STATION_API_URL")
         self.data_set = data_set
@@ -42,18 +44,23 @@ class BaseLoader:
 
     def get_data_set(self):
         # TODO enable different data set types
-        dataset = MinioFolderDS(client=self.minio_client, data_set_id=self.data_set, transform=self.transform)
+        dataset = MinioFolderDS(
+            client=self.minio_client,
+            data_set_id=self.data_set,
+            transform=self.transform,
+        )
         return dataset
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     transform = Compose([ToTensor()])
 
-    loader = BaseLoader(data_set="cifar/batch_1",
-                        transform=transform,
-                        config={"batch_size": 6, "num_workers": 0}
-                        ).make_data_loader()
+    loader = BaseLoader(
+        data_set="cifar/batch_1",
+        transform=transform,
+        config={"batch_size": 6, "num_workers": 0},
+    ).make_data_loader()
     for i, batch in enumerate(loader):
         print(batch.size())
         if i > 3:

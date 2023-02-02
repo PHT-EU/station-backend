@@ -1,12 +1,12 @@
 import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 def to_camel(string: str) -> str:
-    split = string.split('_')
-    return split[0] + ''.join(word.capitalize() for word in split[1:])
+    split = string.split("_")
+    return split[0] + "".join(word.capitalize() for word in split[1:])
 
 
 class UserPermission(BaseModel):

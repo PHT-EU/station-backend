@@ -1,8 +1,7 @@
 import uuid
-
-from sqlalchemy import Boolean, Column, Integer, String, DateTime
 from datetime import datetime
 
+from sqlalchemy import Boolean, Column, DateTime, String
 from sqlalchemy.dialects.postgresql import UUID
 
 from station.app.db.base_class import Base

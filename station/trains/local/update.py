@@ -5,7 +5,9 @@ from station.app.schemas import local_trains as lt_schema
 from station.app.schemas.datasets import MinioFile
 
 
-def update_configuration_status(local_train: lt_models.LocalTrain, files: List[MinioFile] = None) -> str:
+def update_configuration_status(
+    local_train: lt_models.LocalTrain, files: List[MinioFile] = None
+) -> str:
     """
     Update the configuration status of a local train
     """

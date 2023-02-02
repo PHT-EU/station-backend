@@ -1,4 +1,4 @@
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
+from typing import Any, Generic, List, Type, TypeVar, Union
 
 import requests
 import requests.auth
@@ -13,8 +13,9 @@ UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 
 
 class ResourceClient(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
-
-    def __init__(self, base_url, resource_name: str, model: Type[ModelType], client: BaseClient):
+    def __init__(
+        self, base_url, resource_name: str, model: Type[ModelType], client: BaseClient
+    ):
         """
         Base class for a resource client for the station api implement
         Args:
@@ -35,7 +36,7 @@ class ResourceClient(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         response = requests.post(
             f"{self.base_url}/{self.resource_name}",
             json=data.dict(),
-            headers=self._client.headers
+            headers=self._client.headers,
         )
         try:
             response.raise_for_status()
@@ -45,23 +46,35 @@ class ResourceClient(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return self.model(**response.json())
 
     def get(self, resource_id) -> ModelType:
-        response = requests.get(f"{self.base_url}/{self.resource_name}/{resource_id}", headers=self._client.headers)
+        response = requests.get(
+            f"{self.base_url}/{self.resource_name}/{resource_id}",
+            headers=self._client.headers,
+        )
         response.raise_for_status()
         return self.model(**response.json())
 
     def get_multi(self, skip: int = 0, limit: int = 100) -> List[ModelType]:
-        response = requests.get(f"{self.base_url}/{self.resource_name}",
-                                params={"skip": skip, "limit": limit}, headers=self._client.headers)
+        response = requests.get(
+            f"{self.base_url}/{self.resource_name}",
+            params={"skip": skip, "limit": limit},
+            headers=self._client.headers,
+        )
         response.raise_for_status()
         return [self.model(**item) for item in response.json()]
 
     def update(self, resource_id: Any, data: UpdateSchemaType) -> ModelType:
-        response = requests.put(f"{self.base_url}/{self.resource_name}/{resource_id}", json=data,
-                                headers=self._client.headers)
+        response = requests.put(
+            f"{self.base_url}/{self.resource_name}/{resource_id}",
+            json=data,
+            headers=self._client.headers,
+        )
         response.raise_for_status()
         return self.model(**response.json())
 
     def delete(self, resource_id) -> ModelType:
-        response = requests.delete(f"{self.base_url}/{self.resource_name}/{resource_id}", headers=self._client.headers)
+        response = requests.delete(
+            f"{self.base_url}/{self.resource_name}/{resource_id}",
+            headers=self._client.headers,
+        )
         response.raise_for_status()
         return self.model(**response.json())

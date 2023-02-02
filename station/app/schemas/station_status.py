@@ -1,13 +1,13 @@
-from typing import List, Optional
 from enum import Enum
+from typing import List, Optional
 
 from pydantic import BaseModel
 
 
 class HealthStatus(str, Enum):
-    healthy = 'healthy'
-    stopped = 'stopped'
-    error = 'error'
+    healthy = "healthy"
+    stopped = "stopped"
+    error = "error"
 
 
 class StatusDocker(BaseModel):

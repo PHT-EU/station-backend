@@ -1,143 +1,164 @@
-import pytest
-from dotenv import load_dotenv, find_dotenv
-from unittest.mock import patch
 import os
-from yaml import safe_load, safe_dump
+from unittest.mock import patch
 
-from pydantic import SecretStr
+import pytest
+from dotenv import find_dotenv, load_dotenv
 
-from station.app.settings import Settings, AuthConfig, RegistrySettings, MinioSettings, CentralUISettings, \
-    StationConfig, AirflowSettings
 from station.app.env import StationEnvironmentVariables
+from station.app.settings import (
+    AirflowSettings,
+    AuthConfig,
+    CentralUISettings,
+    MinioSettings,
+    RegistrySettings,
+    Settings,
+    StationConfig,
+)
 
 
 def test_settings_init_env_vars():
     load_dotenv(find_dotenv())
     # Test runtime environment variables
-    with patch.dict(os.environ,
-                    {
-                        'ENVIRONMENT': 'development',
-                        StationEnvironmentVariables.AUTH_SERVER_HOST.value: 'http://auth.example.com',
-                        StationEnvironmentVariables.AUTH_SERVER_PORT.value: '3010',
-                        StationEnvironmentVariables.AUTH_ROBOT_ID.value: 'robot',
-                        StationEnvironmentVariables.AUTH_ROBOT_SECRET.value: 'robot_secret',
-                        StationEnvironmentVariables.MINIO_HOST.value: 'http://minio.example.com',
-                        StationEnvironmentVariables.MINIO_ACCESS_KEY.value: 'minio_user',
-                        StationEnvironmentVariables.MINIO_SECRET_KEY.value: 'minio_secret',
-                        StationEnvironmentVariables.STATION_DB.value: "postgres://db"
-                    }):
+    with patch.dict(
+        os.environ,
+        {
+            "ENVIRONMENT": "development",
+            StationEnvironmentVariables.AUTH_SERVER_HOST.value: "http://auth.example.com",
+            StationEnvironmentVariables.AUTH_SERVER_PORT.value: "3010",
+            StationEnvironmentVariables.AUTH_ROBOT_ID.value: "robot",
+            StationEnvironmentVariables.AUTH_ROBOT_SECRET.value: "robot_secret",
+            StationEnvironmentVariables.MINIO_HOST.value: "http://minio.example.com",
+            StationEnvironmentVariables.MINIO_ACCESS_KEY.value: "minio_user",
+            StationEnvironmentVariables.MINIO_SECRET_KEY.value: "minio_secret",
+            StationEnvironmentVariables.STATION_DB.value: "postgres://db",
+        },
+    ):
         settings = Settings()
         settings.setup()
-        assert settings.config.environment == 'development'
-        assert settings.config.auth.host == 'http://auth.example.com'
+        assert settings.config.environment == "development"
+        assert settings.config.auth.host == "http://auth.example.com"
         assert settings.config.auth.port == 3010
-        assert settings.config.auth.robot_id == 'robot'
+        assert settings.config.auth.robot_id == "robot"
 
-    with patch.dict(os.environ, {'ENVIRONMENT': 'development'}):
+    with patch.dict(os.environ, {"ENVIRONMENT": "development"}):
         settings = Settings()
         settings.setup()
-        assert settings.config.environment == 'development'
+        assert settings.config.environment == "development"
 
     with pytest.raises(ValueError):
-        with patch.dict(os.environ, {'ENVIRONMENT': 'fails'}):
+        with patch.dict(os.environ, {"ENVIRONMENT": "fails"}):
             settings = Settings()
             settings.setup()
 
-    with patch.dict(os.environ,
-                    {
-                        'ENVIRONMENT': 'development',
-                        "STATION_ID": "test_station_id",
-                        "FERNET_KEY": "test_fernet_key",
-                        "STATION_API_HOST": "0.0.0.0",
-                        "STATION_API_PORT": "8082",
-                    }):
+    with patch.dict(
+        os.environ,
+        {
+            "ENVIRONMENT": "development",
+            "STATION_ID": "test_station_id",
+            "FERNET_KEY": "test_fernet_key",
+            "STATION_API_HOST": "0.0.0.0",
+            "STATION_API_PORT": "8082",
+        },
+    ):
         settings = Settings()
         settings.setup()
         assert settings.config.station_id == "test_station_id"
-        assert settings.config.environment == 'development'
-        assert settings.config.fernet_key == 'test_fernet_key'
+        assert settings.config.environment == "development"
+        assert settings.config.fernet_key == "test_fernet_key"
         assert settings.config.host == "0.0.0.0"
         assert settings.config.port == 8082
 
-    with patch.dict(os.environ,
-                    {
-                        'ENVIRONMENT': 'development',
-                        "STATION_ID": "test_station_id",
-                        "FERNET_KEY": "",
-                        "STATION_API_HOST": "0.0.0.0",
-                        "STATION_API_PORT": "8082",
-                    }):
+    with patch.dict(
+        os.environ,
+        {
+            "ENVIRONMENT": "development",
+            "STATION_ID": "test_station_id",
+            "FERNET_KEY": "",
+            "STATION_API_HOST": "0.0.0.0",
+            "STATION_API_PORT": "8082",
+        },
+    ):
         settings = Settings()
         settings.setup()
         assert settings.config.station_id == "test_station_id"
-        assert settings.config.environment == 'development'
+        assert settings.config.environment == "development"
         assert settings.config.fernet_key
         assert settings.config.host == "0.0.0.0"
         assert settings.config.port == 8082
 
     with pytest.raises(ValueError):
-        with patch.dict(os.environ,
-                        {
-                            'ENVIRONMENT': 'development',
-                            "STATION_ID": "",
-                            "FERNET_KEY": "",
-                            "STATION_API_HOST": "0.0.0.0",
-                            "STATION_API_PORT": "8082",
-                        }):
+        with patch.dict(
+            os.environ,
+            {
+                "ENVIRONMENT": "development",
+                "STATION_ID": "",
+                "FERNET_KEY": "",
+                "STATION_API_HOST": "0.0.0.0",
+                "STATION_API_PORT": "8082",
+            },
+        ):
             settings = Settings()
             settings.setup()
 
     with pytest.raises(ValueError):
-        with patch.dict(os.environ,
-                        {
-                            'ENVIRONMENT': 'production',
-                            StationEnvironmentVariables.AUTH_SERVER_HOST.value: '',
-                            StationEnvironmentVariables.AUTH_SERVER_PORT.value: '',
-                            StationEnvironmentVariables.AUTH_ROBOT_ID.value: '',
-                            StationEnvironmentVariables.AUTH_ROBOT_SECRET.value: '',
-                        }):
+        with patch.dict(
+            os.environ,
+            {
+                "ENVIRONMENT": "production",
+                StationEnvironmentVariables.AUTH_SERVER_HOST.value: "",
+                StationEnvironmentVariables.AUTH_SERVER_PORT.value: "",
+                StationEnvironmentVariables.AUTH_ROBOT_ID.value: "",
+                StationEnvironmentVariables.AUTH_ROBOT_SECRET.value: "",
+            },
+        ):
             settings = Settings()
             settings.setup()
-    with patch.dict(os.environ,
-                    {
-                        'ENVIRONMENT': 'development',
-                        StationEnvironmentVariables.AUTH_SERVER_HOST.value: '',
-                        StationEnvironmentVariables.AUTH_SERVER_PORT.value: '',
-                        StationEnvironmentVariables.AUTH_ROBOT_ID.value: '',
-                        StationEnvironmentVariables.AUTH_ROBOT_SECRET.value: '',
-                    }):
+    with patch.dict(
+        os.environ,
+        {
+            "ENVIRONMENT": "development",
+            StationEnvironmentVariables.AUTH_SERVER_HOST.value: "",
+            StationEnvironmentVariables.AUTH_SERVER_PORT.value: "",
+            StationEnvironmentVariables.AUTH_ROBOT_ID.value: "",
+            StationEnvironmentVariables.AUTH_ROBOT_SECRET.value: "",
+        },
+    ):
         settings = Settings()
         settings.setup()
-        assert settings.config.environment == 'development'
+        assert settings.config.environment == "development"
         assert settings.config.auth is None
 
-    with patch.dict(os.environ,
-                    {
-                        'ENVIRONMENT': 'development',
-                        StationEnvironmentVariables.REGISTRY_URL.value: 'http://registry.example.com',
-                        StationEnvironmentVariables.REGISTRY_USER.value: 'test',
-                        StationEnvironmentVariables.REGISTRY_PW.value: 'test',
-                    }):
+    with patch.dict(
+        os.environ,
+        {
+            "ENVIRONMENT": "development",
+            StationEnvironmentVariables.REGISTRY_URL.value: "http://registry.example.com",
+            StationEnvironmentVariables.REGISTRY_USER.value: "test",
+            StationEnvironmentVariables.REGISTRY_PW.value: "test",
+        },
+    ):
         settings = Settings()
         settings.setup()
-        assert settings.config.environment == 'development'
-        assert settings.config.registry.address == 'http://registry.example.com'
-        assert settings.config.registry.user == 'test'
-        assert settings.config.registry.password.get_secret_value() == 'test'
+        assert settings.config.environment == "development"
+        assert settings.config.registry.address == "http://registry.example.com"
+        assert settings.config.registry.user == "test"
+        assert settings.config.registry.password.get_secret_value() == "test"
 
-    with patch.dict(os.environ,
-                    {
-                        'ENVIRONMENT': 'development',
-                        StationEnvironmentVariables.MINIO_HOST.value: 'http://registry.example.com',
-                        StationEnvironmentVariables.MINIO_ACCESS_KEY.value: 'test',
-                        StationEnvironmentVariables.MINIO_SECRET_KEY.value: 'test',
-                    }):
+    with patch.dict(
+        os.environ,
+        {
+            "ENVIRONMENT": "development",
+            StationEnvironmentVariables.MINIO_HOST.value: "http://registry.example.com",
+            StationEnvironmentVariables.MINIO_ACCESS_KEY.value: "test",
+            StationEnvironmentVariables.MINIO_SECRET_KEY.value: "test",
+        },
+    ):
         settings = Settings()
         settings.setup()
-        assert settings.config.environment == 'development'
-        assert settings.config.minio.host == 'http://registry.example.com'
-        assert settings.config.minio.secret_key.get_secret_value() == 'test'
-        assert settings.config.minio.access_key == 'test'
+        assert settings.config.environment == "development"
+        assert settings.config.minio.host == "http://registry.example.com"
+        assert settings.config.minio.secret_key.get_secret_value() == "test"
+        assert settings.config.minio.access_key == "test"
 
 
 def test_config_file():
@@ -171,7 +192,6 @@ def test_config_file():
         api_url="http://central-ui.example.com",
         client_id="central_ui_client_id",
         client_secret="central_ui_client_secret",
-
     )
     config = StationConfig(**settings.config.dict())
 
@@ -194,7 +214,6 @@ def test_airflow_settings():
 
     assert airflow_settings.api_url == "http://airflow:8080/api/v1/"
 
-
     airflow_settings = AirflowSettings(
         host="http://airflow.example.com",
         user="airflow",
@@ -210,6 +229,7 @@ def test_airflow_settings():
     )
 
     assert airflow_settings.api_url == "http://airflow.example.com/api/v1/"
+
 
 # def test_settings():
 #     settings = Settings(config_path="station_config.yml")

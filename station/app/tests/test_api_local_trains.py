@@ -1,14 +1,11 @@
+
 import pytest
-from fastapi import HTTPException
 from fastapi.testclient import TestClient
-import json
-
 from requests import HTTPError
-from station.app.trains.local.docker import make_docker_file
 
-from station.app.main import app
 from station.app.api.dependencies import get_db
-import time
+from station.app.main import app
+
 from .test_db import override_get_db
 
 app.dependency_overrides[get_db] = override_get_db
@@ -23,7 +20,7 @@ def train_id():
         json={
             "name": "test_train",
             "custom_image": "test_image",
-        }
+        },
     )
     return response.json()["id"]
 
@@ -34,7 +31,7 @@ def test_create_local_train():
         json={
             "name": "test_train",
             "custom_image": "test_image",
-        }
+        },
     )
     assert response.status_code == 200
     assert response.json()["name"] == "test_train"
@@ -51,7 +48,7 @@ def test_update_local_train(train_id):
         f"/api/local-trains/{train_id}",
         json={
             "name": "test_train_updated",
-        }
+        },
     )
 
     assert response.status_code == 200
@@ -66,6 +63,3 @@ def test_delete_local_train(train_id):
     r = client.get(f"/api/local-trains/{train_id}")
     with pytest.raises(HTTPError):
         r.raise_for_status()
-
-
-

@@ -1,17 +1,15 @@
 import json
 from datetime import datetime
 
-
-from sqlalchemy.orm import Session
-from fhir_kindling.fhir_server.server_responses import ServerSummary
-from fhir_kindling import FhirServer
 import plotly.graph_objects as go
 import plotly.io
+from fhir_kindling import FhirServer
+from fhir_kindling.fhir_server.server_responses import ServerSummary
+from sqlalchemy.orm import Session
 
 from station.app.crud.crud_fhir_servers import fhir_servers
-from station.app.settings import settings
-from station.app.schemas.datasets import FigureData
 from station.app.schemas.fhir import ServerStatistics
+from station.app.settings import settings
 
 
 def fhir_server_from_db(db: Session, fhir_server_id: str, server=None) -> FhirServer:
@@ -28,7 +26,7 @@ def fhir_server_from_db(db: Session, fhir_server_id: str, server=None) -> FhirSe
             api_address=db_server.api_address,
             username=db_server.username,
             password=password,
-            fhir_server_type=db_server.type
+            fhir_server_type=db_server.type,
         )
 
     if db_server.token:
@@ -36,7 +34,7 @@ def fhir_server_from_db(db: Session, fhir_server_id: str, server=None) -> FhirSe
         return FhirServer(
             api_address=db_server.api_address,
             token=token,
-            fhir_server_type=db_server.type
+            fhir_server_type=db_server.type,
         )
 
     if db_server.client_id:
@@ -50,7 +48,9 @@ def fhir_server_from_db(db: Session, fhir_server_id: str, server=None) -> FhirSe
         )
 
 
-def get_server_statistics(db: Session, fhir_server_id: str, refresh: bool = False) -> ServerStatistics:
+def get_server_statistics(
+    db: Session, fhir_server_id: str, refresh: bool = False
+) -> ServerStatistics:
     db_server = fhir_servers.get(db, id=fhir_server_id)
 
     if db_server.summary and not refresh:
@@ -59,21 +59,14 @@ def get_server_statistics(db: Session, fhir_server_id: str, refresh: bool = Fals
     server = fhir_server_from_db(db, fhir_server_id, db_server)
     summary = server.summary()
     obj = summary_plot(summary)
-    return ServerStatistics(
-        created_at=datetime.now(),
-        summary=summary,
-        figure=obj
-    )
+    return ServerStatistics(created_at=datetime.now(), summary=summary, figure=obj)
 
 
 def summary_plot(summary: ServerSummary) -> dict:
     # sort the resources by count
     resources = sorted(summary.resources, key=lambda x: x.count)
     resources, counts = zip(*[(r.resource, r.count) for r in resources if r.count > 0])
-    fig = go.Figure(go.Bar(
-        x=list(counts),
-        y=list(resources),
-        orientation='h'))
+    fig = go.Figure(go.Bar(x=list(counts), y=list(resources), orientation="h"))
 
     fig_json = plotly.io.to_json(fig)
     obj = json.loads(fig_json)

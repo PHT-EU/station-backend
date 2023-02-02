@@ -1,6 +1,7 @@
-from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
+
+from pydantic import BaseModel
 
 from station.app.schemas import datasets
 

@@ -1,6 +1,7 @@
-from pydantic import BaseModel, validator
 from datetime import datetime
-from typing import List, Optional, Union, Any, Dict
+from typing import Any, Dict, List, Optional, Union
+
+from pydantic import BaseModel, validator
 
 
 class DBSchema(BaseModel):
@@ -55,7 +56,7 @@ class DockerTrainConfig(DockerTrainConfigBase):
     trains: Optional[List[DockerTrainMinimal]] = None
 
     # concatenates list of objects with train_ids to one list of train_ids
-    @validator('trains')
+    @validator("trains")
     def train_list(cls, v):
         if v:
             train_list = []

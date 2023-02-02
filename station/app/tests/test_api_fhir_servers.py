@@ -1,14 +1,14 @@
 import pytest
+from dotenv import find_dotenv, load_dotenv
 from fastapi.testclient import TestClient
-from dotenv import load_dotenv, find_dotenv
 
-from station.app.main import app
 from station.app.api.dependencies import get_db
 from station.app.crud.crud_fhir_servers import fhir_servers
+from station.app.main import app
 from station.app.schemas.fhir import FHIRServerCreate
 from station.app.settings import settings
 
-from .test_db import override_get_db, TestingSessionLocal
+from .test_db import TestingSessionLocal, override_get_db
 
 app.dependency_overrides[get_db] = override_get_db
 
@@ -27,7 +27,12 @@ def test_fhir_server_encrypted_storage(station_settings):
 
     db = TestingSessionLocal()
 
-    obj_in = {"name": "Test Server", "api_address": "http://test.com", "username": "user", "password": "password"}
+    obj_in = {
+        "name": "Test Server",
+        "api_address": "http://test.com",
+        "username": "user",
+        "password": "password",
+    }
     obj_in = FHIRServerCreate(**obj_in)
     fhir_server = fhir_servers.create(db, obj_in=obj_in)
 
@@ -43,7 +48,10 @@ def test_fhir_server_create():
     """
     Test the creation of a FHIR server
     """
-    response = client.post("/api/fhir/server", json={"name": "Test Server", "api_address": "http://test.com"})
+    response = client.post(
+        "/api/fhir/server",
+        json={"name": "Test Server", "api_address": "http://test.com"},
+    )
     assert response.status_code == 201
     assert response.json()["name"] == "Test Server"
     assert response.json()["api_address"] == "http://test.com"
@@ -63,7 +71,10 @@ def test_list_fhir_servers():
     """
     Test the retrieval of a list of FHIR servers
     """
-    response = client.post("/api/fhir/server", json={"name": "Test Server", "api_address": "http://test.com"})
+    response = client.post(
+        "/api/fhir/server",
+        json={"name": "Test Server", "api_address": "http://test.com"},
+    )
     assert response.status_code == 201
     assert response.json()["name"] == "Test Server"
     assert response.json()["api_address"] == "http://test.com"
@@ -77,9 +88,15 @@ def test_update_fhir_server():
     """
     Test the update of a FHIR server
     """
-    response = client.put("/api/fhir/server/1",
-                          json={"name": "Test Server Updated", "api_address": "http://test.com", "username": "user",
-                                "password": "password"})
+    response = client.put(
+        "/api/fhir/server/1",
+        json={
+            "name": "Test Server Updated",
+            "api_address": "http://test.com",
+            "username": "user",
+            "password": "password",
+        },
+    )
     assert response.status_code == 200
     assert response.json()["name"] == "Test Server Updated"
     assert response.json()["api_address"] == "http://test.com"

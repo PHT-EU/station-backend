@@ -1,8 +1,9 @@
-from sqlalchemy.orm import Session
 from typing import Union
 
-from station.clients.harbor_client import HarborClient
+from sqlalchemy.orm import Session
+
 from station.app.crud import docker_trains
+from station.clients.harbor_client import HarborClient
 
 
 def sync_db_with_registry(db: Session, station_id: Union[str, int] = None):
@@ -18,4 +19,6 @@ def sync_db_with_registry(db: Session, station_id: Union[str, int] = None):
 
     for repo in harbor_repos:
         train_id = repo["name"].split("/")[-1]
-        docker_trains.add_if_not_exists(db=db, train_id=train_id, created_at=repo["creation_time"])
+        docker_trains.add_if_not_exists(
+            db=db, train_id=train_id, created_at=repo["creation_time"]
+        )

@@ -1,9 +1,6 @@
 from enum import Enum
-from typing import Optional
-from pydantic import SecretStr
 
 import redis
-
 
 
 class RedisJSONOps(str, Enum):
@@ -12,9 +9,10 @@ class RedisJSONOps(str, Enum):
 
 
 class Cache:
-
     def __init__(self, host="redis", port=6379, password=None, db=None):
-        self.redis = redis.Redis(decode_responses=True, host=host, port=port, password=password, db=db)
+        self.redis = redis.Redis(
+            decode_responses=True, host=host, port=port, password=password, db=db
+        )
 
     def set(self, key: str, value: str, ttl: int = 3600) -> None:
         """
@@ -68,11 +66,7 @@ class Cache:
         Returns:
             json string or None if not found
         """
-        json_string = self.redis.execute_command(
-            RedisJSONOps.GET.value,
-            key,
-            "."
-        )
+        json_string = self.redis.execute_command(RedisJSONOps.GET.value, key, ".")
         return json_string
 
 

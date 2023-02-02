@@ -1,12 +1,13 @@
-from airflow.decorators import dag, task
 import pendulum
 
+from airflow.decorators import dag, task
+
 default_args = {
-    'owner': 'airflow',
-    'depends_on_past': False,
-    'email': ['airflow@example.com'],
-    'email_on_failure': False,
-    'email_on_retry': False,
+    "owner": "airflow",
+    "depends_on_past": False,
+    "email": ["airflow@example.com"],
+    "email_on_failure": False,
+    "email_on_retry": False,
     # 'retries': 1,
     # 'retry_delay': timedelta(minutes=5),
     # 'queue': 'bash_queue',
@@ -25,8 +26,12 @@ default_args = {
 }
 
 
-@dag(default_args=default_args, schedule_interval="*/10 * * * *", start_date=pendulum.now().add(minutes=-10),
-     tags=['pht', "update", "interval"])
+@dag(
+    default_args=default_args,
+    schedule_interval="*/10 * * * *",
+    start_date=pendulum.now().add(minutes=-10),
+    tags=["pht", "update", "interval"],
+)
 def get_pht_updates():
     @task()
     def check_train_updates():

@@ -1,7 +1,8 @@
-import torchvision
 import os
 import pickle
+
 import numpy as np
+import torchvision
 from PIL import Image as pimg
 from tqdm import tqdm
 
@@ -23,7 +24,9 @@ def load_cifar_10(download=True):
 
 def extract_cifar_10_batches(batch_path: str, out_path: str):
     # load metadata
-    categories = pickle.load(open(os.path.join(batch_path, "batches.meta"), "rb"))["label_names"]
+    categories = pickle.load(open(os.path.join(batch_path, "batches.meta"), "rb"))[
+        "label_names"
+    ]
     # Extract the 5 data batches
     for i in range(5):
 
@@ -42,7 +45,9 @@ def extract_cifar_10_batches(batch_path: str, out_path: str):
             class_dir = os.path.join(out_path, f"batch_{i + 1}", string_label)
             if not os.path.isdir(class_dir):
                 os.mkdir(class_dir)
-            outfile = out_path + f"/batch_{i + 1}/" + string_label + "/" + str(filenames[j])
+            outfile = (
+                out_path + f"/batch_{i + 1}/" + string_label + "/" + str(filenames[j])
+            )
             # Transpose image to fit regular image dimensions
             img_array = image.transpose(1, 2, 0)
             img = pimg.fromarray(img_array, mode="RGB")
@@ -50,14 +55,14 @@ def extract_cifar_10_batches(batch_path: str, out_path: str):
 
 
 def load_cifar_pickle(path, file):
-    f = open(os.path.join(path, file), 'rb')
+    f = open(os.path.join(path, file), "rb")
     dict = pickle.load(f, encoding="bytes")
-    images = dict[b'data']
+    images = dict[b"data"]
     images = np.reshape(images, (10000, 3, 32, 32))
-    labels = np.array(dict[b'labels'])
-    filenames = np.array((dict[b'filenames'])).astype("str")
+    labels = np.array(dict[b"labels"])
+    filenames = np.array((dict[b"filenames"])).astype("str")
     return images, labels, filenames
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     load_cifar_10(download=False)

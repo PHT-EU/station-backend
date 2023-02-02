@@ -1,14 +1,16 @@
-from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional, Any, List, Union, Dict, Literal
-from typing_extensions import Annotated
 from enum import Enum
+from typing import Any, Dict, List, Literal, Optional, Union
+
+from pydantic import BaseModel, Field
+from typing_extensions import Annotated
 
 
 class StorageType(Enum):
     """
     Enum for storage types
     """
+
     LOCAL = "local"
     MINIO = "minio"
     DB = "db"
@@ -18,6 +20,7 @@ class DataType(Enum):
     """
     Enum for data types
     """
+
     IMAGE = "image"
     GENOME = "genome"
     FHIR = "fhir"
@@ -69,17 +72,17 @@ class DataSetColumn(BaseModel):
 
 
 class DataSetUniqueColumn(DataSetColumn):
-    type: Literal['unique']
+    type: Literal["unique"]
     number_of_duplicates: Optional[int]
 
 
 class DataSetEqualColumn(DataSetColumn):
-    type: Literal['equal']
+    type: Literal["equal"]
     value: Optional[str]
 
 
 class DataSetCategoricalColumn(DataSetColumn):
-    type: Literal['categorical']
+    type: Literal["categorical"]
     number_categories: Optional[int]
     value_counts: Optional[Dict[str, int]]
     most_frequent_element: Optional[Union[int, str]]
@@ -87,7 +90,7 @@ class DataSetCategoricalColumn(DataSetColumn):
 
 
 class DataSetNumericalColumn(DataSetColumn):
-    type: Literal['numeric']
+    type: Literal["numeric"]
     mean: Optional[float]
     std: Optional[float]
     min: Optional[float]
@@ -98,11 +101,19 @@ class DataSetStatistics(BaseModel):
     created_at: Optional[datetime] = datetime.now()
     n_items: Optional[int] = 0
     n_features: Optional[int] = 0
-    column_information: Optional[List[Annotated[Union[DataSetCategoricalColumn,
-                                                      DataSetNumericalColumn,
-                                                      DataSetEqualColumn,
-                                                      DataSetUniqueColumn],
-                                                Field(discriminator='type')]]]
+    column_information: Optional[
+        List[
+            Annotated[
+                Union[
+                    DataSetCategoricalColumn,
+                    DataSetNumericalColumn,
+                    DataSetEqualColumn,
+                    DataSetUniqueColumn,
+                ],
+                Field(discriminator="type"),
+            ]
+        ]
+    ]
 
     class Config:
         orm_mode = True
@@ -115,5 +126,3 @@ class DataSet(DataSetBase):
 
     class Config:
         orm_mode = True
-
-
