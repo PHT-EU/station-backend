@@ -25,7 +25,7 @@ test-ctl-install-path PATH:
     -e "PHT_TEMPLATE_DIR=/home/station/station/ctl/templates" \
     station-ctl \
     install \
-    --install-dir /mnt/station \
+    --install-dir "/mnt/station" \
     --host-path "{{PATH}}"
 
 windows-pwd:
