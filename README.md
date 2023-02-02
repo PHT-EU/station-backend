@@ -5,8 +5,8 @@
 # PHT Station Backend
 
 This project contains the implementation of the station API, workers for training models, as well as the configuration
-for the station airflow instance and related workers. A FastAPI REST API for train and station management can be found
-in the `station` directory.
+for the station airflow instance and related workers. A FastAPI REST API als well as a command line tool for train and
+station management can be found in the `station` directory.
 
 ## Setup development environment
 
@@ -20,93 +20,76 @@ git clone https://github.com/PHT-Medic/station-backend.git
 cd station-backend
 ```
 
-Make sure the following ports required for the services are open or change the port mappings in the `docker-compose_dev.yml` file.
+### Prerequisites
 
-- Postgres: 5432
-- Redis: 6379
-- Minio: 9000 & 9001 (Console)
-- Airflow: 8080
-- Blaze FHIR server: 9090
-- API: 8000
+Make sure the following ports required for the services are open or change the port mappings in the `docker-compose.yml`
+file.
 
-### Configure environment variables
+- Postgres: `5432`
+- Redis: `6379`
+- Minio: `9000` & `9001` (Console)
+- Airflow: `8080`
+- Blaze FHIR server: `9090`
+- API: `8000`
 
-Copy the `.env.example` file to `.env` and adjust the values to your needs.
+### Start services
 
-```bash
-cp .env.template .env
+Start the services for development using docker-compose.
+
+```shell
+docker compose up -d
 ```
 
-### Start third party services
+Check the logs of the services to see if everything is running as expected.
 
-Spin up the backend services
-
-#### Setup the auth server
-
-When installing for the first time, run the following command to perform the initial setup of the auth server.
-NODE_ENV=test
-WRITABLE_DIRECTORY_PATH=/usr/src/app/writable
-```bash
-docker-compose -f docker-compose_dev.yml run auth setup
+```shell
+docker compose logs -f
 ```
-This should generate the files required for the auth server as well as a `seed.json` file in `service_data/auth`.
-Copy the robot id and secret from the `seed.json` file into the `.env` file (`AUTH_ROBOT_ID` and `AUTH_ROBOT_SECRET`).
 
-```bash
-docker-compose -f docker-compose_dev.yml up -d
+### Configure station config for running the API in development mode
+
+Copy the `station_config.yml.tmpl` file in the root directory to `station_config.yml` and adjust the values (especially
+configuring addresses and credentials for the central api)
+
+```yaml
+# Configure authentication for central services
+central:
+  api_url: ""
+  # Robot credentials for accessing central services, these can be obtained in the central UI
+  robot_id: "central-robot-id"
+  robot_secret: "central-robot-secret"
+  private_key: "/path/to/private_key.pem"
+  # optional password for private key
+  private_key_passphrase: "admin"
+
+######### some lines omitted #########
+
+# Configures the address and credentials for the central container registry
+registry:
+  address:
+  password:
+  user:
+  project:
+
 ```
 
 ### Install python dependencies
 
-[Pipenv](https://pipenv.pypa.io/en/latest/) should be used as a dependency manager for developing in the project. Install
-dependencies in a new virtual environment using the following command:
+Install dependencies using [poetry](https://python-poetry.org/). This will also create a virtual environment for the
+project.
 
 ```shell
-pipenv install --dev
+poetry install --with dev
 ```
 
 ### Run the station API
+
 To run the station API with hot reloading, run the following command:
-```bashs
-python station/app/run_station.py
+
+```bash
+poetry run python station/app/run_station.py
 ```
 
-## Third party services
-
-### Airflow
-
-The `airflow` directory contains the configuration file for the station airflow instance as well as the predefined
-airflow DAGs responsible for executing trains and other longer running or repeating functionality.
-
-### Minio
-
-### Postgres DB
-
-### Running the third party services
-
-1. If it does not yet exist create volumes for the database `docker volume create pg_pht_station` and the
-   [Blaze](https://github.com/samply/blaze) FHIR server `docker volume create blaze_data`
-2. Run the development docker-compose file `docker-compose -f docker-compose_dev.yml up -d`, which will spin up the
-   third party services such as the postgres db, airflow and minio, allowing for development of the station API inside
-   of an IDE. The services require the following ports to be available on the machine:
-    - Postgres: 5432
-    - Airflow: 8080
-    - Minio: 9000
-    - Blaze FHIR Server: 8001
-
-### Updating the database
-
-After creating a new or changing and existing database model and registering it in the metadata of the base class,
-perform the database migrations using alembic.
-
-1. Create a new revision: `alembic revision --autogenerate -m "name for your migration"`
-2. Update the database `alembic upgrade head`
-
-## PHT worker
-
-The PHT worker package contains implementations high cost operations such as loading or preparing data sets and training
-models or running trains. It should expose a simple API to be used in Airflow DAGs and can also interact with the
-station DB.
 
 
    
