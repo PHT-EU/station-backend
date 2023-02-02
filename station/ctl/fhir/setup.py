@@ -12,10 +12,14 @@ def setup_cli(ctx: click.Context, name: str):
         name = click.prompt("Please enter a name for the server")
 
     name = _validate_server_name(name)
-    port = click.prompt("If you would like to expose the server on the host machine please enter the port number",
-                        default="")
-    domain = ctx.obj['https']['domain']
-    click.echo(f"Setting up server with base url: {domain}/fhir-servers/{name}... ", nl=False)
+    port = click.prompt(
+        "If you would like to expose the server on the host machine please enter the port number",
+        default="",
+    )
+    domain = ctx.obj["https"]["domain"]
+    click.echo(
+        f"Setting up server with base url: {domain}/fhir-servers/{name}... ", nl=False
+    )
     try:
         setup_server(domain, name, port)
         click.echo(f"{Icons.CHECKMARK.value}")
@@ -37,7 +41,7 @@ def setup_server(domain: str, name: str, port: str = None):
         detach=True,
         name=name,
         network=DockerNetworks.STATION.value,
-        ports={port: "8080"} if port else None
+        ports={port: "8080"} if port else None,
     )
 
 
@@ -53,7 +57,7 @@ def _make_labels(domain: str, name: str) -> dict:
         "traefik.enable": "true",
         f"traefik.http.routers.{'fhir-' + name}.tls": "true",
         f'traefik.http.routers.{"fhir-" + name}.rule': f'Host("{domain}") && PathPrefix("/fhir-servers/{name}")',
-        f"traefik.http.services.{'fhir-' + name}.loadbalancer.server.port": "8080"
+        f"traefik.http.services.{'fhir-' + name}.loadbalancer.server.port": "8080",
     }
 
 
@@ -62,13 +66,14 @@ def _make_env(domain: str, name: str) -> List[str]:
     return [
         "JAVA_TOOL_OPTIONS=-Xmx2g",
         f"BASE_URL=https://{domain}/fhir-servers/{name}",
-
     ]
 
 
 def _validate_server_name(name: str) -> str:
     match = re.match(r"^[a-zA-Z\d_-]*$", name)
     if not match:
-        name = click.prompt(f"Invalid server name: {name}. Enter a valid server name containing only [a-zA-Z0-9_-].")
+        name = click.prompt(
+            f"Invalid server name: {name}. Enter a valid server name containing only [a-zA-Z0-9_-]."
+        )
         return _validate_server_name(name)
     return name

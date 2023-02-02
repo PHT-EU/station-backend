@@ -22,9 +22,15 @@ class LocalTrainMasterImageBase(BaseModel):
     def image_specified(cls, values):
         image_id = values.get("image_id")
         if not image_id:
-            registry, group, artifact = values.get("registry"), values.get("group"), values.get("artifact")
+            registry, group, artifact = (
+                values.get("registry"),
+                values.get("group"),
+                values.get("artifact"),
+            )
             if not registry or not group or not artifact:
-                raise ValueError("Image ID or registry, group and artifact must be specified.")
+                raise ValueError(
+                    "Image ID or registry, group and artifact must be specified."
+                )
         return values
 
 

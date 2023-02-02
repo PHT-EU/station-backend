@@ -17,7 +17,9 @@ class TokenCacheKeys(str, Enum):
     user_token_prefix = "user-token-"
 
 
-def get_robot_token(robot_id: str = None, robot_secret: str = None, token_url: str = None) -> str:
+def get_robot_token(
+    robot_id: str = None, robot_secret: str = None, token_url: str = None
+) -> str:
     """
     Get robot token from auth server.
     """
@@ -35,7 +37,7 @@ def get_robot_token(robot_id: str = None, robot_secret: str = None, token_url: s
     # try to read the token from cache and return it if it exists
     cached_token = redis_cache.get(TokenCacheKeys.robot_token.value)
     if cached_token:
-        logger.debug(f"Found cached robot token")
+        logger.debug("Found cached robot token")
         return cached_token
     else:
         # get a new token from the auth server
@@ -43,7 +45,7 @@ def get_robot_token(robot_id: str = None, robot_secret: str = None, token_url: s
         data = {
             "id": robot_id,
             "secret": robot_secret,
-            "grant_type": "robot_credentials"
+            "grant_type": "robot_credentials",
         }
 
         response = requests.post(token_url, data=data).json()
@@ -79,8 +81,7 @@ def validate_user_token(token: str, user_url: str = None) -> User:
     return user
 
 
-def get_current_user(token: str,
-                     token_url: str = None) -> User:
+def get_current_user(token: str, token_url: str = None) -> User:
     """
     Validate a user token against the auth server and parse a user object from the response.
     Args:
@@ -92,7 +93,7 @@ def get_current_user(token: str,
         User object parsed from the auth server response
     """
 
-    logger.debug(f"Validating bearer token")
+    logger.debug("Validating bearer token")
     if not settings.is_initialized:
         logger.error("Found uninitialized setting.... Initializing settings")
         settings.setup()
@@ -110,9 +111,11 @@ def get_current_user(token: str,
             # attempt refresh robot token
             try:
 
-                robot_token = get_robot_token(robot_id=settings.config.auth.robot_id,
-                                              robot_secret=settings.config.auth.robot_secret.get_secret_value(),
-                                              token_url=token_url)
+                get_robot_token(
+                    robot_id=settings.config.auth.robot_id,
+                    robot_secret=settings.config.auth.robot_secret.get_secret_value(),
+                    token_url=token_url,
+                )
 
                 user = validate_user_token(token=token)
                 return user
@@ -146,7 +149,7 @@ def authorized_user(token: HTTPAuthorizationCredentials = Depends(HTTPBearer()))
         User object if authorized
 
     """
-    logger.debug(f"Authorizing user")
+    logger.debug("Authorizing user")
     user = get_current_user(token=token.credentials)
     # if permissions:
     #     user.permissions = get_user_permissions(user)

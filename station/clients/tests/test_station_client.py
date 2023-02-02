@@ -14,13 +14,16 @@ def station_client():
     auth_url = os.getenv("STATION_AUTH_URL", "http://localhost:3010/token")
     username = os.getenv("STATION_USER")
     password = os.getenv("STATION_PASSWORD")
-    return StationAPIClient(base_url=base_url, auth_url=auth_url, username=username, password=password)
+    return StationAPIClient(
+        base_url=base_url, auth_url=auth_url, username=username, password=password
+    )
 
 
 """
 Test local train client
 
 """
+
 
 def test_local_train_create(station_client):
     local_train = station_client.local_trains.create(
@@ -32,7 +35,6 @@ def test_local_train_create(station_client):
     )
     assert local_train.name == "test-create"
     assert local_train.command == "python3 -m station.app.main"
-
 
 
 def test_get_local_train(station_client):
@@ -48,6 +50,8 @@ def test_list_local_trains(station_client):
 
 
 def test_get_local_train_archive(station_client):
-    archive = station_client.local_trains.download_train_archive("5b2682dd-b4b1-46af-b2ed-d6aba8a309bb")
+    archive = station_client.local_trains.download_train_archive(
+        "5b2682dd-b4b1-46af-b2ed-d6aba8a309bb"
+    )
     print(archive.getmembers())
     assert archive

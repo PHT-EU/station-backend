@@ -8,7 +8,6 @@ from .base import CreateSchemaType, CRUDBase, ModelType, Optional
 
 
 class CRUDDiscoveries(CRUDBase[DataSetSummary, SummaryCreate, SummaryUpdate]):
-
     def create(self, db: Session, *, obj_in: CreateSchemaType) -> Optional[ModelType]:
         obj_in_data = jsonable_encoder(obj_in)
         db_obj = self.model(**obj_in_data)

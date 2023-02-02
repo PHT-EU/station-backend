@@ -17,5 +17,5 @@ class DataSet(Base):
     data_type = Column(String, nullable=True)
     storage_type = Column(String, nullable=True)
     access_path = Column(String, nullable=True)
-    fhir_server = Column(UUID, ForeignKey('fhir_servers.id'), nullable=True)
+    fhir_server = Column(UUID, ForeignKey("fhir_servers.id"), nullable=True)
     summary = Column(JSON, nullable=True)

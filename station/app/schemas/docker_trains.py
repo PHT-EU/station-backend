@@ -56,7 +56,7 @@ class DockerTrainConfig(DockerTrainConfigBase):
     trains: Optional[List[DockerTrainMinimal]] = None
 
     # concatenates list of objects with train_ids to one list of train_ids
-    @validator('trains')
+    @validator("trains")
     def train_list(cls, v):
         if v:
             train_list = []

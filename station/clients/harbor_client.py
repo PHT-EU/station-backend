@@ -8,7 +8,6 @@ from station.app.schemas.station_status import HealthStatus
 
 
 class HarborClient:
-
     def __init__(self, api_url: str = None, username: str = None, password: str = None):
         # Setup and verify connection parameters either based on arguments or .env vars
 
@@ -27,7 +26,9 @@ class HarborClient:
         self.password = password if password else os.getenv("HARBOR_PW")
         assert self.password
 
-    def get_artifacts_for_station(self, station_id: Union[str, int] = None) -> List[dict]:
+    def get_artifacts_for_station(
+        self, station_id: Union[str, int] = None
+    ) -> List[dict]:
         # TODO chache no replys
         if not station_id:
             station_id = int(os.getenv("STATION_ID"))
@@ -45,7 +46,9 @@ class HarborClient:
                     print("Getting repositories on next page.")
                     url = r.links["next"]["url"]
                     new_endpoint = url[9:]
-                    r = requests.get(self.api_url + new_endpoint, auth=(self.username, self.password))
+                    r = requests.get(
+                        self.api_url + new_endpoint, auth=(self.username, self.password)
+                    )
                     new_results = r.json()
                     results.extend(new_results)
                 else:

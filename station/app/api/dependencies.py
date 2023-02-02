@@ -23,5 +23,3 @@ def fernet_key() -> bytes:
         # TODO load key from station config file
         pass
     return fernet_key.encode()
-
-

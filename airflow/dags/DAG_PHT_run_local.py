@@ -1,4 +1,3 @@
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -15,17 +14,19 @@ def failure_callback(context):
     print(f"FAILURE CALLBACK -- Task {context['task'].task_id} failed")
     client = StationAPIClient.from_env()
 
-    response = client.local_trains.post_failure_notification(context['dag_run'].conf['train_id'],
-                                                             f"Train failed at task {context['task'].task_id}")
+    response = client.local_trains.post_failure_notification(
+        context["dag_run"].conf["train_id"],
+        f"Train failed at task {context['task'].task_id}",
+    )
     print(response)
 
 
 default_args = {
-    'owner': 'airflow',
-    'depends_on_past': False,
-    'email': ['airflow@example.com'],
-    'email_on_failure': False,
-    'email_on_retry': False,
+    "owner": "airflow",
+    "depends_on_past": False,
+    "email": ["airflow@example.com"],
+    "email_on_failure": False,
+    "email_on_retry": False,
     # 'retries': 1,
     # 'retry_delay': timedelta(minutes=5),
     # 'queue': 'bash_queue',
@@ -36,7 +37,7 @@ default_args = {
     # 'dag': dag,
     # 'sla': timedelta(hours=2),
     # 'execution_timeout': timedelta(seconds=300),
-    'on_failure_callback': failure_callback,
+    "on_failure_callback": failure_callback,
     # 'on_success_callback': some_other_function,
     # 'on_retry_callback': another_function,
     # 'sla_miss_callback': yet_another_function,
@@ -48,15 +49,16 @@ default_args = {
     default_args=default_args,
     schedule_interval=None,
     start_date=days_ago(2),
-    tags=['pht', 'local train'],
+    tags=["pht", "local train"],
 )
 def run_local_train():
     @task(on_failure_callback=failure_callback)
     def get_local_train_config():
         context = get_current_context()
-        train_id, env, volumes, master_image, custom_image = [context['dag_run'].conf.get(_, None) for _ in
-                                                              ['train_id', 'env', 'volumes', 'master_image',
-                                                               'custom_image']]
+        train_id, env, volumes, master_image, custom_image = [
+            context["dag_run"].conf.get(_, None)
+            for _ in ["train_id", "env", "volumes", "master_image", "custom_image"]
+        ]
 
         # check and process the volumes passed to the dag via the config
         if volumes:
@@ -67,20 +69,19 @@ def run_local_train():
                 # check if docker volume keys are present and raise an error if not
                 if isinstance(item, dict):
                     if not ("bind" in item and "mode" in item):
-                        raise ValueError("Incorrectly formatted docker volume, 'bind' and 'mode' keys are required")
+                        raise ValueError(
+                            "Incorrectly formatted docker volume, 'bind' and 'mode' keys are required"
+                        )
                 # transform simple path:path volumes into correctly formatted docker read only volumes
                 elif isinstance(item, str):
-                    volumes[key] = {
-                        "bind": item,
-                        "mode": "ro"
-                    }
+                    volumes[key] = {"bind": item, "mode": "ro"}
 
         train_config = {
             "train_id": train_id,
             "env": env,
             "volumes": volumes,
             "master_image": master_image,
-            "custom_image": custom_image
+            "custom_image": custom_image,
         }
 
         return train_config
@@ -93,12 +94,14 @@ def run_local_train():
 
         connection = BaseHook.get_connection("pg_station")
 
-        db_url = f"postgresql://{connection.login}:{connection.password}@{connection.host}:{connection.port}/" \
-                 f"{connection.schema}"
+        db_url = (
+            f"postgresql://{connection.login}:{connection.password}@{connection.host}:{connection.port}/"
+            f"{connection.schema}"
+        )
 
         # create a session to the station database
         engine = create_engine(db_url)
-        train_id = train_config['train_id']
+        train_id = train_config["train_id"]
         session_local = sessionmaker(autocommit=False, autoflush=False, bind=engine)
         db = session_local()
 
@@ -109,12 +112,12 @@ def run_local_train():
         image = build_train(
             db=db,
             train_id=train_id,
-            custom_image=train_config.get('custom_image'),
-            master_image_id=train_config.get('master_image'),
+            custom_image=train_config.get("custom_image"),
+            master_image_id=train_config.get("master_image"),
             files=train_files_archive,
         )
 
-        train_config['image'] = image
+        train_config["image"] = image
 
         db.close()
         return train_config
@@ -126,7 +129,7 @@ def run_local_train():
         volumes = train_config.get("volumes", {})
         print("Volumes: ", volumes)
         container = client.containers.run(
-            train_config['image'],
+            train_config["image"],
             environment=environment,
             volumes=volumes,
             detach=True,
@@ -138,7 +141,7 @@ def run_local_train():
 
         # print("Train Container ID: ", container.id)
         print("Train Container Logs: ", container.logs().decode("utf-8"))
-        print("Train Container Exit Code: ", output['StatusCode'])
+        print("Train Container Exit Code: ", output["StatusCode"])
 
         return train_config
 
@@ -149,7 +152,9 @@ def run_local_train():
         print(dict(context))
         print(client.base_url)
         print(train_config)
-        response = client.local_trains.update_train_status(train_config['train_id'], "completed")
+        response = client.local_trains.update_train_status(
+            train_config["train_id"], "completed"
+        )
         print(response)
 
     train_config = get_local_train_config()

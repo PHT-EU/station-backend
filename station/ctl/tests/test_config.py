@@ -8,8 +8,8 @@ from station.ctl.constants import CERTS_REGEX
 
 def test_validate_config():
     config = {
-        'station_id': '',
-        'version': 'latest',
+        "station_id": "",
+        "version": "latest",
         "environment": "test",
         "central": {
             "api_url": "https://api.test.com",
@@ -27,20 +27,15 @@ def test_validate_config():
                     "key": "test-key",
                     "cert": "test-cert",
                 },
-                {
-                    "key": "test-key2"
-                }
-
-            ]
-        }
-
+                {"key": "test-key2"},
+            ],
+        },
     }
 
     results, table = validate_config(config)
     console = Console()
     print()
     console.print(table)
-
 
 
 def test_match_cert_index():

@@ -13,7 +13,6 @@ from station.clients.minio import MinioClient
 
 
 class ModelLoader:
-
     def __init__(self, station_url: str = None):
         self.station_url = station_url if station_url else os.getenv("STATION_API_URL")
         assert self.station_url
@@ -47,14 +46,18 @@ class ModelLoader:
         model = db_train.model
         assert model
 
-        lightning_module = self._make_lightning_module(model.model_src, module_name=model.model_name)
+        lightning_module = self._make_lightning_module(
+            model.model_src, module_name=model.model_name
+        )
         return lightning_module
 
     def save_model_checkpoint(self):
         # TODO
         pass
 
-    def load_torch_model_from_json(self, model_json: dict = None) -> LightningTrainModel:
+    def load_torch_model_from_json(
+        self, model_json: dict = None
+    ) -> LightningTrainModel:
         """
         Parse the content relevant for initializing a model from the given dictionary containing a user submitted
         json file defining the module.
@@ -66,7 +69,9 @@ class ModelLoader:
         lightning_model_name = model_json["objects"]["lightning_model"]
         lightning_model_src = model_json["src"]["lightning_model"]
 
-        ligntning_module = self._make_lightning_module(lightning_model_src, lightning_model_name)
+        ligntning_module = self._make_lightning_module(
+            lightning_model_src, lightning_model_name
+        )
         return ligntning_module
 
     @staticmethod

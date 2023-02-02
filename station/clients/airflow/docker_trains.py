@@ -15,7 +15,9 @@ from station.app.schemas import docker_trains as dts
 from station.app.settings import settings
 
 
-def run_train(db: Session, train_id: Any, execution_params: dts.DockerTrainExecution) -> dts.DockerTrainSavedExecution:
+def run_train(
+    db: Session, train_id: Any, execution_params: dts.DockerTrainExecution
+) -> dts.DockerTrainSavedExecution:
     """
     Execute a PHT 1.0 docker train using a configured airflow instance
 
@@ -27,7 +29,9 @@ def run_train(db: Session, train_id: Any, execution_params: dts.DockerTrainExecu
     # Extract the train from the database
     db_train = docker_trains.get_by_train_id(db, train_id)
     if not db_train:
-        raise HTTPException(status_code=404, detail=f"Train with id '{train_id}' not found.")
+        raise HTTPException(
+            status_code=404, detail=f"Train with id '{train_id}' not found."
+        )
 
     # Use default config if there is no config defined.
     if execution_params is None:
@@ -45,19 +49,27 @@ def run_train(db: Session, train_id: Any, execution_params: dts.DockerTrainExecu
     # Execute the train using the airflow rest api
     try:
         run_id = clients.airflow.trigger_dag("run_pht_train", config=config_dict)
-        db_train = update_train_after_run(db, db_train, run_id, config_id, dataset_id=execution_params.dataset_id)
+        db_train = update_train_after_run(
+            db, db_train, run_id, config_id, dataset_id=execution_params.dataset_id
+        )
         last_execution = db_train.executions[-1]
         return last_execution
     except Exception as e:
-        logger.error(f"Error while running train {train_id} with config {config_dict} \n {e}")
-        raise HTTPException(status_code=503, detail="No connection to the airflow client could be established.")
+        logger.error(
+            f"Error while running train {train_id} with config {config_dict} \n {e}"
+        )
+        raise HTTPException(
+            status_code=503,
+            detail="No connection to the airflow client could be established.",
+        )
 
 
 def validate_run_config(
-        db: Session,
-        train_id: str,
-        execution_params: dts.DockerTrainExecution,
-        tag: str = None) -> Tuple[Union[int, str], dict]:
+    db: Session,
+    train_id: str,
+    execution_params: dts.DockerTrainExecution,
+    tag: str = None,
+) -> Tuple[Union[int, str], dict]:
     """
     Validate the config used for the triggered run
     :param db: database session
@@ -72,7 +84,7 @@ def validate_run_config(
     project = settings.config.registry.project
     config = {
         "repository": f"{harbor_url}/{project}/{train_id}",
-        "tag": "latest" if not tag else tag
+        "tag": "latest" if not tag else tag,
     }
 
     # Extract config by id if given
@@ -87,7 +99,9 @@ def validate_run_config(
         return "default", config
 
 
-def update_state(db: Session, db_train: dtm.DockerTrain, run_time: datetime) -> dts.DockerTrainState:
+def update_state(
+    db: Session, db_train: dtm.DockerTrain, run_time: datetime
+) -> dts.DockerTrainState:
     """
     Update the train state object of the train after starting an execution.
     Args:
@@ -99,11 +113,15 @@ def update_state(db: Session, db_train: dtm.DockerTrain, run_time: datetime) -> 
         updated train state object
 
     """
-    train_state = db.query(dtm.DockerTrainState).filter(dtm.DockerTrainState.train_id == db_train.id).first()
+    train_state = (
+        db.query(dtm.DockerTrainState)
+        .filter(dtm.DockerTrainState.train_id == db_train.id)
+        .first()
+    )
     if train_state:
         train_state.last_execution = run_time
         train_state.num_executions += 1
-        train_state.status = 'active'
+        train_state.status = "active"
     else:
         logger.info("No train state assigned.")
     db.add(train_state)
@@ -113,11 +131,13 @@ def update_state(db: Session, db_train: dtm.DockerTrain, run_time: datetime) -> 
     return train_state
 
 
-def update_train_after_run(db: Session,
-                           db_train: dtm.DockerTrain,
-                           run_id: str,
-                           config_id: int,
-                           dataset_id: int = None) -> dts.DockerTrain:
+def update_train_after_run(
+    db: Session,
+    db_train: dtm.DockerTrain,
+    run_id: str,
+    config_id: int,
+    dataset_id: int = None,
+) -> dts.DockerTrain:
     """
     Update train in the database and create a new execution object that stores the run configuration.
 
@@ -136,14 +156,14 @@ def update_train_after_run(db: Session,
     db_train.updated_at = run_time
 
     # Update the train state
-    train_state = update_state(db, db_train, run_time)
+    update_state(db, db_train, run_time)
 
     # Create an execution
     execution = dtm.DockerTrainExecution(
         train_id=db_train.id,
         airflow_dag_run=run_id,
         config=config_id,
-        dataset=dataset_id
+        dataset=dataset_id,
     )
     db.add(execution)
     db.commit()
@@ -173,7 +193,7 @@ def process_db_config(config_dict: dict, db_config: dtm.DockerTrainConfig) -> di
         for volume in db_config.airflow_config.volumes:
             volume_dict[volume.host_path] = {
                 "bind": volume.container_path,
-                "mode": volume.mode
+                "mode": volume.mode,
             }
         config_dict["volumes"] = volume_dict
         return config_dict
@@ -189,10 +209,9 @@ def process_dataset(config_dict, dataset):
     Returns:
 
     """
-    mount_path = os.path.join(settings.config.station_data_dir, "datasets", str(dataset.id))
+    mount_path = os.path.join(
+        settings.config.station_data_dir, "datasets", str(dataset.id)
+    )
     volumes = config_dict.get("volumes", {})
-    volumes[mount_path] = {
-        "bind": "/opt/train_data/",
-        "mode": "ro"
-    }
+    volumes[mount_path] = {"bind": "/opt/train_data/", "mode": "ro"}
     config_dict["volumes"] = volumes

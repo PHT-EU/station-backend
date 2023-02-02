@@ -9,10 +9,8 @@ from .base import CRUDBase
 
 
 class CRUDNotifications(CRUDBase[Notification, NotificationCreate, NotificationUpdate]):
-
     def read_notifications_for_user(self, db: Session, user: str) -> List[Notification]:
         return db.query(Notification).filter(Notification.target_user == user).all()
-
 
 
 notifications = CRUDNotifications(Notification)

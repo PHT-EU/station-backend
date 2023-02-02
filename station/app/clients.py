@@ -20,7 +20,9 @@ class StationClients:
     def initialize(self):
         logger.info("Initializing clients")
         if not self.settings.is_initialized:
-            logger.warning("Station settings are not initialized. Please call settings.setup() before initializing clients.")
+            logger.warning(
+                "Station settings are not initialized. Please call settings.setup() before initializing clients."
+            )
             self.settings.setup()
         self._airflow = AirflowClient(
             airflow_api_url=self.settings.config.airflow.api_url,
@@ -41,10 +43,17 @@ class StationClients:
 
         self._minio.setup_buckets()
 
+        if isinstance(self.settings.config.central_ui.robot_secret, str):
+            robot_secret = self.settings.config.central_ui.robot_secret
+        else:
+            robot_secret = (
+                self.settings.config.central_ui.robot_secret.get_secret_value()
+            )
+
         self._central = CentralApiClient(
             api_url=self.settings.config.central_ui.api_url,
             robot_id=self.settings.config.central_ui.robot_id,
-            robot_secret=self.settings.config.central_ui.robot_secret.get_secret_value(),
+            robot_secret=robot_secret,
         )
 
         self.is_initialized = True
@@ -53,27 +62,35 @@ class StationClients:
     @property
     def airflow(self) -> AirflowClient:
         if not self.is_initialized:
-            logger.warning("Station clients are not initialized. Please call clients.initialize() before using clients.")
+            logger.warning(
+                "Station clients are not initialized. Please call clients.initialize() before using clients."
+            )
             self.initialize()
         return self._airflow
 
     @property
     def harbor(self) -> HarborClient:
         if not self.is_initialized:
-            logger.warning("Station clients are not initialized. Please call clients.initialize() before using clients.")
+            logger.warning(
+                "Station clients are not initialized. Please call clients.initialize() before using clients."
+            )
             self.initialize()
         return self._harbor
 
     @property
     def minio(self) -> MinioClient:
         if not self.is_initialized:
-            logger.warning("Station clients are not initialized. Please call clients.initialize() before using clients.")
+            logger.warning(
+                "Station clients are not initialized. Please call clients.initialize() before using clients."
+            )
             self.initialize()
         return self._minio
 
     @property
     def central(self) -> CentralApiClient:
         if not self.is_initialized:
-            logger.warning("Station clients are not initialized. Please call clients.initialize() before using clients.")
+            logger.warning(
+                "Station clients are not initialized. Please call clients.initialize() before using clients."
+            )
             self.initialize()
         return self._central

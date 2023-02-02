@@ -40,9 +40,8 @@ def test_setup_auth():
             "version": "latest",
         }
     }
-    ctx = namedtuple('Struct', ctx.keys())(*ctx.values())
+    ctx = namedtuple("Struct", ctx.keys())(*ctx.values())
     _setup_auth_server(ctx)
-
 
 
 def test_render_init_sql():
@@ -77,7 +76,10 @@ def test_render_traefik_configs():
     assert traefik_dict["entryPoints"]["http"]["address"] == ":80"
     assert traefik_dict["entryPoints"]["https"]["address"] == ":443"
 
-    assert router_dict["http"]["routers"]["traefik"]["tls"]["domains"][0]["main"] == "test.com"
+    assert (
+        router_dict["http"]["routers"]["traefik"]["tls"]["domains"][0]["main"]
+        == "test.com"
+    )
     assert router_dict["tls"]["certificates"][0]["certFile"] == "test"
     assert router_dict["tls"]["certificates"][0]["keyFile"] == "test"
 
@@ -94,5 +96,3 @@ def test_generate_certs(tmp_path):
     assert key_path.read_bytes()
     assert cert_path.exists()
     assert cert_path.read_bytes()
-
-

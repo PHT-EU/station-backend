@@ -20,7 +20,7 @@ def train_id():
         json={
             "name": "test_train",
             "custom_image": "test_image",
-        }
+        },
     )
     return response.json()["id"]
 
@@ -31,7 +31,7 @@ def test_create_local_train():
         json={
             "name": "test_train",
             "custom_image": "test_image",
-        }
+        },
     )
     assert response.status_code == 200
     assert response.json()["name"] == "test_train"
@@ -48,7 +48,7 @@ def test_update_local_train(train_id):
         f"/api/local-trains/{train_id}",
         json={
             "name": "test_train_updated",
-        }
+        },
     )
 
     assert response.status_code == 200
@@ -63,6 +63,3 @@ def test_delete_local_train(train_id):
     r = client.get(f"/api/local-trains/{train_id}")
     with pytest.raises(HTTPError):
         r.raise_for_status()
-
-
-

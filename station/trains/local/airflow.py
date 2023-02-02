@@ -28,7 +28,9 @@ class AirflowRunConfig(BaseModel):
     fhir: Optional[FHIRConfig] = None
 
 
-def run_local_train(db: Session, train_id: str, dataset_id: str = None, config_id: int = None) -> LocalTrainExecution:
+def run_local_train(
+    db: Session, train_id: str, dataset_id: str = None, config_id: int = None
+) -> LocalTrainExecution:
     """
     Run a local train
 
@@ -48,13 +50,15 @@ def run_local_train(db: Session, train_id: str, dataset_id: str = None, config_i
         train_id=train_id,
         dag_run=run_id,
         config_id=config_id,
-        dataset_id=dataset_id
+        dataset_id=dataset_id,
     )
 
     return train_execution
 
 
-def make_dag_config(db: Session, db_train, train_id: str, dataset_id: str = None, config_id: int = None) -> dict:
+def make_dag_config(
+    db: Session, db_train, train_id: str, dataset_id: str = None, config_id: int = None
+) -> dict:
     """
     Create a config dictionary for the airflow DAG
 
@@ -65,14 +69,16 @@ def make_dag_config(db: Session, db_train, train_id: str, dataset_id: str = None
     """
 
     if db_train.master_image_id:
-        master_image = local_train_master_image.get(db, db_train.master_image_id).image_id
+        master_image = local_train_master_image.get(
+            db, db_train.master_image_id
+        ).image_id
     else:
         master_image = None
 
     dag_config = {
         "train_id": train_id,
         "master_image": master_image,
-        "custom_image": db_train.custom_image
+        "custom_image": db_train.custom_image,
     }
 
     if dataset_id:

@@ -11,12 +11,10 @@ client = TestClient(app)
 
 
 def test_data_set_create():
-    response = client.post("/api/datasets", json={
-        "name": "test data set",
-        "data_type": "tabular",
-        "storage_type": "fhir"
-
-    })
+    response = client.post(
+        "/api/datasets",
+        json={"name": "test data set", "data_type": "tabular", "storage_type": "fhir"},
+    )
 
     assert response.status_code == 200, response.text
 

@@ -17,8 +17,9 @@ class BaseDataSet(Dataset, ABC):
 
 
 class MinioFolderDataSet(IterableDataset):
-
-    def __init__(self, minio_client: MinioClient, id: str = None, transform: Compose = None):
+    def __init__(
+        self, minio_client: MinioClient, id: str = None, transform: Compose = None
+    ):
         super(MinioFolderDataSet, self).__init__()
         self.id = id
         self.client = minio_client
@@ -33,7 +34,9 @@ class MinioFolderDataSet(IterableDataset):
         else:
             print(worker_info.num_workers)
             # TODO
-            raise NotImplementedError("Implement sliced generators for multiworker loading")
+            raise NotImplementedError(
+                "Implement sliced generators for multiworker loading"
+            )
 
     def _make_generator(self, id: str = None):
         if id:
@@ -47,11 +50,13 @@ class MinioFolderDataSet(IterableDataset):
         items = self.client.get_minio_dir_items(self.id)
         return items
 
-    def _make_image_generator(self,
-                              minio_items: Generator[datatypes.Object, None, None]
-                              ) -> Generator[torch.Tensor, None, None]:
+    def _make_image_generator(
+        self, minio_items: Generator[datatypes.Object, None, None]
+    ) -> Generator[torch.Tensor, None, None]:
         for i, object in enumerate(minio_items):
-            minio_object = self.client.client.get_object("data-sets", object.object_name)
+            minio_object = self.client.client.get_object(
+                "data-sets", object.object_name
+            )
             np_img = np.array(Image.open(minio_object))
 
             print(object.object_name)
@@ -66,8 +71,13 @@ class MinioFolderDS(Dataset):
 
     # TODO generalized target creation
 
-    def __init__(self, client: MinioClient, data_set_id: str = None, transform: Compose = None,
-                 target_classes: List[str] = None):
+    def __init__(
+        self,
+        client: MinioClient,
+        data_set_id: str = None,
+        transform: Compose = None,
+        target_classes: List[str] = None,
+    ):
         super().__init__()
         self.data_set_id = data_set_id
         self.minio_client = client
@@ -82,7 +92,9 @@ class MinioFolderDS(Dataset):
             self.classes = self.get_classes_from_folders()
 
     def __getitem__(self, index) -> T_co:
-        minio_object = self.minio_client.client.get_object("datasets", self.items[index])
+        minio_object = self.minio_client.client.get_object(
+            "datasets", self.items[index]
+        )
         np_img = np.array(Image.open(minio_object))
         np_img = np.transpose(np_img.astype(float), (2, 1, 0))
         label = self.get_label(self.items[index])
@@ -94,7 +106,7 @@ class MinioFolderDS(Dataset):
         return len(list(self.items))
 
     def get_label(self, item_name: str):
-        folder = item_name[len(self.data_set_id):].split("/")[0]
+        folder = item_name[len(self.data_set_id) :].split("/")[0]
         label = self.classes == folder
         return torch.tensor(label, dtype=torch.long)
 
@@ -117,12 +129,17 @@ class MinioFolderDS(Dataset):
         return np.asarray(classes)
 
 
-if __name__ == '__main__':
-    minio_client = MinioClient(minio_server="localhost:9000",
-                               secret_key="minio_admin", access_key="minio_admin")
+if __name__ == "__main__":
+    minio_client = MinioClient(
+        minio_server="localhost:9000",
+        secret_key="minio_admin",
+        access_key="minio_admin",
+    )
 
     transform = Compose([ToTensor(), CenterCrop(size=24)])
-    minio_ds = MinioFolderDS(client=minio_client, data_set_id="cifar/batch_2", transform=transform)
+    minio_ds = MinioFolderDS(
+        client=minio_client, data_set_id="cifar/batch_2", transform=transform
+    )
     minio_ds.get_minio_items()
     print(len(minio_ds))
 

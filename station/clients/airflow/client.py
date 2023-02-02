@@ -8,11 +8,24 @@ from station.app.schemas.station_status import HealthStatus
 
 
 class AirflowClient:
-    def __init__(self, airflow_api_url: str = None, airflow_user: str = None, airflow_password: str = None):
+    def __init__(
+        self,
+        airflow_api_url: str = None,
+        airflow_user: str = None,
+        airflow_password: str = None,
+    ):
 
-        self.airflow_url = airflow_api_url if airflow_api_url else os.getenv("AIRFLOW_API_URL", "localhost:8080/api/v1")
-        self.airflow_user = airflow_user if airflow_user else os.getenv("AIRFLOW_USER", "admin")
-        self.airflow_pw = airflow_password if airflow_password else os.getenv("AIRFLOW_PW", "admin")
+        self.airflow_url = (
+            airflow_api_url
+            if airflow_api_url
+            else os.getenv("AIRFLOW_API_URL", "localhost:8080/api/v1")
+        )
+        self.airflow_user = (
+            airflow_user if airflow_user else os.getenv("AIRFLOW_USER", "admin")
+        )
+        self.airflow_pw = (
+            airflow_password if airflow_password else os.getenv("AIRFLOW_PW", "admin")
+        )
         self.auth = HTTPBasicAuth(self.airflow_user, self.airflow_pw)
 
     def trigger_dag(self, dag_id: str, config: dict = None) -> str:
@@ -96,7 +109,9 @@ class AirflowClient:
         information["tasklist"] = task_list
         return information
 
-    def get_task_log(self, dag_id: str, run_id: str, task_id: str, task_try_number: int = None) -> str:
+    def get_task_log(
+        self, dag_id: str, run_id: str, task_id: str, task_try_number: int = None
+    ) -> str:
         """
         get the log of a task for a specific run
         @param dag_id: dag under which the task is run
@@ -108,7 +123,9 @@ class AirflowClient:
 
         task_number_list = []
         task_known = False
-        for task in self.get_run_information(dag_id, run_id)["tasklist"]["task_instances"]:
+        for task in self.get_run_information(dag_id, run_id)["tasklist"][
+            "task_instances"
+        ]:
             if task["task_id"] == task_id:
                 task_known = True
                 task_number_list.append(task["try_number"])
@@ -118,7 +135,10 @@ class AirflowClient:
                 try_number = task_try_number
             else:
                 try_number = last_task_try_number
-            url = self.airflow_url + f"dags/{dag_id}/dagRuns/{run_id}/taskInstances/{task_id}/logs/{try_number}"
+            url = (
+                self.airflow_url
+                + f"dags/{dag_id}/dagRuns/{run_id}/taskInstances/{task_id}/logs/{try_number}"
+            )
             log = requests.get(url=url, auth=self.auth)
             log.raise_for_status()
             return log.content.decode("utf-8")

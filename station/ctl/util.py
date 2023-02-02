@@ -8,5 +8,5 @@ def get_template_env():
     if env_template_dir:
         loader = FileSystemLoader(env_template_dir)
     else:
-        loader = PackageLoader('station.ctl', 'templates')
+        loader = PackageLoader("station.ctl", "templates")
     return Environment(loader=loader)

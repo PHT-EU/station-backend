@@ -45,7 +45,7 @@ def remove_server(name: str):
 
 def list_servers():
     client = docker.from_env()
-    containers = client.containers.list()
+    client.containers.list()
     # todo
     click.echo("coming soon...")
 

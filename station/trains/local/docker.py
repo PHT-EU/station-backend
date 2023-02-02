@@ -7,10 +7,12 @@ from train_lib.docker_util.docker_ops import add_archive
 from docker.models.images import Image
 
 
-def make_docker_file(master_image: str,
-                     entrypoint_file: str,
-                     command: str,
-                     command_args: Union[List[str], str] = None) -> BytesIO:
+def make_docker_file(
+    master_image: str,
+    entrypoint_file: str,
+    command: str,
+    command_args: Union[List[str], str] = None,
+) -> BytesIO:
     """
     Make an in memory docker file for a local train
     Args:
@@ -25,7 +27,9 @@ def make_docker_file(master_image: str,
 
     print(master_image, entrypoint_file, command, command_args)
     docker_from = f"FROM {master_image}\n"
-    directory_setup = f"RUN mkdir /opt/train && mkdir /opt/results && chmod -R +x /opt/train \n"
+    directory_setup = (
+        "RUN mkdir /opt/train && mkdir /opt/results && chmod -R +x /opt/train \n"
+    )
 
     if isinstance(command_args, str):
         command_args = command_args.split(" ")

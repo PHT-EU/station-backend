@@ -9,4 +9,3 @@ class DataSetSummary(Base):
     proposal_id = Column(Integer, default=0)
     count = Column(Integer, default=0)
     data_information = Column(JSON, default={})
-

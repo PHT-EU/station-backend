@@ -5,9 +5,9 @@ from pydantic import BaseModel
 
 
 class HealthStatus(str, Enum):
-    healthy = 'healthy'
-    stopped = 'stopped'
-    error = 'error'
+    healthy = "healthy"
+    stopped = "stopped"
+    error = "error"
 
 
 class StatusDocker(BaseModel):

@@ -8,8 +8,17 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from station.app.config import clients, settings
-from station.app.models.docker_trains import DockerTrain, DockerTrainConfig, DockerTrainExecution, DockerTrainState
-from station.app.schemas.docker_trains import DockerTrainConfigCreate, DockerTrainCreate, DockerTrainUpdate
+from station.app.models.docker_trains import (
+    DockerTrain,
+    DockerTrainConfig,
+    DockerTrainExecution,
+    DockerTrainState,
+)
+from station.app.schemas.docker_trains import (
+    DockerTrainConfigCreate,
+    DockerTrainCreate,
+    DockerTrainUpdate,
+)
 from station.app.schemas.docker_trains import DockerTrainState as DockerTrainStateSchema
 
 # TODO improve handling of proposals
@@ -17,21 +26,31 @@ from .base import CRUDBase, ModelType
 
 
 class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate]):
-
     def create(self, db: Session, *, obj_in: DockerTrainCreate) -> ModelType:
 
         if isinstance(obj_in.config, int):
-            db_config = db.query(DockerTrainConfig).filter(DockerTrainConfig.id == obj_in.config).first()
+            db_config = (
+                db.query(DockerTrainConfig)
+                .filter(DockerTrainConfig.id == obj_in.config)
+                .first()
+            )
             if not db_config:
-                raise HTTPException(status_code=404, detail=f"Config {obj_in.config} not found")
+                raise HTTPException(
+                    status_code=404, detail=f"Config {obj_in.config} not found"
+                )
             config_id = db_config.id
 
         elif isinstance(obj_in.config, DockerTrainConfigCreate):
-            db_config: DockerTrainConfig = db.query(DockerTrainConfig).filter(
-                DockerTrainConfig.name == obj_in.config.name
-            ).first()
+            db_config: DockerTrainConfig = (
+                db.query(DockerTrainConfig)
+                .filter(DockerTrainConfig.name == obj_in.config.name)
+                .first()
+            )
             if db_config:
-                raise HTTPException(status_code=400, detail="A config with the given name already exists.")
+                raise HTTPException(
+                    status_code=400,
+                    detail="A config with the given name already exists.",
+                )
             else:
                 new_config = DockerTrainConfig(**jsonable_encoder(obj_in.config))
                 db.add(new_config)
@@ -42,10 +61,7 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
         else:
             config_id = None
 
-        db_train = DockerTrain(
-            train_id=obj_in.train_id,
-            config_id=config_id
-        )
+        db_train = DockerTrain(train_id=obj_in.train_id, config_id=config_id)
         db.add(db_train)
         db.commit()
         db.refresh(db_train)
@@ -60,9 +76,16 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
         train = db.query(DockerTrain).filter(DockerTrain.train_id == train_id).first()
         return train
 
-    def get_trains_by_active_status(self, db: Session, active=True, limit: int = 0) -> List[DockerTrain]:
+    def get_trains_by_active_status(
+        self, db: Session, active=True, limit: int = 0
+    ) -> List[DockerTrain]:
         if limit != 0:
-            trains = db.query(DockerTrain).filter(DockerTrain.is_active == active).limit(limit).all()
+            trains = (
+                db.query(DockerTrain)
+                .filter(DockerTrain.is_active == active)
+                .limit(limit)
+                .all()
+            )
         else:
             trains = db.query(DockerTrain).filter(DockerTrain.is_active == active).all()
         return trains
@@ -75,14 +98,25 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
         db.commit()
         return db_train
 
-    def add_if_not_exists(self, db: Session, train_id: str, created_at: str = datetime.now(), updated_at: str = None):
+    def add_if_not_exists(
+        self,
+        db: Session,
+        train_id: str,
+        created_at: str = datetime.now(),
+        updated_at: str = None,
+    ):
         db_train = self.get_by_train_id(db, train_id)
         if not db_train:
             if updated_at:
-                db_train = DockerTrain(train_id=train_id, created_at=parser.parse(created_at),
-                                       updated_at=parser.parse(updated_at))
+                db_train = DockerTrain(
+                    train_id=train_id,
+                    created_at=parser.parse(created_at),
+                    updated_at=parser.parse(updated_at),
+                )
             else:
-                db_train = DockerTrain(train_id=train_id, created_at=parser.parse(created_at))
+                db_train = DockerTrain(
+                    train_id=train_id, created_at=parser.parse(created_at)
+                )
             db.add(db_train)
             db.commit()
             db.refresh(db_train)
@@ -98,10 +132,14 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
         state = db_train.state
         return state
 
-    def update_train_state(self, db: Session, train_id: str, state_in: DockerTrainStateSchema) -> DockerTrainState:
+    def update_train_state(
+        self, db: Session, train_id: str, state_in: DockerTrainStateSchema
+    ) -> DockerTrainState:
         db_state = self.read_train_state(db, train_id)
         if not db_state:
-            raise HTTPException(status_code=404, detail=f"Train State for train: {train_id} not found")
+            raise HTTPException(
+                status_code=404, detail=f"Train State for train: {train_id} not found"
+            )
         db_state.num_executions = state_in.num_executions
         db_state.last_execution = state_in.last_execution
         db_state.status = state_in.status
@@ -118,8 +156,16 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
         executions = db_train.executions
         return executions
 
-    def get_executions(self, db: Session, skip: int = 0, limit: int = 100) -> List[DockerTrainExecution]:
-        return db.query(DockerTrainExecution).order_by(DockerTrainExecution.start.desc()).offset(skip).limit(limit).all()
+    def get_executions(
+        self, db: Session, skip: int = 0, limit: int = 100
+    ) -> List[DockerTrainExecution]:
+        return (
+            db.query(DockerTrainExecution)
+            .order_by(DockerTrainExecution.start.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
     def synchronize_central(self, db: Session) -> List[DockerTrain]:
 
@@ -136,9 +182,9 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             return []
         return trains
 
-    def _parse_central_api_train(self,
-                                 db: Session,
-                                 train_dict: dict) -> Union[None, Tuple[DockerTrain, DockerTrainState]]:
+    def _parse_central_api_train(
+        self, db: Session, train_dict: dict
+    ) -> Union[None, Tuple[DockerTrain, DockerTrainState]]:
         db_train = self.get_by_train_id(db, train_dict["train_id"])
         if db_train:
             # todo update existing train
@@ -169,7 +215,6 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             name=train_dict["train"]["name"],
             num_participants=train_dict["train"]["stations"],
             image_name=image_name,
-
         )
         return db_train
 
@@ -179,11 +224,11 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
         tag = train_dict["artifact_tag"]
         if not tag:
             tag = "latest"
-        image_name = '{}/{}/{}:{}'.format(
+        image_name = "{}/{}/{}:{}".format(
             settings.config.registry.address,
             settings.config.registry.project,
             train_dict["train_id"],
-            tag
+            tag,
         )
         return image_name
 

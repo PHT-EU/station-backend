@@ -14,18 +14,15 @@ class StationAPIClient(BaseClient):
     trains: ResourceClient
 
     def __init__(
-            self,
-            base_url: str,
-            auth_url: str = None,
-            username: str = None,
-            password: str = None,
+        self,
+        base_url: str,
+        auth_url: str = None,
+        username: str = None,
+        password: str = None,
     ):
 
         super().__init__(
-            base_url=base_url,
-            auth_url=auth_url,
-            username=username,
-            password=password
+            base_url=base_url, auth_url=auth_url, username=username, password=password
         )
 
         self.local_trains = LocalTrainClient(base_url, "local-trains", LocalTrain, self)
@@ -41,9 +38,5 @@ class StationAPIClient(BaseClient):
         auth_url = os.getenv("AUTH_URL")
 
         return cls(
-            base_url=base_url,
-            username=username,
-            password=password,
-            auth_url=auth_url
+            base_url=base_url, username=username, password=password, auth_url=auth_url
         )
-

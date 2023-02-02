@@ -1,7 +1,3 @@
-
-
-
-
 # @pytest.fixture
 # def auth_values():
 #     load_dotenv(find_dotenv())
@@ -32,4 +28,3 @@
 #         response = validate_user_token(token_url=url, token=user_token, robot_token=token)
 #         assert response.name == "admin"
 #
-

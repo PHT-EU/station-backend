@@ -14,7 +14,9 @@ def test_notification_create():
     """
     Test the creation of a Notification
     """
-    response = client.post("/api/notifications", json={"topic": "Test Notification", "message": "testing"})
+    response = client.post(
+        "/api/notifications", json={"topic": "Test Notification", "message": "testing"}
+    )
     assert response.status_code == 201
     assert response.json()["topic"] == "Test Notification"
     assert response.json()["message"] == "testing"
@@ -24,7 +26,9 @@ def test_notification_create_fail():
     """
     Test the creation of a Notification --fail
     """
-    response = client.post("/api/notification/x", json={"topic": "Test Notification", "message": "testing"})
+    response = client.post(
+        "/api/notification/x", json={"topic": "Test Notification", "message": "testing"}
+    )
     assert response.status_code == 404, response.text
 
 
@@ -32,7 +36,7 @@ def test_notification_get_by_id():
     """
     Test the retrieval of a Notification
     """
-    response = client.get(f"/api/notifications/1")
+    response = client.get("/api/notifications/1")
     assert response.status_code == 200
     assert response.json()["topic"] == "Test Notification"
     assert response.json()["message"] == "testing"
@@ -42,14 +46,22 @@ def test_notification_get_by_id_fail():
     """
     Test the retrieval of a Notification --fail
     """
-    response = client.get(f"/api/notification/x")
+    response = client.get("/api/notification/x")
     assert response.status_code == 404, response.text
+
 
 def test_notification_update():
     """
     Test the update of a Notification
     """
-    response = client.put("/api/notifications/1", json={'message': 'testing', 'topic': 'Test Notification Updated', 'is_read': True})
+    response = client.put(
+        "/api/notifications/1",
+        json={
+            "message": "testing",
+            "topic": "Test Notification Updated",
+            "is_read": True,
+        },
+    )
     assert response.status_code == 200
     assert response.json()["topic"] == "Test Notification Updated"
     assert response.json()["message"] == "testing"
@@ -59,14 +71,16 @@ def test_get_list_notifications():
     """
     Test the retrieval of a list of Notifications
     """
-    response = client.post("/api/notifications", json={"topic": "Test Notification 2", "message": "testing"})
+    response = client.post(
+        "/api/notifications",
+        json={"topic": "Test Notification 2", "message": "testing"},
+    )
     assert response.status_code == 201
     assert response.json()["topic"] == "Test Notification 2"
     assert response.json()["message"] == "testing"
-    response = client.get(f"/api/notifications")
+    response = client.get("/api/notifications")
     assert response.status_code == 200
     assert len(response.json()) >= 1
-
 
 
 def test_notification_delete():
@@ -75,4 +89,3 @@ def test_notification_delete():
     """
     response = client.delete("/api/notifications/1")
     assert response.status_code == 202, response.text
-

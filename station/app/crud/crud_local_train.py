@@ -5,15 +5,27 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from station.app.config import clients
-from station.app.crud.base import CreateSchemaType, CRUDBase, ModelType, UpdateSchemaType
-from station.app.models.local_trains import LocalTrain, LocalTrainExecution, LocalTrainState
-from station.app.schemas.local_trains import LocalTrainConfigurationStep, LocalTrainCreate, LocalTrainUpdate
+from station.app.crud.base import (
+    CreateSchemaType,
+    CRUDBase,
+    ModelType,
+    UpdateSchemaType,
+)
+from station.app.models.local_trains import (
+    LocalTrain,
+    LocalTrainExecution,
+    LocalTrainState,
+)
+from station.app.schemas.local_trains import (
+    LocalTrainConfigurationStep,
+    LocalTrainCreate,
+    LocalTrainUpdate,
+)
 from station.ctl.constants import DataDirectories
 from station.trains.local.update import update_configuration_status
 
 
 class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
-
     def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
         obj_in_data = jsonable_encoder(obj_in, exclude_none=True)
         db_obj = self.model(**obj_in_data)
@@ -26,8 +38,15 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
 
         return train
 
-    def create_run(self, db: Session, *, train_id: str, dag_run: str,
-                   config_id: int = None, dataset_id: str = None) -> LocalTrainExecution:
+    def create_run(
+        self,
+        db: Session,
+        *,
+        train_id: str,
+        dag_run: str,
+        config_id: int = None,
+        dataset_id: str = None
+    ) -> LocalTrainExecution:
         """
         create a database entry for a local train execution
 
@@ -55,10 +74,16 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         """
         # TODO remove query results when exist
         # remove files stored in minio
-        clients.minio.delete_folder(bucket=str(DataDirectories.LOCAL_TRAINS.value), directory=train_id)
+        clients.minio.delete_folder(
+            bucket=str(DataDirectories.LOCAL_TRAINS.value), directory=train_id
+        )
 
         # remove sql database entries for LocalTrainExecution
-        obj = db.query(LocalTrainExecution).filter(LocalTrainExecution.train_id == train_id).all()
+        obj = (
+            db.query(LocalTrainExecution)
+            .filter(LocalTrainExecution.train_id == train_id)
+            .all()
+        )
         for run in obj:
             db.delete(run)
         db.commit()
@@ -69,20 +94,26 @@ class CRUDLocalTrain(CRUDBase[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):
         return db_train
 
     def create_initial_state(self, db: Session, db_obj: LocalTrain):
-        state = LocalTrainState(
-            train_id=db_obj.id
-        )
+        state = LocalTrainState(train_id=db_obj.id)
         db.add(state)
         db.commit()
         db.refresh(db_obj)
         return db_obj
 
-    def update(self, db: Session, *, db_obj: ModelType, obj_in: Union[UpdateSchemaType, Dict[str, Any]]) -> ModelType:
+    def update(
+        self,
+        db: Session,
+        *,
+        db_obj: ModelType,
+        obj_in: Union[UpdateSchemaType, Dict[str, Any]]
+    ) -> ModelType:
         update_train = super().update(db, db_obj=db_obj, obj_in=obj_in)
         update_train.updated_at = datetime.now()
         db.commit()
         state = update_train.state
-        files = clients.minio.get_minio_dir_items(DataDirectories.LOCAL_TRAINS.value, db_obj.id)
+        files = clients.minio.get_minio_dir_items(
+            DataDirectories.LOCAL_TRAINS.value, db_obj.id
+        )
         configuration_state = update_configuration_status(update_train, files)
         state.configuration_state = configuration_state
         db.commit()

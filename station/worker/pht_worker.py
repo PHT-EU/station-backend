@@ -14,7 +14,6 @@ from station.worker.trainer import FederatedTrainer
 
 
 class PHTWorker:
-
     def __init__(self):
         self.conductor_client = ConductorRESTClient()
         self.minio_client = MinioClient()
@@ -26,9 +25,11 @@ class PHTWorker:
 
         discovery_post = {
             "station_id": os.getenv("STATION_ID"),
-            "results": discovery_result
+            "results": discovery_result,
         }
-        self.conductor_client.post_discovery_results(train_id=train_id, discovery_results=discovery_post)
+        self.conductor_client.post_discovery_results(
+            train_id=train_id, discovery_results=discovery_post
+        )
 
     def make_data_loader(self, db: Session, train_id: Any):
         db_train = federated_trains.get_by_train_id(db=db, train_id=train_id)
@@ -50,7 +51,7 @@ class PHTWorker:
         pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     load_dotenv(find_dotenv())
     session = SessionLocal()
     TRAIN_ID = "1"

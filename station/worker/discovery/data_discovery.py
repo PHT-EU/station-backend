@@ -24,6 +24,8 @@ def _minio_discovery(ds: DataSet) -> List[Dict[str, Union[int, str]]]:
     minio_client = MinioClient()
 
     local_classes = minio_client.get_classes_by_folders(ds.access_path)
-    class_distribution = minio_client.get_class_distributions(ds.access_path, local_classes)
+    class_distribution = minio_client.get_class_distributions(
+        ds.access_path, local_classes
+    )
 
     return class_distribution

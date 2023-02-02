@@ -13,11 +13,11 @@ from station.trains.local.docker import make_docker_file
 
 
 def build_train(
-        db: Session,
-        train_id: str,
-        master_image_id: str = None,
-        files: BytesIO = None,
-        custom_image: str = None,
+    db: Session,
+    train_id: str,
+    master_image_id: str = None,
+    files: BytesIO = None,
+    custom_image: str = None,
 ) -> str:
     if master_image_id and not files:
         raise ValueError("Must specify files with master image")
@@ -31,7 +31,7 @@ def build_train(
         entrypoint_file=train.entrypoint,
         custom_image=custom_image,
         command=train.command,
-        command_args=train.command_args
+        command_args=train.command_args,
     )
 
     image = _add_train_files(files=files, image=image)
@@ -40,23 +40,30 @@ def build_train(
 
 
 def _make_train_image(
-        train_id: str,
-        master_image: str = None,
-        entrypoint_file: str = None,
-        custom_image: str = None,
-        command: str = None,
-        command_args: Union[List[str], str] = None) -> Image:
+    train_id: str,
+    master_image: str = None,
+    entrypoint_file: str = None,
+    custom_image: str = None,
+    command: str = None,
+    command_args: Union[List[str], str] = None,
+) -> Image:
     docker_client = docker.from_env()
     if not entrypoint_file and not custom_image:
-        raise ValueError("Must specify an entrypoint file with master image or a custom image")
+        raise ValueError(
+            "Must specify an entrypoint file with master image or a custom image"
+        )
     if custom_image:
         image = docker_client.images.get(custom_image)
     elif master_image:
-        dockerfile = make_docker_file(master_image, entrypoint_file, command=command, command_args=command_args)
+        dockerfile = make_docker_file(
+            master_image, entrypoint_file, command=command, command_args=command_args
+        )
         image, logs = docker_client.images.build(fileobj=dockerfile)
         logger.info(logs)
     else:
-        raise ValueError("Must specify an entrypoint file with master image or a custom image")
+        raise ValueError(
+            "Must specify an entrypoint file with master image or a custom image"
+        )
 
     if image.tag(repository=f"pht-local/{train_id}", tag="latest"):
         logger.debug(f"Tagged image {image.id} as pht-local/{train_id}:latest")

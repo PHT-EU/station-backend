@@ -1,4 +1,3 @@
-
 from sqlalchemy.orm import Session
 
 from station.app.config import settings
@@ -12,13 +11,15 @@ class CRUDLocalTrainMasterImage(
     CRUDBase[
         LocalTrainMasterImage,
         schemas.LocalTrainMasterImageCreate,
-        schemas.LocalTrainMasterImageUpdate
+        schemas.LocalTrainMasterImageUpdate,
     ]
 ):
     def get_by_image_id(self, db: Session, image_id: str):
-        return db.query(LocalTrainMasterImage).filter(
-            LocalTrainMasterImage.image_id == image_id
-        ).first()
+        return (
+            db.query(LocalTrainMasterImage)
+            .filter(LocalTrainMasterImage.image_id == image_id)
+            .first()
+        )
 
     def sync_with_harbor(self, db: Session):
         harbor_client = HarborClient(

@@ -55,4 +55,3 @@ class AirflowRun(BaseModel):
     dag_id: str
     train_id: str
     start_date: datetime
-

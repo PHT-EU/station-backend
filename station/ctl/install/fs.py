@@ -13,12 +13,13 @@ def check_create_pht_dirs(path):
     # check that pht directories exist
     pht_dir_check = _check_dirs_from_enum(path, PHTDirectories)
     service_dir_check = _check_dirs_from_enum(
-        os.path.join(path, PHTDirectories.SERVICE_DATA_DIR.value),
-        ServiceDirectories
+        os.path.join(path, PHTDirectories.SERVICE_DATA_DIR.value), ServiceDirectories
     )
 
     if pht_dir_check and service_dir_check:
-        click.confirm('Previous installation found. Do you want to overwrite it?', abort=True)
+        click.confirm(
+            "Previous installation found. Do you want to overwrite it?", abort=True
+        )
         create_pht_dirs(path)
     else:
         create_pht_dirs(path)
