@@ -7,6 +7,9 @@ readme = "README.md"
 packages = [{include = "station"}]
 include = ["station/ctl/templates/*.tmpl", "station/ctl/templates/traefik/*.tmpl"]
 
+[tool.poetry.scripts]
+station_ctl = "station.ctl.cli:cli"
+
 
 [tool.poetry.dependencies]
 python = "^3.10"

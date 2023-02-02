@@ -2,4 +2,4 @@
 
 set -e
 
-station_ctl "$@"
+python /home/station/station/ctl/cli.py "$@"

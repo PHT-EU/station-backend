@@ -5,4 +5,5 @@ service_data/
 .github/
 station_data/
 testing/
+.env
 
