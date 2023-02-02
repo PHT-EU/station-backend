@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from station.app.api import dependencies
+from station.app.auth import authorized_user
 
 # from station.clients.airflow.client import airflow_client
 from station.app.config import clients
@@ -26,7 +27,7 @@ def run(
     run_msg: AirflowRunMsg,
     dag_id: str,
     db: Session = Depends(dependencies.get_db),
-    user: User = Depends(dependencies.authorized_user),
+    user: User = Depends(authorized_user),
 ):
     """
     Trigger a dag run and return the run_id of the run
@@ -68,7 +69,7 @@ def run(
 
 @router.get("/logs/{dag_id}/{run_id}", response_model=AirflowInformation)
 def get_airflow_run_information(
-    dag_id: str, run_id: str, user: User = Depends(dependencies.authorized_user)
+    dag_id: str, run_id: str, user: User = Depends(authorized_user)
 ):
     """
     Get information about one airflow DAG execution.
@@ -104,7 +105,7 @@ def get_airflow_task_log(
     run_id: str,
     task_id: str,
     task_try_number: int,
-    user: User = Depends(dependencies.authorized_user),
+    user: User = Depends(authorized_user),
 ):
     """
     Get log of a task in a DAG execution.
