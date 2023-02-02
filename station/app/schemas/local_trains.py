@@ -1,9 +1,9 @@
 import uuid
+from datetime import datetime
 from enum import Enum
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, root_validator
-from datetime import datetime
-from typing import Optional, Dict, List, Union, Any
 
 
 class DBSchema(BaseModel):
@@ -22,9 +22,15 @@ class LocalTrainMasterImageBase(BaseModel):
     def image_specified(cls, values):
         image_id = values.get("image_id")
         if not image_id:
-            registry, group, artifact = values.get("registry"), values.get("group"), values.get("artifact")
+            registry, group, artifact = (
+                values.get("registry"),
+                values.get("group"),
+                values.get("artifact"),
+            )
             if not registry or not group or not artifact:
-                raise ValueError("Image ID or registry, group and artifact must be specified.")
+                raise ValueError(
+                    "Image ID or registry, group and artifact must be specified."
+                )
         return values
 
 

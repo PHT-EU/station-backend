@@ -31,7 +31,13 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self, db: Session, *, skip: int = 0, limit: int = 100
     ) -> List[ModelType]:
         if isinstance(self.model.__table__.columns.get("created_at", None), Column):
-            return db.query(self.model).order_by(self.model.created_at.desc()).offset(skip).limit(limit).all()
+            return (
+                db.query(self.model)
+                .order_by(self.model.created_at.desc())
+                .offset(skip)
+                .limit(limit)
+                .all()
+            )
 
         return db.query(self.model).offset(skip).limit(limit).all()
 

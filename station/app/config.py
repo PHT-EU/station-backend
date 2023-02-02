@@ -1,8 +1,7 @@
-from dotenv import load_dotenv, find_dotenv
+from dotenv import find_dotenv, load_dotenv
 
 from station.app.clients import StationClients
 from station.app.settings import Settings
-from station.app.cache import Cache
 
 load_dotenv(find_dotenv())
 

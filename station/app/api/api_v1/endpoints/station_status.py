@@ -1,10 +1,8 @@
+import psutil
 from fastapi import APIRouter
-from station.app.schemas import station_status as status_schema
-from loguru import logger
 
 from station.app.config import clients
-
-import psutil
+from station.app.schemas import station_status as status_schema
 
 router = APIRouter()
 """
@@ -23,10 +21,7 @@ def service_health_check():
         "minio": clients.minio.health_check(),
     }
     for service, health in services.items():
-        service_status.append(status_schema.ServiceStatus(
-            name=service,
-            status=health
-        ))
+        service_status.append(status_schema.ServiceStatus(name=service, status=health))
     return service_status
 
 
@@ -38,16 +33,16 @@ def get_hardware_resources_status():
         available=memory_stats.available,
         percent=memory_stats.percent,
         used=memory_stats.used,
-        free=memory_stats.free
+        free=memory_stats.free,
     )
 
     # get disk statistics
-    disk_util = psutil.disk_usage('./')
+    disk_util = psutil.disk_usage("./")
     disk_usage = status_schema.DiskUsage(
         total=disk_util.total,
         used=disk_util.used,
         free=disk_util.free,
-        percent=disk_util.percent
+        percent=disk_util.percent,
     )
 
     # cpu usage per core
@@ -66,10 +61,8 @@ async def get_station_status():
     hardware = get_hardware_resources_status()
     services = service_health_check()
 
-    return status_schema.StationStatus(
-        hardware=hardware,
-        services=services
-    )
+    return status_schema.StationStatus(hardware=hardware, services=services)
+
 
 # @router.get("/container_resource_util")
 # def status_docker_container_resource_use():

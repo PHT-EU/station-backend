@@ -1,15 +1,17 @@
-from fastapi import FastAPI, Depends
-from dotenv import load_dotenv, find_dotenv
+from dotenv import find_dotenv, load_dotenv
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from station.app.api.api_v1.api import api_router
 from station.app.auth import authorized_user
 
-
 load_dotenv(find_dotenv())
 
 app = FastAPI(
-    title="PHT Station", docs_url="/api/docs", redoc_url="/api/redoc", openapi_url="/api/v1/openapi.json"
+    title="PHT Station",
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/v1/openapi.json",
 )
 
 # Setup logging
@@ -21,7 +23,7 @@ origins = [
     "http://localhost:8081",
     # "http://localhost:3000",
     # "http://localhost",
-    "*"
+    "*",
 ]
 
 

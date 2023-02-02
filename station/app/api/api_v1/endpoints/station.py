@@ -1,5 +1,5 @@
-from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 from station.app.api import dependencies
 from station.app.schemas.users import User

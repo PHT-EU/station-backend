@@ -1,9 +1,10 @@
 import os
 import pprint
 
-from station.clients.central.central_client import CentralApiClient
 import pytest
-from dotenv import load_dotenv, find_dotenv
+from dotenv import find_dotenv, load_dotenv
+
+from station.clients.central.central_client import CentralApiClient
 
 
 @pytest.fixture
@@ -22,7 +23,9 @@ def test_get_token(central_client):
 
 
 def test_get_registry_credentials(central_client):
-    registry_credentials = central_client.get_registry_credentials(os.getenv("STATION_ID"))
+    registry_credentials = central_client.get_registry_credentials(
+        os.getenv("STATION_ID")
+    )
     pprint.pprint(registry_credentials)
     assert registry_credentials
 
@@ -32,6 +35,7 @@ def test_update_public_key(central_client):
     station_id = os.getenv("STATION_ID")
     response = central_client.update_public_key(station_id, public_key)
     print(response)
+
 
 def test_get_trains_for_station(central_client):
     station_id = os.getenv("STATION_ID")

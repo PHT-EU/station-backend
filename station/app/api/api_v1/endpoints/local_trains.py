@@ -1,20 +1,14 @@
-import io
-import tarfile
 from typing import List
 
-from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, File, UploadFile, HTTPException
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
+from sqlalchemy.orm import Session
 
 from station.app.api import dependencies
 from station.app.config import clients
-
-from station.app.schemas import local_trains
-
 from station.app.crud.crud_local_train import local_train
-from station.app.crud.local_train_master_image import local_train_master_image
+from station.app.schemas import local_trains
 from station.app.schemas.datasets import MinioFile
-from station.clients.minio import MinioClient
 from station.ctl.constants import DataDirectories
 from station.trains.local.airflow import run_local_train
 
@@ -22,7 +16,10 @@ router = APIRouter()
 
 
 @router.post("", response_model=local_trains.LocalTrain)
-def create_local_train(create_msg: local_trains.LocalTrainCreate, db: Session = Depends(dependencies.get_db)):
+def create_local_train(
+    create_msg: local_trains.LocalTrainCreate,
+    db: Session = Depends(dependencies.get_db),
+):
     """
     creae a database entry for a new train with preset names from the create_msg
 
@@ -43,15 +40,20 @@ def get_local_train(train_id: str, db: Session = Depends(dependencies.get_db)):
 
 
 @router.get("", response_model=List[local_trains.LocalTrain])
-def get_local_trains(db: Session = Depends(dependencies.get_db), skip: int = 0, limit: int = 100):
+def get_local_trains(
+    db: Session = Depends(dependencies.get_db), skip: int = 0, limit: int = 100
+):
     trains = local_train.get_multi(db, skip=skip, limit=limit)
 
     return trains
 
 
 @router.put("/{train_id}", response_model=local_trains.LocalTrain)
-def update_local_train(train_id: str, update_msg: local_trains.LocalTrainUpdate,
-                       db: Session = Depends(dependencies.get_db)):
+def update_local_train(
+    train_id: str,
+    update_msg: local_trains.LocalTrainUpdate,
+    db: Session = Depends(dependencies.get_db),
+):
     train = local_train.get(db, train_id)
     if not train:
         raise HTTPException(status_code=404, detail=f"Train ({train_id}) not found")
@@ -71,8 +73,11 @@ def delete_local_train(train_id: str, db: Session = Depends(dependencies.get_db)
 
 
 @router.post("/{train_id}/run", response_model=local_trains.LocalTrainExecution)
-async def trigger_train_execution(train_id: str, run_config: local_trains.LocalTrainRunConfig,
-                          db: Session = Depends(dependencies.get_db)):
+async def trigger_train_execution(
+    train_id: str,
+    run_config: local_trains.LocalTrainRunConfig,
+    db: Session = Depends(dependencies.get_db),
+):
     train = local_train.get(db, train_id)
     if not train:
         raise HTTPException(status_code=404, detail=f"Train ({train_id}) not found")
@@ -88,12 +93,16 @@ async def trigger_train_execution(train_id: str, run_config: local_trains.LocalT
 
 
 @router.post("/{train_id}/files")
-async def upload_train_files(train_id: str,
-                             files: List[UploadFile] = File(description="Multiple files as UploadFile"),
-                             db: Session = Depends(dependencies.get_db)) -> List[MinioFile]:
+async def upload_train_files(
+    train_id: str,
+    files: List[UploadFile] = File(description="Multiple files as UploadFile"),
+    db: Session = Depends(dependencies.get_db),
+) -> List[MinioFile]:
     db_train = local_train.get(db, train_id)
     if not db_train:
-        raise HTTPException(status_code=404, detail=f"Local train ({train_id}) not found.")
+        raise HTTPException(
+            status_code=404, detail=f"Local train ({train_id}) not found."
+        )
     if not files:
         raise HTTPException(status_code=400, detail="No files provided.")
     for file in files:
@@ -102,24 +111,38 @@ async def upload_train_files(train_id: str,
 
     state = db_train.state
 
-    if state.configuration_state != local_trains.LocalTrainConfigurationStep.image_configured.value:
-        raise HTTPException(status_code=400, detail="Train image is not configured. Select an image first before up"
-                                                    "loading files.")
+    if (
+        state.configuration_state
+        != local_trains.LocalTrainConfigurationStep.image_configured.value
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Train image is not configured. Select an image first before up"
+            "loading files.",
+        )
 
     resp = await clients.minio.save_local_train_files(db_train.id, files)
 
-    state.configuration_status = local_trains.LocalTrainConfigurationStep.files_uploaded.value
+    state.configuration_status = (
+        local_trains.LocalTrainConfigurationStep.files_uploaded.value
+    )
     db.commit()
     return resp
 
 
 @router.get("/{train_id}/files", response_model=List[MinioFile])
-async def get_train_files(train_id: str, file_name: str = None, db: Session = Depends(dependencies.get_db)):
+async def get_train_files(
+    train_id: str, file_name: str = None, db: Session = Depends(dependencies.get_db)
+):
     db_train = local_train.get(db, train_id)
     if not db_train:
-        raise HTTPException(status_code=404, detail=f"Local train ({train_id}) not found.")
+        raise HTTPException(
+            status_code=404, detail=f"Local train ({train_id}) not found."
+        )
 
-    items = clients.minio.get_minio_dir_items(DataDirectories.LOCAL_TRAINS.value, str(db_train.id))
+    items = clients.minio.get_minio_dir_items(
+        DataDirectories.LOCAL_TRAINS.value, str(db_train.id)
+    )
     if file_name:
         pass
     return items
@@ -129,6 +152,8 @@ async def get_train_files(train_id: str, file_name: str = None, db: Session = De
 async def get_train_archive(train_id: str, db: Session = Depends(dependencies.get_db)):
     db_train = local_train.get(db, train_id)
     if not db_train:
-        raise HTTPException(status_code=404, detail=f"Local train ({train_id}) not found.")
+        raise HTTPException(
+            status_code=404, detail=f"Local train ({train_id}) not found."
+        )
     resp = clients.minio.get_local_train_archive(str(db_train.id))
     return StreamingResponse(content=resp, media_type="application/octet-stream")

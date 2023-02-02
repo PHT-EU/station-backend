@@ -40,7 +40,8 @@ def format_record(record: dict) -> str:
     Works with logging if loguru handler it.
 
     Example:
-    >>> payload = [{"users":[{"name": "Nick", "age": 87, "is_active": True}, {"name": "Alex", "age": 27, "is_active": True}], "count": 2}]
+    >>> payload = [{"users":[{"name": "Nick", "age": 87, "is_active": True},
+    >>> {"name": "Alex", "age": 27, "is_active": True}], "count": 2}]
     >>> logger.bind(payload=).debug("users payload")
     >>> [   {   'count': 2,
     >>>         'users': [   {'age': 87, 'is_active': True, 'name': 'Nick'},

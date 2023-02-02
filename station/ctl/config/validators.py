@@ -1,13 +1,13 @@
+import os
 import re
 from enum import Enum
-from typing import Any, Callable, Tuple, Union, List, Optional
-import os
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 from cryptography.fernet import Fernet
 from pydantic import BaseModel
 
-from station.ctl.config.generators import password_generator, generate_fernet_key
-from station.ctl.constants import Icons, DefaultValues, PHTDirectories
+from station.ctl.config.generators import generate_fernet_key, password_generator
+from station.ctl.constants import DefaultValues, PHTDirectories
 
 
 class ApplicationEnvironment(str, Enum):
@@ -429,7 +429,8 @@ def validate_central_config(
                 field="central",
                 display_field="central",
                 message="Central services configuration missing",
-                fix_hint="Add address and credentials for the central API (available in the UI) to the station config file.",
+                fix_hint="Add address and credentials for the central API (available in the UI)"
+                " to the station config file.",
             )
         ]
 
@@ -641,7 +642,7 @@ def _validate_config_value(
 
 def _environment_validator(environment: str) -> Tuple[bool, Union[str, None]]:
     try:
-        env = ApplicationEnvironment(environment)
+        ApplicationEnvironment(environment)
         return True, None
     except ValueError:
         return False, f'Invalid environment "{environment}"'
