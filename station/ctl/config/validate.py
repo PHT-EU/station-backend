@@ -33,7 +33,7 @@ def validate_config(
     validation_results.extend(central_results)
 
     # validate registry config
-    if install:
+    if not install:
         registry_results = validators.validate_registry_config(config.get("registry"))
         validation_results.extend(registry_results)
 
