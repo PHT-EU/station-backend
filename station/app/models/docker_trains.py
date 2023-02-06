@@ -27,7 +27,7 @@ class DockerTrainExecution(Base):
     end = Column(DateTime, nullable=True)
     airflow_dag_run = Column(String, nullable=True)
     config = Column(Integer, ForeignKey("docker_train_configs.id"), nullable=True)
-    dataset = Column(UUID, ForeignKey("datasets.id"), nullable=True)
+    dataset_id = Column(UUID(as_uuid=True), ForeignKey("datasets.id"), nullable=True)
 
 
 class DockerTrainConfig(Base):
