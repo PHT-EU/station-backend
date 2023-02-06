@@ -53,8 +53,6 @@ services:
       - ./station_data:/opt/station_data
     depends_on:
       - postgres
-    env_file:
-      - .env.old
     environment:
       - AIRFLOW__WEBSERVER__X_FRAME_ENABLED=True
       - MINIO_HOST=minio:9000

@@ -29,10 +29,19 @@ class StationClients:
             airflow_user=self.settings.config.airflow.user,
             airflow_password=self.settings.config.airflow.password.get_secret_value(),
         )
+
+        # check for secretstr and get secret value if needed
+        if isinstance(self.settings.config.registry.password, str):
+            registry_password = self.settings.config.registry.password
+        else:
+            registry_password = (
+                self.settings.config.registry.password.get_secret_value()
+            )
+
         self._harbor = HarborClient(
             api_url=self.settings.config.registry.api_url,
             username=self.settings.config.registry.user,
-            password=self.settings.config.registry.password.get_secret_value(),
+            password=registry_password,
         )
 
         self._minio = MinioClient(
