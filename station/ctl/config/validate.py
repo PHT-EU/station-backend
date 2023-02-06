@@ -14,7 +14,7 @@ RED = Style(color="red")
 
 
 def validate_config(
-    config: dict, host_path: str = None
+    config: dict, host_path: str = None, install: bool = False
 ) -> Tuple[List[ConfigItemValidationResult], Table]:
     """
     Validates a config file and returns a table containing the validation results
@@ -33,8 +33,9 @@ def validate_config(
     validation_results.extend(central_results)
 
     # validate registry config
-    registry_results = validators.validate_registry_config(config.get("registry"))
-    validation_results.extend(registry_results)
+    if install:
+        registry_results = validators.validate_registry_config(config.get("registry"))
+        validation_results.extend(registry_results)
 
     # validate http/https config
     web_results = validators.validate_web_config(

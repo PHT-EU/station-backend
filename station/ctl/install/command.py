@@ -38,7 +38,9 @@ def install(ctx, install_dir, host_path):
     if not install_dir:
         install_dir = os.getcwd()
     ctx.obj["install_dir"] = install_dir
-    validation_results, table = validate_config(ctx.obj, host_path=host_path)
+    validation_results, table = validate_config(
+        ctx.obj, host_path=host_path, install=True
+    )
     issues = [
         result
         for result in validation_results
@@ -72,8 +74,7 @@ def install(ctx, install_dir, host_path):
 
     # get credentials for registry
     reg_credentials = _request_registry_credentials(ctx)
-
-    ctx.obj["registry"]["project"] = reg_credentials["external_name"]
+    ctx.obj["registry"] = reg_credentials.dict()
 
     # setup docker volumes and networks
     setup_docker()
