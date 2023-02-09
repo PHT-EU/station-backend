@@ -4,6 +4,12 @@ data
 test_data
 
 .data/
+traefik/
+logs/
+service_data/
+configs/
+certs/
+station_data/
 
 
 # Created by .ignore support plugin (hsz.mobi)

@@ -1,6 +1,7 @@
-from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional, Any, List
+from typing import List, Optional
+
+from pydantic import BaseModel
 
 
 class TaskInstances(BaseModel):
@@ -54,4 +55,3 @@ class AirflowRun(BaseModel):
     dag_id: str
     train_id: str
     start_date: datetime
-

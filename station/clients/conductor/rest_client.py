@@ -1,14 +1,15 @@
+import os
 from typing import Any, Dict
 
 import requests
 from sqlalchemy.orm import Session
-import os
 
 
 class ConductorRESTClient:
-
     def __init__(self, conductor_url: str = None, station_id: int = None):
-        self.conductor_url = conductor_url if conductor_url else os.getenv("CONDUCTOR_URL")
+        self.conductor_url = (
+            conductor_url if conductor_url else os.getenv("CONDUCTOR_URL")
+        )
         self.station_id = station_id if station_id else os.getenv("STATION_ID")
 
         assert self.conductor_url

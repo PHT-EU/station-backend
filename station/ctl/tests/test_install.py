@@ -2,19 +2,15 @@ import os
 from collections import namedtuple
 
 import pytest
-from dotenv import load_dotenv, find_dotenv
 import yaml
-import re
+from dotenv import find_dotenv, load_dotenv
 
 from station.clients.central.central_client import CentralApiClient
-from station.ctl.install.fs import create_pht_dirs
-
-from station.ctl.util import get_template_env
-from station.ctl.install import templates
 from station.ctl.constants import PHTDirectories
-from station.ctl.install import docker
-from station.ctl.install import certs
+from station.ctl.install import certs, docker, templates
 from station.ctl.install.command import _setup_auth_server
+from station.ctl.install.fs import create_pht_dirs
+from station.ctl.util import get_template_env
 
 
 @pytest.fixture
@@ -44,9 +40,8 @@ def test_setup_auth():
             "version": "latest",
         }
     }
-    ctx = namedtuple('Struct', ctx.keys())(*ctx.values())
+    ctx = namedtuple("Struct", ctx.keys())(*ctx.values())
     _setup_auth_server(ctx)
-
 
 
 def test_render_init_sql():
@@ -81,7 +76,10 @@ def test_render_traefik_configs():
     assert traefik_dict["entryPoints"]["http"]["address"] == ":80"
     assert traefik_dict["entryPoints"]["https"]["address"] == ":443"
 
-    assert router_dict["http"]["routers"]["traefik"]["tls"]["domains"][0]["main"] == "test.com"
+    assert (
+        router_dict["http"]["routers"]["traefik"]["tls"]["domains"][0]["main"]
+        == "test.com"
+    )
     assert router_dict["tls"]["certificates"][0]["certFile"] == "test"
     assert router_dict["tls"]["certificates"][0]["keyFile"] == "test"
 
@@ -98,5 +96,3 @@ def test_generate_certs(tmp_path):
     assert key_path.read_bytes()
     assert cert_path.exists()
     assert cert_path.read_bytes()
-
-

@@ -1,8 +1,7 @@
-from conductor_lib.src.torch import LightningTrainModel
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
+from conductor_lib.src.torch import LightningTrainModel
 from torchvision import transforms
 
 
@@ -37,7 +36,10 @@ class Cifar10Model(LightningTrainModel):
 
     def make_transform(self) -> transforms.Compose:
         transform = transforms.Compose(
-            [transforms.ToTensor(),
-             transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+            [
+                transforms.ToTensor(),
+                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+            ]
+        )
 
         return transform

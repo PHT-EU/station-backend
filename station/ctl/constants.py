@@ -1,6 +1,6 @@
 from enum import Enum
 
-CERTS_REGEX = r'https\.certs\[([0-9]*)\]'
+CERTS_REGEX = r"https\.certs\[([0-9]*)\]"
 
 
 class DockerVolumes(Enum):
@@ -26,11 +26,11 @@ class ServiceImages(Enum):
     BLAZE = "samply/blaze:latest"
 
 
-
 class DefaultValues(Enum):
     """
     Default values for the station configuration
     """
+
     FERNET_KEY = "your_fernet_key"
     ADMIN = "admin"
     PRIVATE_KEY = "/path/to/private_key.pem"

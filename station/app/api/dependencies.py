@@ -1,10 +1,7 @@
-from typing import Generator
-from station.app.db.session import SessionLocal
-from station.app.auth import authorized_user
-
 import os
-from fastapi.security import HTTPBearer
+from typing import Generator
 
+from station.app.db.session import SessionLocal
 
 # reusable_oauth2 = OAuth2PasswordBearer(
 #     tokenUrl=f"{settings.API_V1_STR}/login/access-token"
@@ -26,5 +23,3 @@ def fernet_key() -> bytes:
         # TODO load key from station config file
         pass
     return fernet_key.encode()
-
-

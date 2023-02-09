@@ -1,11 +1,12 @@
+import tarfile
 import time
+from io import BytesIO
 
 import pytest
 
-from station.app.trains.local.docker import make_docker_file
 from station.app.trains.local.build import build_train
-from io import BytesIO
-import tarfile
+from station.app.trains.local.docker import make_docker_file
+
 
 @pytest.fixture
 def simple_file_archive() -> BytesIO:
@@ -51,5 +52,3 @@ def test_build_basic(simple_file_archive):
 
 def test_api_create():
     pass
-
-

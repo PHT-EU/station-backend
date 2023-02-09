@@ -1,2 +1,9 @@
 venv/
 test_data/
+service_data/
+.pytest_cache/
+.github/
+station_data/
+testing/
+.env
+

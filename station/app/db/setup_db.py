@@ -1,15 +1,12 @@
 import uuid
 
-from station.app.db.session import engine, SessionLocal, SQLALCHEMY_DATABASE_URL
 from station.app.db.base import Base
-
+from station.app.db.session import SessionLocal, engine
 from station.app.models import docker_trains
-from station.app.config import settings
 
 
 # TODO use alembic
 def setup_db(dev=False, reset=False):
-    SQLALCHEMY_DATABASE_URL = settings.config.db.dsn
 
     if reset:
         reset_db(dev=False)
@@ -36,7 +33,6 @@ def seed_db_for_testing():
         for _ in range(3):
             dt = docker_trains.DockerTrain(
                 train_id=str(uuid.uuid4()),
-
             )
             dts.append(dt)
         session.add_all(dts)
@@ -45,17 +41,12 @@ def seed_db_for_testing():
         # Create states for the created trains
         states = []
         for dt in dts:
-            state = docker_trains.DockerTrainState(
-                train_id=dt.id,
-                status="inactive"
-            )
+            state = docker_trains.DockerTrainState(train_id=dt.id, status="inactive")
             states.append(state)
 
         session.add_all(states)
 
-        config = docker_trains.DockerTrainConfig(
-            name="default"
-        )
+        config = docker_trains.DockerTrainConfig(name="default")
 
         session.add(config)
         session.commit()
@@ -63,6 +54,6 @@ def seed_db_for_testing():
     session.close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Base.metadata.drop_all(bind=engine)
     setup_db()

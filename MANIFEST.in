@@ -1,2 +1,0 @@
-include station/ctl/templates/*.tmpl
-include station/ctl/templates/traefik/*.tmpl

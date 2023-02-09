@@ -1,9 +1,8 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, JSON
-from sqlalchemy.dialects.postgresql import UUID
-
 import uuid
-
 from datetime import datetime
+
+from sqlalchemy import JSON, Column, DateTime, ForeignKey, String
+from sqlalchemy.dialects.postgresql import UUID
 
 from station.app.db.base_class import Base
 
@@ -18,5 +17,5 @@ class DataSet(Base):
     data_type = Column(String, nullable=True)
     storage_type = Column(String, nullable=True)
     access_path = Column(String, nullable=True)
-    fhir_server = Column(UUID, ForeignKey('fhir_servers.id'), nullable=True)
+    fhir_server = Column(UUID, ForeignKey("fhir_servers.id"), nullable=True)
     summary = Column(JSON, nullable=True)

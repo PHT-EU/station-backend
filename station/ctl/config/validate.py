@@ -1,17 +1,21 @@
-from typing import Tuple, List
+from typing import List, Tuple
 
-from rich.table import Table
 from rich.style import Style
-
-from station.ctl.config.validators import ConfigItemValidationResult, ConfigItemValidationStatus
+from rich.table import Table
 
 from station.ctl.config import validators
+from station.ctl.config.validators import (
+    ConfigItemValidationResult,
+    ConfigItemValidationStatus,
+)
 
 YELLOW = Style(color="yellow")
 RED = Style(color="red")
 
 
-def validate_config(config: dict, host_path: str = None) -> Tuple[List[ConfigItemValidationResult], Table]:
+def validate_config(
+    config: dict, host_path: str = None, install: bool = False
+) -> Tuple[List[ConfigItemValidationResult], Table]:
     """
     Validates a config file and returns a table containing the validation results
     """
@@ -23,15 +27,20 @@ def validate_config(config: dict, host_path: str = None) -> Tuple[List[ConfigIte
     validation_results.extend(top_level_results)
 
     # validate configuration for central services
-    central_results = validators.validate_central_config(config.get("central"), host_path=host_path)
+    central_results = validators.validate_central_config(
+        config.get("central"), host_path=host_path
+    )
     validation_results.extend(central_results)
 
     # validate registry config
-    registry_results = validators.validate_registry_config(config.get("registry"))
-    validation_results.extend(registry_results)
+    if not install:
+        registry_results = validators.validate_registry_config(config.get("registry"))
+        validation_results.extend(registry_results)
 
     # validate http/https config
-    web_results = validators.validate_web_config(config, strict=strict, host_path=host_path)
+    web_results = validators.validate_web_config(
+        config, strict=strict, host_path=host_path
+    )
     validation_results.extend(web_results)
 
     # validate db config
@@ -55,7 +64,9 @@ def validate_config(config: dict, host_path: str = None) -> Tuple[List[ConfigIte
 
 
 def _generate_results_table(results: List[ConfigItemValidationResult]) -> Table:
-    table = Table(title="Station config validation", show_lines=True, header_style="bold")
+    table = Table(
+        title="Station config validation", show_lines=True, header_style="bold"
+    )
     table.add_column("Level", justify="center")
     table.add_column("Field", justify="center")
     table.add_column("Issue", justify="center")
@@ -65,6 +76,8 @@ def _generate_results_table(results: List[ConfigItemValidationResult]) -> Table:
         if result.status != ConfigItemValidationStatus.VALID:
             level_val = result.level.value
             # level = YELLOW.render(level_val) if result.level == ConfigIssueLevel.WARN else RED.render(level_val)
-            table.add_row(level_val, result.display_field, result.message, result.fix_hint)
+            table.add_row(
+                level_val, result.display_field, result.message, result.fix_hint
+            )
 
     return table

@@ -1,10 +1,10 @@
 import uvicorn
-from dotenv import load_dotenv, find_dotenv
+from dotenv import find_dotenv, load_dotenv
 
 from station.app.cache import Cache
-from station.app.db.setup_db import setup_db, reset_db
+from station.app.config import clients, settings
+from station.app.db.setup_db import setup_db
 from station.app.settings import StationRuntimeEnvironment
-from station.app.config import settings, clients, cache
 
 
 def setup():
@@ -16,7 +16,7 @@ def setup():
     # minio_client.setup_buckets()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     load_dotenv(find_dotenv())
     # setup()
     settings.setup()
@@ -32,13 +32,16 @@ if __name__ == '__main__':
     )
     # Configure logging behaviour
     log_config = uvicorn.config.LOGGING_CONFIG
-    log_config["formatters"]["access"]["fmt"] = "%(asctime)s - %(levelname)s - %(message)s"
-    log_config["formatters"]["default"]["fmt"] = "%(asctime)s - %(levelname)s - %(message)s"
+    log_config["formatters"]["access"][
+        "fmt"
+    ] = "%(asctime)s - %(levelname)s - %(message)s"
+    log_config["formatters"]["default"][
+        "fmt"
+    ] = "%(asctime)s - %(levelname)s - %(message)s"
     uvicorn.run(
         "station.app.main:app",
         port=settings.config.port,
         host=settings.config.host,
         reload=settings.config.environment == StationRuntimeEnvironment.DEVELOPMENT,
-        log_config=log_config
+        log_config=log_config,
     )
-

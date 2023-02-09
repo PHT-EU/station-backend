@@ -1,8 +1,7 @@
 from fastapi.testclient import TestClient
 
-
-from station.app.main import app
 from station.app.api.dependencies import get_db
+from station.app.main import app
 
 from .test_db import override_get_db
 
@@ -12,12 +11,10 @@ client = TestClient(app)
 
 
 def test_data_set_create():
-    response = client.post("/api/datasets", json={
-        "name": "test data set",
-        "data_type": "tabular",
-        "storage_type": "fhir"
-
-    })
+    response = client.post(
+        "/api/datasets",
+        json={"name": "test data set", "data_type": "tabular", "storage_type": "fhir"},
+    )
 
     assert response.status_code == 200, response.text
 

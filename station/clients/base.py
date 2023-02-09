@@ -6,15 +6,16 @@ from pydantic import SecretStr
 
 
 class BaseClient:
-    def __init__(self,
-                 base_url: str,
-                 auth_url: str = None,
-                 username: str = None,
-                 password: str = None,
-                 robot_id: str = None,
-                 robot_secret: str = None,
-                 headers: dict = None,
-                 ):
+    def __init__(
+        self,
+        base_url: str,
+        auth_url: str = None,
+        username: str = None,
+        password: str = None,
+        robot_id: str = None,
+        robot_secret: str = None,
+        headers: dict = None,
+    ):
         self.base_url = base_url
         self.auth_url = auth_url
         self.username = username
@@ -45,11 +46,17 @@ class BaseClient:
     def _get_token(self) -> str:
         if not self.token or self.token_expiration < pendulum.now():
             if self.username and self.password:
-                r = requests.post(self.auth_url, data={"username": self.username, "password": self.password})
+                r = requests.post(
+                    self.auth_url,
+                    data={"username": self.username, "password": self.password},
+                )
             elif self.robot_id and self.robot_secret:
                 if isinstance(self.robot_secret, SecretStr):
                     self.robot_secret = self.robot_secret.get_secret_value()
-                r = requests.post(self.auth_url, data={"id": self.robot_id, "secret": self.robot_secret})
+                r = requests.post(
+                    self.auth_url,
+                    data={"id": self.robot_id, "secret": self.robot_secret},
+                )
             else:
                 raise Exception("No credentials provided")
 

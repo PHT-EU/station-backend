@@ -1,15 +1,15 @@
+import json
 from typing import List, Union
 
-import orjson
-from sqlalchemy.orm import Session
 import pandas as pd
-import json
-
-from .base import CRUDBase, CreateSchemaType, ModelType, Optional, Any
 from fastapi.encoders import jsonable_encoder
-from station.app.models.datasets import DataSet
-from station.app.schemas.datasets import DataSetCreate, DataSetUpdate, DataSetStatistics
+from sqlalchemy.orm import Session
+
 from station.app.datasets.filesystem import get_file
+from station.app.models.datasets import DataSet
+from station.app.schemas.datasets import DataSetCreate, DataSetStatistics, DataSetUpdate
+
+from .base import CreateSchemaType, CRUDBase, ModelType
 
 
 class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
@@ -29,7 +29,9 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
 
         return db_obj
 
-    def get_data(self, db: Session, data_set_id: str, file_name: Union[str, List[str]] = None):
+    def get_data(
+        self, db: Session, data_set_id: str, file_name: Union[str, List[str]] = None
+    ):
         dataset = self.get(db, data_set_id)
         if dataset.data_type == "image":
             raise NotImplementedError
@@ -49,7 +51,13 @@ class CRUDDatasets(CRUDBase[DataSet, DataSetCreate, DataSetUpdate]):
         dataset = db.query(self.model).filter(self.model.name == name).first()
         return dataset
 
-    def add_stats(self, db: Session, data_set_id: str, stats: DataSetStatistics, file_name: str = None):
+    def add_stats(
+        self,
+        db: Session,
+        data_set_id: str,
+        stats: DataSetStatistics,
+        file_name: str = None,
+    ):
         dataset = self.get(db, data_set_id)
 
         if file_name:
