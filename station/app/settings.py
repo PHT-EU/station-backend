@@ -341,14 +341,14 @@ class Settings:
             StationConfig The initialized settings.
 
         """
-        logger.info(f"{Emojis.INFO}Setting up station backend...")
+        logger.info(f"{Emojis.INFO.value}Setting up station backend...")
         # check for config file at given or default path and load if exists
         self._check_config_path()
         # validate the runtime environment
         self._setup_runtime_environment()
         self._setup_station_environment()
 
-        logger.info(f"Station backend setup successful {Emojis.SUCCESS}")
+        logger.info(f"Station backend setup successful {Emojis.SUCCESS.value}")
         self.is_initialized = True
         return self.config
 
@@ -372,16 +372,17 @@ class Settings:
         Returns:
 
         """
-        logger.info(f"{Emojis.INFO}Looking for config file...")
+        logger.info(f"{Emojis.INFO.value}Looking for config file...")
         print("Config path", self.config_path)
         if not os.path.isfile(self.config_path):
             if self.config_path == "station_config.yml":
                 logger.warning(
-                    f"\t{Emojis.WARNING}No config file found. Attempting configuration via environment variables..."
+                    f"\t{Emojis.WARNING.value} "
+                    f"No config file found. Attempting configuration via environment variables..."
                 )
             else:
                 raise FileNotFoundError(
-                    f"{Emojis.ERROR}   Custom config file not found at {self.config_path}."
+                    f"{Emojis.ERROR.value}   Custom config file not found at {self.config_path}."
                 )
             # construct a placeholder config to fill with environment and default values
             self.config = StationConfig.construct()
@@ -409,11 +410,11 @@ class Settings:
                 # display when config variable is overwritten with env var
                 if self.config.environment:
                     logger.debug(
-                        f"{Emojis.INFO}Overriding runtime environment with env var specification."
+                        f"{Emojis.INFO.value}Overriding runtime environment with env var specification."
                     )
             except ValueError:
                 raise ValueError(
-                    f"{Emojis.ERROR}   Invalid value ({environment_var}) for runtime environment"
+                    f"{Emojis.ERROR.value}   Invalid value ({environment_var}) for runtime environment"
                     f" in env var {StationEnvironmentVariables.ENVIRONMENT.value}."
                 )
         # otherwise, use the value parse from config file
@@ -422,10 +423,10 @@ class Settings:
 
         # Display runtime environment
         if runtime_environment == StationRuntimeEnvironment.PRODUCTION:
-            logger.info(f"{Emojis.INFO}Running in production environment.")
+            logger.info(f"{Emojis.INFO.value}Running in production environment.")
         elif runtime_environment == StationRuntimeEnvironment.DEVELOPMENT:
             logger.warning(
-                f"{Emojis.WARNING}Development environment detected,"
+                f"{Emojis.WARNING.value}Development environment detected,"
                 f" set environment variable '{StationEnvironmentVariables.ENVIRONMENT.value}' "
                 f"to '{StationRuntimeEnvironment.PRODUCTION.value}' for production mode."
             )
@@ -451,12 +452,12 @@ class Settings:
                 pass
             except AttributeError:
                 raise ValueError(
-                    f"{Emojis.ERROR}   No station id specified in config or env var "
+                    f"{Emojis.ERROR.value}   No station id specified in config or env var "
                     f"{StationEnvironmentVariables.STATION_ID.value}."
                 )
         elif env_station_id:
             logger.debug(
-                f"\t{Emojis.INFO}Overriding station id with env var specification."
+                f"\t{Emojis.INFO.value}Overriding station id with env var specification."
             )
             self.config.station_id = env_station_id
 
@@ -480,19 +481,19 @@ class Settings:
         env_station_host = os.getenv(StationEnvironmentVariables.STATION_API_HOST.value)
         if env_station_host:
             logger.debug(
-                f"\t{Emojis.INFO}Overriding station api host with env var specification."
+                f"\t{Emojis.INFO.value}Overriding station api host with env var specification."
             )
             self.config.host = env_station_host
         env_station_port = os.getenv(StationEnvironmentVariables.STATION_API_PORT.value)
         if env_station_port:
             logger.debug(
-                f"\t{Emojis.INFO}Overriding station api port with env var specification."
+                f"\t{Emojis.INFO.value}Overriding station api port with env var specification."
             )
             self.config.port = int(env_station_port)
         station_db = os.getenv(StationEnvironmentVariables.STATION_DB.value)
         if station_db:
             logger.debug(
-                f"\t{Emojis.INFO}Overriding station db with env var specification."
+                f"\t{Emojis.INFO.value}Overriding station db with env var specification."
             )
             self.config.db = DatabaseSettings.from_dsn(
                 parse_obj_as(PostgresDsn, station_db)
@@ -500,12 +501,12 @@ class Settings:
         else:
             if self.config.environment == "production":
                 raise ValueError(
-                    f"{Emojis.ERROR} Connection string to station database needs to be specified in"
+                    f"{Emojis.ERROR.value} Connection string to station database needs to be specified in"
                     f" environment variables."
                 )
             else:
                 logger.warning(
-                    f"{Emojis.WARNING} Connection string to station database is not specified in"
+                    f"{Emojis.WARNING.value} Connection string to station database is not specified in"
                     f" environment variables. Default database is used."
                 )
         station_data_dir = os.getenv(StationEnvironmentVariables.STATION_DATA_DIR.value)
@@ -514,9 +515,9 @@ class Settings:
 
         # if "sqlite" in self.config.db.dsn.lower():
         #     if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
-        #         raise ValueError(f"{Emojis.ERROR}   SQLite database not supported for production mode.")
+        #         raise ValueError(f"{Emojis.ERROR.value}   SQLite database not supported for production mode.")
         #     else:
-        #         logger.warning(f"{Emojis.WARNING}   SQLite database only supported in development mode.")
+        #         logger.warning(f"{Emojis.WARNING.value}   SQLite database only supported in development mode.")
 
     def _setup_central_api_connection(self):
         self._validate_config_item(
@@ -533,7 +534,7 @@ class Settings:
         )
 
         logger.info(
-            f"{Emojis.INFO} Central API url: {self.config.central_ui.api_url}, "
+            f"{Emojis.INFO.value} Central API url: {self.config.central_ui.api_url}, "
             f"Robot ID: {self.config.central_ui.robot_id} Robot Secret: ******"
         )
 
@@ -560,27 +561,27 @@ class Settings:
         env_var = os.getenv(env_var.value)
         if env_var:
             logger.debug(
-                f"\t{Emojis.INFO}Overriding {item_name if item_name else config_item} with env var specification."
+                f"\t{Emojis.INFO.value}Overriding {item_name if item_name else config_item} with env var specification."
             )
             rsetattr(self.config, config_item, env_var)
         elif rgetattr(self.config, config_item):
             logger.debug(
-                f"\t{Emojis.INFO}{item_name if item_name else config_item}: {rgetattr(self.config, config_item)}"
+                f"\t{Emojis.INFO.value}{item_name if item_name else config_item}: {rgetattr(self.config, config_item)}"
             )
         else:
             if self.config.environment == "production":
                 if error_message:
-                    raise ValueError(f"{Emojis.ERROR}{error_message}")
+                    raise ValueError(f"{Emojis.ERROR.value}{error_message}")
                 else:
                     raise ValueError(
-                        f"{Emojis.ERROR} {item_name if item_name else config_item} needs to be specified."
+                        f"{Emojis.ERROR.value} {item_name if item_name else config_item} needs to be specified."
                     )
             else:
                 if warning_message:
-                    logger.warning(f"{Emojis.WARNING}{warning_message}")
+                    logger.warning(f"{Emojis.WARNING.value}{warning_message}")
                 else:
                     logger.warning(
-                        f"{Emojis.WARNING} {item_name if item_name else config_item} is not specified."
+                        f"{Emojis.WARNING.value} {item_name if item_name else config_item} is not specified."
                     )
 
     def _setup_fernet(self):
@@ -597,20 +598,20 @@ class Settings:
             # if fernet key is given in production raise an error
             if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
                 raise ValueError(
-                    f"{Emojis.ERROR}   No fernet key specified in config or env vars."
+                    f"{Emojis.ERROR.value}   No fernet key specified in config or env vars."
                 )
             # generate new key in development mode
             elif self.config.environment == StationRuntimeEnvironment.DEVELOPMENT:
                 logger.warning(
-                    f"\t{Emojis.WARNING}No fernet key specified in config or env vars"
+                    f"\t{Emojis.WARNING.value}No fernet key specified in config or env vars"
                 )
                 self.config.fernet_key = Fernet.generate_key().decode()
                 logger.info(
-                    f"\t{Emojis.INFO}Generated new key for development environment."
+                    f"\t{Emojis.INFO.value}Generated new key for development environment."
                 )
         elif env_fernet_key and self.config.fernet_key:
             logger.debug(
-                f"\t{Emojis.INFO}Overriding fernet key with env var specification."
+                f"\t{Emojis.INFO.value}Overriding fernet key with env var specification."
             )
             self.config.fernet_key = env_fernet_key
 
@@ -624,7 +625,7 @@ class Settings:
 
         """
 
-        logger.info(f"{Emojis.INFO}Setting up redis connection...")
+        logger.info(f"{Emojis.INFO.value}Setting up redis connection...")
         redis_config = self.config.redis.copy()
 
         host = os.getenv(str(StationEnvironmentVariables.REDIS_HOST.value))
@@ -634,7 +635,7 @@ class Settings:
 
         if host:
             logger.debug(
-                f"\t{Emojis.INFO}Overriding redis connections with env var specification."
+                f"\t{Emojis.INFO.value}Overriding redis connections with env var specification."
             )
             if not redis_config:
                 redis_config = RedisSettings()
@@ -646,7 +647,7 @@ class Settings:
         if not self.config.redis:
             self.config.redis = RedisSettings()
             logger.info(
-                f"\t{Emojis.INFO}No redis connection specified in config or env vars. Using default."
+                f"\t{Emojis.INFO.value}No redis connection specified in config or env vars. Using default."
                 f" Host: {self.config.redis.host}, Port: {self.config.redis.port}"
             )
 
@@ -657,7 +658,7 @@ class Settings:
         Returns:
 
         """
-        logger.info(f"{Emojis.INFO}Setting up station authentication...")
+        logger.info(f"{Emojis.INFO.value}Setting up station authentication...")
         # check if station auth is configured via environment variables
         (
             env_auth_server,
@@ -679,7 +680,7 @@ class Settings:
         ):
             if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
                 raise ValueError(
-                    f"{Emojis.ERROR}   No station auth specified in config or env vars,"
+                    f"{Emojis.ERROR.value}   No station auth specified in config or env vars,"
                     f" invalid configuration for production"
                 )
 
@@ -688,7 +689,7 @@ class Settings:
             env_auth_server and env_auth_robot and env_auth_robot_secret
         ):
             logger.debug(
-                f"{Emojis.INFO}No auth config found, creating new one from env vars."
+                f"{Emojis.INFO.value}No auth config found, creating new one from env vars."
             )
             env_auth_config = AuthConfig(
                 host=env_auth_server,
@@ -724,7 +725,7 @@ class Settings:
             )
         else:
             logger.warning(
-                f"{Emojis.WARNING}No auth server specified in config or env vars,"
+                f"{Emojis.WARNING.value}No auth server specified in config or env vars,"
                 f" ignoring in development mode"
             )
 
@@ -774,7 +775,7 @@ class Settings:
             env_registry and env_registry_user and env_registry_password
         ):
             logger.debug(
-                f"{Emojis.INFO}No registry config found, creating new one from env vars."
+                f"{Emojis.INFO.value}No registry config found, creating new one from env vars."
             )
             registry_config = RegistrySettings(
                 address=env_registry,
@@ -796,7 +797,7 @@ class Settings:
             # raise error if no registry is configured in production mode
             if self.config.environment == StationRuntimeEnvironment.PRODUCTION:
                 raise ValueError(
-                    f"{Emojis.ERROR}   No registry config specified in config or env vars"
+                    f"{Emojis.ERROR.value}   No registry config specified in config or env vars"
                 )
             else:
                 logger.warning(
@@ -862,7 +863,7 @@ class Settings:
             env_minio_host and env_minio_access_key and env_minio_secret_key
         ):
             logger.debug(
-                f"{Emojis.INFO}No minio config found, creating new one from env vars."
+                f"{Emojis.INFO.value}No minio config found, creating new one from env vars."
             )
             minio_config.host = env_minio_host
             minio_config.access_key = env_minio_access_key
@@ -945,7 +946,7 @@ class Settings:
             env_airflow_api_url and env_airflow_user and env_airflow_secret
         ):
             logger.debug(
-                f"{Emojis.INFO}No airflow config found, creating new one from env vars."
+                f"{Emojis.INFO.value}No airflow config found, creating new one from env vars."
             )
             airflow_config.host = env_airflow_api_url.split("://")[1]
             if re.search(r":\d+", env_airflow_api_url):
@@ -1002,7 +1003,7 @@ class Settings:
     #         )
     #     else:
     #         raise ValueError(
-    #             f"{Emojis.ERROR.value}   Unable to parse database connection string"
+    #             f"{Emojis.ERROR.value.value}   Unable to parse database connection string"
     #         )
     #     user, password = credentials.split(":")
     #     host, schema = host.split("/")
