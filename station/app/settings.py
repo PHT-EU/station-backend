@@ -389,7 +389,7 @@ class Settings:
         # Parse the config file
         else:
             logger.info(
-                f"\t{Emojis.SUCCESS}   Config file found at {self.config_path} loading... "
+                f"\t{Emojis.SUCCESS.value}   Config file found at {self.config_path} loading... "
             )
             config = StationConfig.from_file(self.config_path)
             print(config)
