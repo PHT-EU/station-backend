@@ -34,7 +34,7 @@ rich = "*"
 plotly = "*"
 s3fs = "*"
 python-multipart = "*"
-redis = "4.4.2"
+redis = "4.4.4"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.0.230"
