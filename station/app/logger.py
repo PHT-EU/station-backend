@@ -10,27 +10,28 @@ from loguru._defaults import LOGURU_FORMAT
 
 
 class InterceptHandler(logging.Handler):
-    """
-    Default handler from examples in loguru documentaion.
-    See https://loguru.readthedocs.io/en/stable/overview.html#entirely-compatible-with-standard-logging
-    """
+    loglevel_mapping = {
+        50: "CRITICAL",
+        40: "ERROR",
+        30: "WARNING",
+        20: "INFO",
+        10: "DEBUG",
+        0: "NOTSET",
+    }
 
-    def emit(self, record: logging.LogRecord):
-        # Get corresponding Loguru level if it exists
+    def emit(self, record):
         try:
             level = logger.level(record.levelname).name
-        except ValueError:
-            level = record.levelno
+        except AttributeError:
+            level = self.loglevel_mapping[record.levelno]
 
-        # Find caller from where originated the logged message
         frame, depth = logging.currentframe(), 2
         while frame.f_code.co_filename == logging.__file__:
             frame = frame.f_back
             depth += 1
 
-        logger.opt(depth=depth, exception=record.exc_info).log(
-            level, record.getMessage()
-        )
+        log = logger.bind(request_id="app")
+        log.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
 
 
 def format_record(record: dict) -> str:
@@ -51,7 +52,7 @@ def format_record(record: dict) -> str:
     format_string = LOGURU_FORMAT
     if record["extra"].get("payload") is not None:
         record["extra"]["payload"] = pformat(
-            record["extra"]["payload"], indent=4, compact=True, width=88
+            record["extra"]["payload"], indent=2, compact=True, width=88
         )
         format_string += "\n<level>{extra[payload]}</level>"
 
@@ -90,7 +91,15 @@ def init_logging():
 
     # change handler for default uvicorn logger
     intercept_handler = InterceptHandler()
-    logging.getLogger("uvicorn").handlers = [intercept_handler]
+    logging.basicConfig(handlers=[InterceptHandler()], level=0)
+    logging.getLogger("uvicorn.access").handlers = [intercept_handler]
+    for _log in [
+        "uvicorn",
+        "uvicorn.error",
+        # 'fastapi'
+    ]:
+        _logger = logging.getLogger(_log)
+        _logger.handlers = [InterceptHandler()]
 
     # set logs output, level and format
     logger.configure(
