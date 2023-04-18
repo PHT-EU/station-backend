@@ -48,6 +48,7 @@ class AirflowTaskLog(BaseModel):
 
 class AirflowRunMsg(BaseModel):
     train_id: str
+    check_results: Optional[bool]
 
 
 class AirflowRun(BaseModel):

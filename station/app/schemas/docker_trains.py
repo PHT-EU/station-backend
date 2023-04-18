@@ -42,6 +42,7 @@ class DockerTrainConfigBase(DBSchema):
     airflow_config: Optional[DockerTrainAirflowConfig] = None
     cpu_requirements: Optional[Dict[str, Any]] = None
     gpu_requirements: Optional[Dict[str, Any]] = None
+    check_results: Optional[bool] = None
     auto_execute: Optional[bool] = None
 
 

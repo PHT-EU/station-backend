@@ -40,6 +40,7 @@ class DockerTrainConfig(Base):
     trains = relationship("DockerTrain")
     cpu_requirements = Column(JSON, nullable=True)
     gpu_requirements = Column(JSON, nullable=True)
+    check_results = Column(Boolean, default=False)
     auto_execute = Column(Boolean, default=False)
     dataset_id = Column(UUID(as_uuid=True), ForeignKey("datasets.id"), nullable=True)
 

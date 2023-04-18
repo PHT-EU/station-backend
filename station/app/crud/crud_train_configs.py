@@ -26,6 +26,7 @@ class CRUDDockerTrainConfig(
             else None,
             gpu_requirements=obj_in.gpu_requirements,
             cpu_requirements=obj_in.cpu_requirements,
+            check_results=obj_in.check_results,
             auto_execute=obj_in.auto_execute,
         )
         db.add(db_config)

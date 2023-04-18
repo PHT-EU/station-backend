@@ -28,7 +28,7 @@ services:
       ADMIN_USER: admin
       ADMIN_PASSWORD: start123
       NODE_ENV: test
-      ROBOT_ENABLED: true
+      ROBOT_ENABLED: "true"
       PUBLIC_URL: http://auth:3010/
     command:
       - start
@@ -66,7 +66,7 @@ services:
       - STATION_PASSWORD=start123
       - AIRFLOW_USER=admin
       - AIRFLOW_PASSWORD=Nk5jMb4WiAT1qrkns2bbeEGp6lcIqqfL
-      - HARBOR_URL=harbor.personalhealthtrain.de
+      - HARBOR_URL=dev-harbor.personalhealthtrain.de
     ports:
       - "8080:8080"
 
