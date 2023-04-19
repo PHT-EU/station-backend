@@ -70,6 +70,7 @@ class DockerTrainConfig(DockerTrainConfigBase):
 
 class DockerTrainExecution(DBSchema):
     config_id: Optional[Union[int, str]] = "default"
+    check_results: Optional[bool] = False
     dataset_id: Optional[Union[int, str]] = None
 
 

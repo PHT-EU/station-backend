@@ -44,7 +44,6 @@ def run_train(
     if execution_params.dataset_id:
         dataset = datasets.get(db, execution_params.dataset_id)
         process_dataset(config_dict, dataset)
-
     # Execute the train using the airflow rest api
     try:
         run_id = clients.airflow.trigger_dag("run_pht_train", config=config_dict)
@@ -84,6 +83,7 @@ def validate_run_config(
     config = {
         "repository": f"{harbor_url}/{project}/{train_id}",
         "tag": "latest" if not tag else tag,
+        "check_results": execution_params.check_results,
     }
 
     # Extract config by id if given
