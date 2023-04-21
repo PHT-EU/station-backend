@@ -73,6 +73,18 @@ def run_docker_train(
     return execution
 
 
+@router.get("/{train_id}/results")
+def get_results_for_train(train_id: str, db: Session = Depends(dependencies.get_db)):
+    results = docker_trains.get_results(db, train_id)
+    return results
+
+
+@router.post("/{train_id}/continue")
+def continue_train(train_id: str, db: Session = Depends(dependencies.get_db)):
+    execution = docker_trains.continue_train(db, train_id)
+    return execution
+
+
 @router.get("/{train_id}/config", response_model=DockerTrainConfig)
 def get_config_for_train(train_id: str, db: Session = Depends(dependencies.get_db)):
     train = docker_trains.get_by_train_id(db, train_id)

@@ -1,4 +1,5 @@
 import os
+import traceback
 from datetime import datetime
 from typing import Any, Tuple, Union
 
@@ -56,6 +57,7 @@ def run_train(
         logger.error(
             f"Error while running train {train_id} with config {config_dict} \n {e}"
         )
+        print(traceback.format_exc())
         raise HTTPException(
             status_code=503,
             detail="No connection to the airflow client could be established.",
@@ -96,6 +98,24 @@ def validate_run_config(
         logger.info(f"Starting train {train_id} using default config")
         # Default config specifies only the identifier of the the train image and uses the latest tag
         return "default", config
+
+
+def get_train_state(run_id: str) -> dict:
+    """
+    Get the state of a train run from the airflow rest api
+    :param run_id: id of the run
+    :return:
+    """
+    try:
+        train_state = clients.airflow.get_dag_run_state(run_id)
+    except Exception as e:
+        logger.error(f"Error while getting train state for run {run_id} \n {e}")
+        print(traceback.format_exc())
+        raise HTTPException(
+            status_code=503,
+            detail="No connection to the airflow client could be established.",
+        )
+    return train_state
 
 
 def update_state(
@@ -156,13 +176,15 @@ def update_train_after_run(
 
     # Update the train state
     update_state(db, db_train, run_time)
+    if config_id == "default":
+        config_id = None
 
     # Create an execution
     execution = dtm.DockerTrainExecution(
         train_id=db_train.id,
         airflow_dag_run=run_id,
         config=config_id,
-        dataset=dataset_id,
+        dataset_id=dataset_id,
     )
     db.add(execution)
     db.commit()

@@ -316,6 +316,7 @@ def run_pht_train():
     def post_run_protocol(train_state):
         # skip if check results is true
         if train_state.get("check_results", True):
+            print("Skipping post run protocol")
             return train_state
         # Check if a post run protocol is specified
         config = TrainConfig(**train_state["config"])
@@ -333,6 +334,7 @@ def run_pht_train():
     def rebase(train_state):
         # skip if check results is true
         if train_state.get("check_results", True):
+            print("Skipping rebase")
             return train_state
 
         base_image = ":".join([train_state["repository"], "base"])
@@ -392,6 +394,9 @@ def run_pht_train():
     def push_train_image(train_state):
         # skip if check results is true
         if train_state.get("check_results", True):
+            print("Skipping push train image")
+            # save the train state to the db
+
             return train_state
 
         client = docker.from_env()

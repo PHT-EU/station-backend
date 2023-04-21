@@ -167,6 +167,19 @@ class CRUDDockerTrain(CRUDBase[DockerTrain, DockerTrainCreate, DockerTrainUpdate
             .all()
         )
 
+    def get_results(self, db: Session, execution_id: str) -> DockerTrainExecution:
+
+        pass
+
+    def continue_train(self, db: Session, train_id: str) -> DockerTrain:
+        db_train = self.get_by_train_id(db, train_id)
+        if not db_train:
+            raise HTTPException(status_code=404, detail=f"Train {train_id} not found")
+        db_train.is_active = True
+        db.commit()
+        db.refresh(db_train)
+        return db_train
+
     def synchronize_central(self, db: Session) -> List[DockerTrain]:
 
         central_trains = clients.central.get_trains(settings.config.station_id)
