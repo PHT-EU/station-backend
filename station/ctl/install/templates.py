@@ -69,6 +69,8 @@ def render_compose(config: dict, env: Environment = None) -> str:
             "PUBLIC_URL": auth_url,
             "AUTHORIZE_REDIRECT_URL": auth_url,
         },
+        "port": config["auth"]["port"],
+        "config_path": config["authup_config_path"],
         "labels": [
             "traefik.enable=true",
             "traefik.http.routers.auth.tls=true",
@@ -234,6 +236,15 @@ def render_airflow_config(
     return template.render(
         airflow_base_url=airflow_base_url, sql_alchemy_conn=sql_alchemy_conn
     )
+
+
+def render_authup_api_config(
+    env: Environment,
+    auth_config: dict,
+) -> str:
+    template = env.get_template("authup/authup.api.conf.tmpl")
+
+    return template.render(auth_config=auth_config)
 
 
 def render_traefik_configs(

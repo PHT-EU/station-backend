@@ -41,18 +41,18 @@ services:
     container_name: pht-station-auth
     restart: unless-stopped
     volumes:
-      - {{ auth_config.data_dir }}:/usr/src/app/writable
+      - {{ auth_config.config_path }}:/usr/src/app/writable/authup.api.conf
     ports:
-      - "3010:3010"
-    environment:{% for key, value in auth_config.env.items() %}
-      - {{ key }}={{ value }}
-      {%- endfor %}
-      - ROBOT_ENABLED=true
+      - "{{ auth_config.port }}:3000"
+    #environment:{% for key, value in auth_config.env.items() %}
+    #  - {{ key }}={{ value }}
+    #  {%- endfor %}
+    #  - ROBOT_ENABLED=true
     labels:{% for label in auth_config.labels %}
       - {{ label }}
       {%- endfor %}
     command:
-      - start
+      - api start
 
   api:
     image: {{ pht_images.api }}:{{ version }}

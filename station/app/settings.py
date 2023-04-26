@@ -372,6 +372,7 @@ class Settings:
         Returns:
 
         """
+        print(os.getcwd())
         logger.info(f"{Emojis.INFO.value}Looking for config file...")
         print("Config path", self.config_path)
         if not os.path.isfile(self.config_path):
@@ -891,7 +892,6 @@ class Settings:
                 )
 
     def _setup_airflow(self):
-
         logger.info(
             "Setting up airflow connection and airflow-connection to station database..."
         )

@@ -346,7 +346,6 @@ def validate_web_config(
                 )
             )
         else:
-
             # validate certificate
             if not isinstance(certs, dict):
                 validation_results.append(
@@ -456,7 +455,6 @@ def validate_central_config(
 
     # validate central credentials
     for robot_field in ["robot_id", "robot_secret"]:
-
         default = (
             DefaultValues.ROBOT_ID.value
             if robot_field == "robot_id"
@@ -557,11 +555,14 @@ def validate_top_level_config(config: dict) -> List[ConfigItemValidationResult]:
     # if no station data directory is specified use the default <install-dir>/station_data
 
     # get host path or install dir for creating a default station data dir
-    install_dir = config.get("host_path", config.get("install_dir", os.getcwd()))
+    install_dir = config.get("host_path")
+    if not install_dir:
+        install_dir = config.get("install_dir", os.getcwd())
     station_data_dir = os.path.join(install_dir, PHTDirectories.STATION_DATA_DIR.value)
     station_data_dir_result = _validate_config_value(
         config, "station_data_dir", default_value=station_data_dir
     )
+
     if station_data_dir_result.status != ConfigItemValidationStatus.VALID:
         station_data_dir_result.fix_hint = "Set station_data_dir to a valid directory"
         station_data_dir_result.level = ConfigIssueLevel.ERROR

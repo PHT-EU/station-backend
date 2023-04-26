@@ -17,8 +17,13 @@ from station.ctl.util import get_template_env
 
 @click.command(help="Validate and/or fix a station configuration file")
 @click.option("-f", "--file", help="Path to the configuration file to validate/fix")
+@click.option(
+    "--dry-run",
+    is_flag=True,
+    help="Do not write the fixed config to disk. But print it instead.",
+)
 @click.pass_context
-def config(ctx, file):
+def config(ctx, file, dry_run):
     """Validate and/or fix the configuration file"""
 
     if not file:
@@ -43,7 +48,8 @@ def config(ctx, file):
         click.confirm("Fix issues now?", abort=True)
         fixed_config = fix_config(ctx.obj, station_config, results)
         render_config(fixed_config, file)
-        click.echo(f"Fixed configuration file written to: {file}")
+        if not dry_run:
+            click.echo(f"Fixed configuration file written to: {file}")
 
     else:
         click.echo("Configuration file is valid.")
@@ -63,8 +69,7 @@ def _display_issues(issues: List[ConfigItemValidationResult], table: Table):
     click.echo(f"Found {warning_styled} warnings and {errors_styled} errors")
 
 
-def render_config(config: dict, path: str):
-
+def render_config(config: dict, path: str, dry_run: bool = False):
     env = get_template_env()
     template = env.get_template("station_config.yml.tmpl")
     # write out the correct path to key file on host when rendering the template from docker container
@@ -90,5 +95,9 @@ def render_config(config: dict, path: str):
         auth=config["auth"],
     )
 
-    with open(path, "w") as f:
-        f.write(out_config)
+    # print the rendered config to stdout if dry_run is True
+    if dry_run:
+        click.echo(out_config)
+    else:
+        with open(path, "w") as f:
+            f.write(out_config)

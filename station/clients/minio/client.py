@@ -189,7 +189,7 @@ class MinioClient:
         for obj in delete_objects:
             self.client.remove_object(bucket_name=bucket, object_name=obj.object_name)
 
-    def get_file_names(self, bucket: str, prefix: str = "") -> [str]:
+    def get_file_names(self, bucket: str, prefix: str = "") -> List[str]:
         response = self.client.list_objects(bucket, prefix=prefix)
         data = list(response)
         return data
@@ -314,7 +314,6 @@ class MinioClient:
     def get_class_distributions(
         self, data_set_id: str, classes: List[str]
     ) -> List[Dict[str, Union[int, str]]]:
-
         class_distribution = []
 
         for cls in classes:
