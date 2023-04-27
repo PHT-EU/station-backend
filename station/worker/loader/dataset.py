@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader, Dataset, IterableDataset
 from torch.utils.data.dataset import T_co
 from torchvision.transforms import CenterCrop, Compose, ToTensor
 
-from station.clients.minio import MinioClient
+from station.common.clients.minio import MinioClient
 
 
 class BaseDataSet(Dataset, ABC):
@@ -68,7 +68,6 @@ class MinioFolderDataSet(IterableDataset):
 
 
 class MinioFolderDS(Dataset):
-
     # TODO generalized target creation
 
     def __init__(
@@ -119,7 +118,6 @@ class MinioFolderDS(Dataset):
         self.items = item_list
 
     def save(self):
-
         # TODO Save the full data set to disk somewhere to enable fast loading
         pass
 

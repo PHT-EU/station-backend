@@ -5,8 +5,8 @@ import pytest
 import yaml
 from dotenv import find_dotenv, load_dotenv
 
-from station.clients.central.central_client import CentralApiClient
-from station.ctl.constants import PHTDirectories
+from station.common.clients.central.central_client import CentralApiClient
+from station.common.constants import PHTDirectories
 from station.ctl.install import certs, docker, templates
 from station.ctl.install.command import _setup_auth_server
 from station.ctl.install.fs import create_pht_dirs

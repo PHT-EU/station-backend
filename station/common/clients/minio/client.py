@@ -14,7 +14,7 @@ from pydantic import SecretStr
 
 from station.app.schemas.datasets import MinioFile
 from station.app.schemas.station_status import HealthStatus
-from station.ctl.constants import DataDirectories
+from station.common.constants import DataDirectories
 
 
 class MinioClient:

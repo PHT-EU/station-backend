@@ -1,7 +1,7 @@
 from typing import Dict, List, Union
 
 from station.app.models.datasets import DataSet
-from station.clients.minio import MinioClient
+from station.common.clients.minio import MinioClient
 
 
 def perform_discovery(ds: DataSet):

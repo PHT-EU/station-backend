@@ -1,38 +1,72 @@
 import re
 
+import pytest
 from rich.console import Console
 
+from station.common.constants import CERTS_REGEX
 from station.ctl.config import validate_config
-from station.ctl.constants import CERTS_REGEX
 
 
-def test_validate_config():
+@pytest.fixture
+def config_dict():
     config = {
-        "station_id": "",
+        "station_id": "d7b7bd69-c828-45f3-b0bc-0d5ca10a8cd5",
         "version": "latest",
-        "environment": "test",
+        "environment": "development",
+        "admin_password": "GucVuG6MgVyy58v8Xjg3o4jTnAyNrP1k",
+        "station_data_dir": "./station_data",
         "central": {
-            "api_url": "https://api.test.com",
-            "robot_id": "test-robot",
-            "robot_secret": "test-secret",
+            "api_url": "https://dev.personalhealthtrain.de/api",
+            "robot_id": "0b34acb9-9b26-4780-80d1-705772464cf2",
+            "robot_secret": "start123",
+            "private_key": "./private.pem",
+            "private_key_password": "",
         },
-        "http": {
-            "port": 8080,
-        },
+        "http": {"port": "80"},
         "https": {
-            "port": 8443,
-            "domain": "test.com",
-            "certs": [
-                {
-                    "key": "test-key",
-                    "cert": "test-cert",
-                },
-                {"key": "test-key2"},
-            ],
+            "port": "443",
+            "domain": "station.localhost",
+            "certificate": {
+                "cert": "./certs/cert.pem",
+                "key": "./certs/cert.pem",
+            },
+        },
+        "traefik": {"dashboard": {"port": 8081}},
+        "registry": {
+            "address": "dev-harbor.personalhealthtrain.de",
+            "user": "test-user",
+            "password": "test-password",
+            "project": "test-project",
+        },
+        "db": {"host": "127.0.0.1", "admin_user": "admin", "admin_password": "admin"},
+        "api": {"fernet_key": "Z_kebTcA7p2VV9xga-ES2wCMjvfaRNzQktjsxo5vPMM="},
+        "airflow": {
+            "host": "127.0.0.1",
+            "admin_user": "admin",
+            "admin_password": "start123",
+        },
+        "auth": {
+            "admin_user": "admin",
+            "host": "127.0.0.1",
+            "port": 3001,
+            "robot_id": "5f77fe3f-a48c-46be-ba67-df6b1058ebcb",
+            "robot_secret": "v1ziczynshyotuzudc8ymumjtijli9yoo1mygyrv2ucqdm77lae6d5pni6xh5vp4",
+        },
+        "minio": {
+            "host": "127.0.0.1",
+            "port": 9000,
+            "admin_user": "minio_admin",
+            "admin_password": "minio_admin",
+        },
+        "redis": {
+            "host": "127.0.0.1",
         },
     }
+    return config
 
-    results, table = validate_config(config)
+
+def test_validate_config(config_dict):
+    results, table = validate_config(config_dict)
     console = Console()
     print()
     console.print(table)

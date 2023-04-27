@@ -4,7 +4,7 @@ import pytest
 from dotenv import find_dotenv, load_dotenv
 
 from station.app.schemas.local_trains import LocalTrainCreate
-from station.clients.station import StationAPIClient
+from station.common.clients.station import StationAPIClient
 
 
 @pytest.fixture

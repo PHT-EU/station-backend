@@ -4,7 +4,7 @@ from typing import Union
 from conductor_lib.src.torch import LightningTrainModel
 from torch.utils.data import DataLoader
 
-from station.clients.minio import MinioClient
+from station.common.clients.minio import MinioClient
 from station.worker.loader import BaseLoader
 
 
@@ -53,7 +53,6 @@ class ModelTrainer:
             # TODO Load data from file system
             raise NotImplementedError("Only Minio based data sets available")
         else:
-
             # TODO use station api to get the relevant information for a data set from the db
             if data_set_id:
                 self.data_set_id = data_set_id

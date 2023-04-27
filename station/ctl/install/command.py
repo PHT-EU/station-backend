@@ -8,11 +8,11 @@ import click
 from rich.console import Console
 
 import docker
-from station.clients.central.central_client import CentralApiClient
+from station.common.clients.central.central_client import CentralApiClient
+from station.common.constants import Icons, PHTDirectories, PHTImages
 from station.ctl.config import fix_config, validate_config
 from station.ctl.config.command import render_config
 from station.ctl.config.validators import ConfigItemValidationStatus
-from station.ctl.constants import Icons, PHTDirectories, PHTImages
 from station.ctl.install import templates
 from station.ctl.install.docker import setup_docker
 from station.ctl.install.fs import check_create_pht_dirs

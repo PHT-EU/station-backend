@@ -4,7 +4,7 @@ from station.app.config import settings
 from station.app.crud.base import CRUDBase
 from station.app.models.local_trains import LocalTrainMasterImage
 from station.app.schemas import local_trains as schemas
-from station.clients.harbor_client import HarborClient
+from station.common.clients.harbor_client import HarborClient
 
 
 class CRUDLocalTrainMasterImage(

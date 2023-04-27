@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from station.clients.central import CentralApiClient
+from station.common.clients.central import CentralApiClient
 
 
 @pytest.fixture

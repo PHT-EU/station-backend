@@ -7,7 +7,7 @@ from station.app.schemas.local_trains import (
     LocalTrainCreate,
     LocalTrainUpdate,
 )
-from station.clients.resource_client import ResourceClient
+from station.common.clients.resource_client import ResourceClient
 
 
 class LocalTrainClient(ResourceClient[LocalTrain, LocalTrainCreate, LocalTrainUpdate]):

@@ -6,7 +6,7 @@ from airflow.decorators import dag, task
 from airflow.hooks.base import BaseHook
 from airflow.operators.python import get_current_context
 from airflow.utils.dates import days_ago
-from station.clients.station import StationAPIClient
+from station.common.clients.station import StationAPIClient
 from station.trains.local.build import build_train
 
 
@@ -88,7 +88,6 @@ def run_local_train():
 
     @task(on_failure_callback=failure_callback)
     def build_train_image(train_config):
-
         print("Building train image")
         print("config", train_config)
 

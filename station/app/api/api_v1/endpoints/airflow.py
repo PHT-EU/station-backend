@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from station.app.api import dependencies
 from station.app.auth import authorized_user
 
-# from station.clients.airflow.client import airflow_client
+# from station.common.clients.airflow.client import airflow_client
 from station.app.config import clients
 from station.app.crud.crud_docker_trains import docker_trains
 from station.app.schemas.airflow import (
@@ -17,7 +17,7 @@ from station.app.schemas.airflow import (
 )
 from station.app.schemas.docker_trains import DockerTrainExecution
 from station.app.schemas.users import User
-from station.clients.airflow import docker_trains as airflow_docker_train
+from station.common.clients.airflow import docker_trains as airflow_docker_train
 
 router = APIRouter()
 

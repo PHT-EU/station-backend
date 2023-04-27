@@ -3,7 +3,7 @@ from enum import Enum
 
 import click
 
-from station.ctl.constants import DataDirectories, PHTDirectories, ServiceDirectories
+from station.common.constants import DataDirectories, PHTDirectories, ServiceDirectories
 
 
 def check_create_pht_dirs(path):

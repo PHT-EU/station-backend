@@ -2,9 +2,9 @@ import os
 
 import click
 
+from station.common.constants import Icons
 from station.ctl.config import find_config, load_config
 from station.ctl.config.command import config
-from station.ctl.constants import Icons
 from station.ctl.fhir.command import fhir
 from station.ctl.install.command import install
 

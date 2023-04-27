@@ -7,13 +7,13 @@ import click
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-from station.clients.central.central_client import CentralApiClient
+from station.common.clients.central.central_client import CentralApiClient
+from station.common.constants import CERTS_REGEX, Icons, PHTDirectories
 from station.ctl.config.generators import generate_private_key
 from station.ctl.config.validators import (
     ConfigItemValidationResult,
     ConfigItemValidationStatus,
 )
-from station.ctl.constants import CERTS_REGEX, Icons, PHTDirectories
 from station.ctl.install.certs import generate_certificates
 
 
@@ -149,7 +149,6 @@ def _fix_private_key(config: dict) -> str:
     # if a host path is given append the name of the private key to this path
     host_path = config.get("host_path", None)
     if host_path:
-
         private_key_path = os.path.join(host_path, private_key_path)
         click.echo(
             f"Private key will be saved at: {private_key_path} on the host machine"

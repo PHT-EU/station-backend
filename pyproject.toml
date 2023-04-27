@@ -8,6 +8,7 @@ packages = [{ include = "station" }]
 include = [
     "station/ctl/templates/*.tmpl",
     "station/ctl/templates/traefik/*.tmpl",
+    "station/ctl/templates/authup/*.tmpl",
 ]
 
 [tool.poetry.scripts]

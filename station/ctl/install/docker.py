@@ -3,14 +3,13 @@ import click
 import docker
 import docker.errors
 from docker import DockerClient
-from station.ctl import constants
+from station.common import constants
 
 
 def setup_docker():
     client = _get_docker_client()
     click.echo("Creating docker volumes... ", nl=False)
     for vol in constants.DockerVolumes:
-
         try:
             volume = client.volumes.get(vol.value)
             if (

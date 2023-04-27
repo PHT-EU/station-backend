@@ -6,8 +6,8 @@ from typing import Any, Callable, List, Optional, Tuple, Union
 from cryptography.fernet import Fernet
 from pydantic import BaseModel
 
+from station.common.constants import DefaultValues, PHTDirectories
 from station.ctl.config.generators import generate_fernet_key, password_generator
-from station.ctl.constants import DefaultValues, PHTDirectories
 
 
 class ApplicationEnvironment(str, Enum):

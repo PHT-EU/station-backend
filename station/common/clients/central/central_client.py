@@ -2,13 +2,12 @@ from typing import Any
 
 import requests
 
-from station.clients.base import BaseClient
-from station.clients.central.schemas import RegistryCredentials
+from station.common.clients.base import BaseClient
+from station.common.clients.central.schemas import RegistryCredentials
 
 
 class CentralApiClient(BaseClient):
     def __init__(self, api_url: str, robot_id: str, robot_secret: str):
-
         super().__init__(
             base_url=api_url,
             robot_id=robot_id,
@@ -28,7 +27,6 @@ class CentralApiClient(BaseClient):
         return response.json()
 
     def get_registry_credentials(self, station_id: Any) -> RegistryCredentials:
-
         # get registry and external name
         url = self.api_url + f"/stations/{station_id}?"
         filters = (

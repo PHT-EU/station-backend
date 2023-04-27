@@ -5,7 +5,7 @@ import pytorch_lightning as pl
 from torch.utils.data import DataLoader, Dataset
 from torchvision.transforms import Compose, ToTensor
 
-from station.clients.minio import MinioClient
+from station.common.clients.minio import MinioClient
 from station.worker.loader.dataset import MinioFolderDS
 
 
@@ -17,7 +17,6 @@ class BaseLoader:
         config: dict = None,
         transform: Compose = None,
     ):
-
         self.station_api = station_api if station_api else os.getenv("STATION_API_URL")
         self.data_set = data_set
         self.transform = transform
@@ -53,7 +52,6 @@ class BaseLoader:
 
 
 if __name__ == "__main__":
-
     transform = Compose([ToTensor()])
 
     loader = BaseLoader(
