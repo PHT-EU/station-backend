@@ -5,11 +5,11 @@ from unittest import mock
 from station.common.station_config import StationConfig
 
 CONFIG_DICT = {
-    "station_id": "d7b7bd69-c828-45f3-b0bc-0d5ca10a8cd5",
+    "id": "d7b7bd69-c828-45f3-b0bc-0d5ca10a8cd5",
     "version": "latest",
     "environment": "development",
     "admin_password": "GucVuG6MgVyy58v8Xjg3o4jTnAyNrP1k",
-    "station_data_dir": "./station_data",
+    "data_dir": "./station_data",
     "central": {
         "api_url": "https://dev.personalhealthtrain.de/api",
         "robot_id": "0b34acb9-9b26-4780-80d1-705772464cf2",
@@ -26,7 +26,7 @@ CONFIG_DICT = {
             "key": "./certs/cert.pem",
         },
     },
-    "traefik": {"dashboard": {"port": 8081}},
+    "traefik": {"dashboard": True, "dashboard_port": 8081},
     "registry": {
         "address": "dev-harbor.personalhealthtrain.de",
         "user": "test-user",
@@ -73,7 +73,18 @@ def test_from_file():
 def test_env_vars():
     # mock env vars
 
-    with mock.patch.dict(os.environ, {"STATION_STATION_ID": "env-test"}):
+    # test top level env var
+    with mock.patch.dict(os.environ, {"STATION_ID": "env-test"}):
         print(os.getenv("STATION_ID"))
         config = StationConfig(**CONFIG_DICT)
-        assert config.station_id == "env-test"
+        assert config.id == "env-test"
+
+    # test nested env var
+    with mock.patch.dict(os.environ, {"STATION_MINIO_HOST": "env-test"}):
+        config = StationConfig(**CONFIG_DICT)
+        assert config.minio.host == "env-test"
+
+    # test nested env var
+    with mock.patch.dict(os.environ, {"STATION_HTTPS_CERTIFICATES_KEY": "env-test"}):
+        config = StationConfig(**CONFIG_DICT)
+        assert config.https.certificate.key == "env-test"

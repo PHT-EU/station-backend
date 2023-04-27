@@ -1,5 +1,5 @@
 # configure station variables
-station_id: "d7b7bd69-c828-45f3-b0bc-0d5ca10a8cd5"
+id: "d7b7bd69-c828-45f3-b0bc-0d5ca10a8cd5"
 version: "latest"
 
 # station runtime environment set to development to allow for debugging and reduced security settings
@@ -10,7 +10,7 @@ environment: "development"
 admin_password: "GucVuG6MgVyy58v8Xjg3o4jTnAyNrP1k"
 
 # set the station data directory where the station will store the data used for local analysis
-station_data_dir: "./station_data"
+data_dir: "./station_data"
 
 # Configure authentication for central services
 central:
@@ -36,8 +36,8 @@ https:
 
 # Configure the port for the traefik dashboard, can be disabled by settings disabled: true for the dashboard
 traefik:
-  dashboard:
-    port: 8081
+  dashboard: True
+  dashboard_port: 8081
 #   disabled: True
 
 # Configures the address and credentials for the central container registry

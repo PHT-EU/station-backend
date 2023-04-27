@@ -1,19 +1,11 @@
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
 import yaml
-from pydantic import AnyHttpUrl, BaseModel, BaseSettings
+from pydantic import AnyHttpUrl, BaseSettings
+from pydantic.env_settings import SettingsSourceCallable
 from rich.pretty import pprint
 
 from station.ctl.config.validators import ApplicationEnvironment
-
-
-def parse_station_env_var_for_value(
-    field_name: str, raw_val: str, prefix: str | None = None
-) -> Any:
-    """
-    Parses a station environment variable and returns the value
-    """
-    pass
 
 
 class CentralSettings(BaseSettings):
@@ -25,6 +17,16 @@ class CentralSettings(BaseSettings):
 
     class Config:
         env_prefix = "STATION_CENTRAL_"
+        use_enum_values = True
+
+        @classmethod
+        def customise_sources(
+            cls,
+            init_settings: SettingsSourceCallable,
+            env_settings: SettingsSourceCallable,
+            file_secret_settings: SettingsSourceCallable,
+        ) -> tuple[SettingsSourceCallable, ...]:
+            return env_settings, init_settings, file_secret_settings
 
 
 class HttpSettings(BaseSettings):
@@ -32,14 +34,34 @@ class HttpSettings(BaseSettings):
 
     class Config:
         env_prefix = "STATION_HTTP_"
+        use_enum_values = True
+
+        @classmethod
+        def customise_sources(
+            cls,
+            init_settings: SettingsSourceCallable,
+            env_settings: SettingsSourceCallable,
+            file_secret_settings: SettingsSourceCallable,
+        ) -> tuple[SettingsSourceCallable, ...]:
+            return env_settings, init_settings, file_secret_settings
 
 
-class Certificate(BaseModel):
+class Certificate(BaseSettings):
     cert: str
     key: str
 
     class Config:
-        env_prefix = "STATION_HTTPS_CERTIFICATE_"
+        env_prefix = "STATION_HTTPS_CERTIFICATES_"
+        use_enum_values = True
+
+        @classmethod
+        def customise_sources(
+            cls,
+            init_settings: SettingsSourceCallable,
+            env_settings: SettingsSourceCallable,
+            file_secret_settings: SettingsSourceCallable,
+        ) -> tuple[SettingsSourceCallable, ...]:
+            return env_settings, init_settings, file_secret_settings
 
 
 class HttpsSettings(BaseSettings):
@@ -49,18 +71,34 @@ class HttpsSettings(BaseSettings):
 
     class Config:
         env_prefix = "STATION_HTTPS_"
+        use_enum_values = True
 
-
-class TraefikDashboardSettings(BaseSettings):
-    port: Optional[Union[int, str]] = 8081
-    disable: Optional[bool] = False
+        @classmethod
+        def customise_sources(
+            cls,
+            init_settings: SettingsSourceCallable,
+            env_settings: SettingsSourceCallable,
+            file_secret_settings: SettingsSourceCallable,
+        ) -> tuple[SettingsSourceCallable, ...]:
+            return env_settings, init_settings, file_secret_settings
 
 
 class TraefikSettings(BaseSettings):
-    dashboard: TraefikDashboardSettings
+    dashboard: Optional[bool] = False
+    dashboard_port: Optional[Union[int, str]] = 8081
 
     class Config:
         env_prefix = "STATION_TRAEFIK_"
+        use_enum_values = True
+
+        @classmethod
+        def customise_sources(
+            cls,
+            init_settings: SettingsSourceCallable,
+            env_settings: SettingsSourceCallable,
+            file_secret_settings: SettingsSourceCallable,
+        ) -> tuple[SettingsSourceCallable, ...]:
+            return env_settings, init_settings, file_secret_settings
 
 
 class RegistrySettings(BaseSettings):
@@ -71,6 +109,16 @@ class RegistrySettings(BaseSettings):
 
     class Config:
         env_prefix = "STATION_REGISTRY_"
+        use_enum_values = True
+
+        @classmethod
+        def customise_sources(
+            cls,
+            init_settings: SettingsSourceCallable,
+            env_settings: SettingsSourceCallable,
+            file_secret_settings: SettingsSourceCallable,
+        ) -> tuple[SettingsSourceCallable, ...]:
+            return env_settings, init_settings, file_secret_settings
 
 
 class ServiceSettings(BaseSettings):
@@ -86,6 +134,16 @@ class ExtendedServiceSettings(ServiceSettings):
 class DBSettings(ExtendedServiceSettings):
     class Config:
         env_prefix = "STATION_DB_"
+        use_enum_values = True
+
+        @classmethod
+        def customise_sources(
+            cls,
+            init_settings: SettingsSourceCallable,
+            env_settings: SettingsSourceCallable,
+            file_secret_settings: SettingsSourceCallable,
+        ) -> tuple[SettingsSourceCallable, ...]:
+            return env_settings, init_settings, file_secret_settings
 
 
 class AirflowSettings(ExtendedServiceSettings):
@@ -94,11 +152,31 @@ class AirflowSettings(ExtendedServiceSettings):
 
     class Config:
         env_prefix = "STATION_AIRFLOW_"
+        use_enum_values = True
+
+        @classmethod
+        def customise_sources(
+            cls,
+            init_settings: SettingsSourceCallable,
+            env_settings: SettingsSourceCallable,
+            file_secret_settings: SettingsSourceCallable,
+        ) -> tuple[SettingsSourceCallable, ...]:
+            return env_settings, init_settings, file_secret_settings
 
 
 class MinioSettings(ExtendedServiceSettings):
     class Config:
         env_prefix = "STATION_MINIO_"
+        use_enum_values = True
+
+        @classmethod
+        def customise_sources(
+            cls,
+            init_settings: SettingsSourceCallable,
+            env_settings: SettingsSourceCallable,
+            file_secret_settings: SettingsSourceCallable,
+        ) -> tuple[SettingsSourceCallable, ...]:
+            return env_settings, init_settings, file_secret_settings
 
 
 class AuthSettings(BaseSettings):
@@ -110,6 +188,16 @@ class AuthSettings(BaseSettings):
 
     class Config:
         env_prefix = "STATION_AUTH_"
+        use_enum_values = True
+
+        @classmethod
+        def customise_sources(
+            cls,
+            init_settings: SettingsSourceCallable,
+            env_settings: SettingsSourceCallable,
+            file_secret_settings: SettingsSourceCallable,
+        ) -> tuple[SettingsSourceCallable, ...]:
+            return env_settings, init_settings, file_secret_settings
 
 
 class APISettings(BaseSettings):
@@ -119,6 +207,16 @@ class APISettings(BaseSettings):
 
     class Config:
         env_prefix = "STATION_API_"
+        use_enum_values = True
+
+        @classmethod
+        def customise_sources(
+            cls,
+            init_settings: SettingsSourceCallable,
+            env_settings: SettingsSourceCallable,
+            file_secret_settings: SettingsSourceCallable,
+        ) -> tuple[SettingsSourceCallable, ...]:
+            return env_settings, init_settings, file_secret_settings
 
 
 class RedisSettings(BaseSettings):
@@ -129,13 +227,23 @@ class RedisSettings(BaseSettings):
 
     class Config:
         env_prefix = "STATION_REDIS_"
+        use_enum_values = True
+
+        @classmethod
+        def customise_sources(
+            cls,
+            init_settings: SettingsSourceCallable,
+            env_settings: SettingsSourceCallable,
+            file_secret_settings: SettingsSourceCallable,
+        ) -> tuple[SettingsSourceCallable, ...]:
+            return env_settings, init_settings, file_secret_settings
 
 
 class StationConfig(BaseSettings):
-    station_id: str
+    id: str
     environment: ApplicationEnvironment
     admin_password: str
-    station_data_dir: str
+    data_dir: str
     version: str
     central: CentralSettings
     http: HttpSettings
@@ -160,3 +268,13 @@ class StationConfig(BaseSettings):
 
     class Config:
         env_prefix = "STATION_"
+        use_enum_values = True
+
+        @classmethod
+        def customise_sources(
+            cls,
+            init_settings: SettingsSourceCallable,
+            env_settings: SettingsSourceCallable,
+            file_secret_settings: SettingsSourceCallable,
+        ) -> tuple[SettingsSourceCallable, ...]:
+            return env_settings, init_settings, file_secret_settings
