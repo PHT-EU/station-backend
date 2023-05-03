@@ -23,7 +23,6 @@ central:
 # Configure which port the proxy should use to listen for http requests
 http:
   port: "{{ config.http.port }}"
-{% if https %}
 # Configure which port the proxy should use to listen for https requests
 https:
   port: "{{ config.https.port }}"
@@ -33,12 +32,11 @@ https:
   certificate:
     cert: {{ config.https.certifcate.cert }}
     key: {{ config.https.certifcate.key }}
-{% endif %}
 
 # Optionally configure the port for the traefik dashboard, when dashboard is set to true
 traefik:
   dashboard: "{{ config.traefik.dashboard }}"
-  port: {{ config.traefik.dashboard_port }}
+  dashboard_port: {{ config.traefik.dashboard_port }}
 
 # Configures the address and credentials for the central container registry
 registry:
