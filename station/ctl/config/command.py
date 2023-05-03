@@ -80,12 +80,9 @@ def render_config(config: dict, path: str, dry_run: bool = False) -> str | None:
         key_path = os.path.join(config["host_path"], key_name)
         config["central"]["private_key"] = key_path
 
-    print(config)
-
     # todo fix this hack
     # extract https certs from config
     certs = config["https"].pop("certificate")
-    print(certs)
 
     out_config = template.render(certificate=certs, **config)
 

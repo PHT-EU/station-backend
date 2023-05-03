@@ -58,8 +58,6 @@ class StationSettings(BaseSettings):
                 ):  # Moved this check since None value can be passed for Optional nested field
                     fields_values[name] = field.get_default()
                 else:
-                    print(f"Found value for {name}")
-                    print(field.type_)
                     # check for union type
                     if type(field.type_) == type(Union):
                         print("Found union type")
@@ -79,10 +77,31 @@ class StationSettings(BaseSettings):
             elif not field.required:
                 fields_values[name] = field.get_default()
 
+        # override with env variables
+        # read the environment variables specs of the models
+        # override the fields only if they are not of object type
+
+        for name, field in m.__fields__.items():
+            if issubclass(field.type_, BaseSettings):
+                pass
+            else:
+                env_name = f"{config.env_prefix}{name.upper()}"
+                env = os.getenv(env_name)
+                if env:
+                    # try to convert the value to the type of the field
+                    if field.type_ == bool:
+                        env = env.lower() == "true"
+                    elif field.type_ == int:
+                        env = int(env)
+                    elif field.type_ == float:
+                        env = float(env)
+                    fields_values[name] = env
+
         object.__setattr__(m, "__dict__", fields_values)
         if _fields_set is None:
             _fields_set = set(values.keys())
         object.__setattr__(m, "__fields_set__", _fields_set)
+
         m._init_private_attributes()
         return m
 

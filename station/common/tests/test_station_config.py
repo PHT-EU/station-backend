@@ -112,3 +112,8 @@ def test_env_vars():
     with mock.patch.dict(os.environ, {"STATION_MINIO_HOST": "env-test"}):
         config = StationConfig(**CONFIG_DICT)
         assert config.minio.host == "env-test"
+
+    # test nested env var
+    with mock.patch.dict(os.environ, {"STATION_MINIO_HOST": "env-test"}):
+        config = StationConfig.construct(**CONFIG_DICT)
+        assert config.minio.host == "env-test"

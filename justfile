@@ -4,10 +4,10 @@ lint:
 format:
     poetry run black .
 test:
-    poetry run pytest -v
+    poetry run pytest -v --lf -s
 
 run-test TEST:
-    poetry run pytest -s -v {{TEST}}
+    poetry run pytest -s --lf -v {{TEST}}
 
 build-ctl:
   docker build -f "$(pwd)/docker/Dockerfile_ctl" . -t station-ctl:latest
