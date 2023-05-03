@@ -69,35 +69,30 @@ def _display_issues(issues: List[ConfigItemValidationResult], table: Table):
     click.echo(f"Found {warning_styled} warnings and {errors_styled} errors")
 
 
-def render_config(config: dict, path: str, dry_run: bool = False):
+def render_config(config: dict, path: str, dry_run: bool = False) -> str | None:
     env = get_template_env()
     template = env.get_template("station_config.yml.tmpl")
     # write out the correct path to key file on host when rendering the template from docker container
+
+    # todo check and improve this
     if config.get("host_path"):
         key_name = config["central"]["private_key"].split("/")[-1]
         key_path = os.path.join(config["host_path"], key_name)
         config["central"]["private_key"] = key_path
 
-    out_config = template.render(
-        station_id=config["station_id"],
-        version=config["version"],
-        admin_password=config["admin_password"],
-        station_data_dir=config["station_data_dir"],
-        environment=config["environment"],
-        central=config["central"],
-        http=config["http"],
-        https=config["https"],
-        registry=config["registry"],
-        db=config["db"],
-        api=config["api"],
-        airflow=config["airflow"],
-        minio=config["minio"],
-        auth=config["auth"],
-    )
+    print(config)
 
-    # print the rendered config to stdout if dry_run is True
+    # todo fix this hack
+    # extract https certs from config
+    certs = config["https"].pop("certificate")
+    print(certs)
+
+    out_config = template.render(certificate=certs, **config)
+
+    # print the rendered config to stdout and return it if dry_run is True
     if dry_run:
         click.echo(out_config)
+        return out_config
     else:
         with open(path, "w") as f:
             f.write(out_config)

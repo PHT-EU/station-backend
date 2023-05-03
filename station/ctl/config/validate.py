@@ -1,9 +1,12 @@
 from typing import List, Tuple
 
+from pydantic.error_wrappers import ValidationError
 from rich.style import Style
 from rich.table import Table
 
+from station.common.config.station_config import StationConfig
 from station.ctl.config import validators
+from station.ctl.config.fix import get_fixes_from_errors
 from station.ctl.config.validators import (
     ConfigItemValidationResult,
     ConfigItemValidationStatus,
@@ -11,6 +14,22 @@ from station.ctl.config.validators import (
 
 YELLOW = Style(color="yellow")
 RED = Style(color="red")
+
+
+def validate_config_object(config: dict):
+    try:
+        print("Station config fields")
+        print(StationConfig.__fields__)
+        StationConfig(**config)
+    except ValidationError as e:
+        get_fixes_from_errors(e.errors())
+
+        print(e)
+        print(type(e))
+        print(e.__dict__)
+        print(e.errors())
+
+        # raise e
 
 
 def validate_config(

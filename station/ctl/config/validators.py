@@ -6,20 +6,19 @@ from typing import Any, Callable, List, Optional, Tuple, Union
 from cryptography.fernet import Fernet
 from pydantic import BaseModel
 
-from station.common.constants import DefaultValues, PHTDirectories
+from station.common.constants import (
+    ApplicationEnvironment,
+    DefaultValues,
+    PHTDirectories,
+)
 from station.ctl.config.generators import generate_fernet_key, password_generator
 
 
-class ApplicationEnvironment(str, Enum):
-    DEVELOPMENT = "development"
-    PRODUCTION = "production"
-
-
 class ConfigItemValidationStatus(str, Enum):
-    VALID = 0
-    INVALID = 1
-    MISSING = 2
-    FORBIDDEN_DEFAULT = 3
+    VALID = "VALID"
+    INVALID = "INVALID"
+    MISSING = "MISSING"
+    FORBIDDEN_DEFAULT = "FORBIDDEN_DEFAULT"
 
 
 class ConfigIssueLevel(str, Enum):
@@ -28,9 +27,18 @@ class ConfigIssueLevel(str, Enum):
     NONE = "NONE"
 
 
+class ConfigValidationError(AssertionError):
+    def __init__(self, message, status: ConfigItemValidationStatus):
+        self.message = message
+        self.status = status
+
+    def __str__(self):
+        return f"{self.status}: {self.message}"
+
+
 class ConfigItemValidationResult(BaseModel):
     status: ConfigItemValidationStatus
-    level: Optional[ConfigIssueLevel] = ConfigIssueLevel.WARN
+    level: ConfigIssueLevel = ConfigIssueLevel.WARN
     field: str
     display_field: str
     value: Optional[Any] = None
@@ -38,6 +46,9 @@ class ConfigItemValidationResult(BaseModel):
     generator: Optional[Callable[[], Any]] = None
     fix_hint: Optional[str] = ""
     validator: Optional[Callable[[Any], Tuple[bool, Union[None, str]]]] = None
+
+    class Config:
+        use_enum_values = True
 
 
 def validate_registry_config(registry_config: dict) -> List[ConfigItemValidationResult]:

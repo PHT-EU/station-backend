@@ -1,93 +1,101 @@
 # configure station variables
-id: "{{ config.id }}"
-version: "{{ config.version }}"
+id: "{{ id }}"
+version: "{{ version }}"
 
 # station runtime environment set to development to allow for debugging and reduced security settings
 # if no value is given or any value other than 'development' is given it defaults to a production environment
-environment: "{{ config.environment }}"
+environment: "{{ environment }}"
 
 # configure the admin password for the station (username: admin)
-admin_password: "{{ config.admin_password }}"
+admin_password: "{{ admin_password }}"
 
 # set the station data directory where the station will store the data used for local analysis
-data_dir: "{{ config.data_dir }}"
+data_dir: "{{ data_dir }}"
 
 # Configure authentication for central services
 central:
-  api_url: "{{ config.central.api_url }}"
-  robot_id: "{{ config.central.robot_id }}"
-  robot_secret: "{{ config.central.robot_secret }}"
-  private_key: {{ config.central.private_key }}
-  private_key_password: "{{ config.central.private_key_password }}"
+  api_url: "{{ central.api_url }}"
+  robot_id: "{{ central.robot_id }}"
+  robot_secret: "{{ central.robot_secret }}"
+  private_key: {{ central.private_key }}
+  private_key_password: "{{ central.private_key_password }}"
 
 # Configure which port the proxy should use to listen for http requests
 http:
-  port: "{{ config.http.port }}"
+  port: "{{ http.port }}"
 # Configure which port the proxy should use to listen for https requests
 https:
-  port: "{{ config.https.port }}"
+  port: "{{ https.port }}"
   # Set the domain name for tls certificate either based on the existing certificate or to be used for self-signed certs
-  domain: "{{ config.https.domain }}"
+  domain: "{{ https.domain }}"
   # list of paths to certificate files (cert/key)
   certificate:
-    cert: {{ config.https.certifcate.cert }}
-    key: {{ config.https.certifcate.key }}
+    cert: {{ certificate.cert }}
+    key: {{ certificate.key }}
 
 # Optionally configure the port for the traefik dashboard, when dashboard is set to true
 traefik:
-  dashboard: "{{ config.traefik.dashboard }}"
-  dashboard_port: {{ config.traefik.dashboard_port }}
+  dashboard: "{{ traefik.dashboard }}"
+  dashboard_port: {{ traefik.dashboard_port }}
 
 # Configures the address and credentials for the central container registry
 registry:
-  address: "{{ config.registry.address }}"
-  user: "{{ config.registry.user }}"
-  password: "{{ config.registry.password }}"
-  project: "{{ config.registry.project }}"
+  address: "{{ registry.address }}"
+  user: "{{ registry.user }}"
+  password: "{{ registry.password }}"
+  project: "{{ registry.project }}"
 
 # configure admin user for the postgres database
 db:
-  host: {{ config.db.host }}
-  admin_user: "{{ config.db.admin_user }}"
-  admin_password: "{{ config.db.admin_password }}"
+  host: {{ db.host }}
+  port: {{ db.port }}
+  admin_user: "{{ db.admin_user }}"
+  admin_password: "{{ db.admin_password }}"
 
 api:
   # Fernet key for encryption of sensitive values stored in the database
-  fernet_key: "{{ config.api.fernet_key }}"
-  port: {{ config.api.port }}
+  fernet_key: "{{ api.fernet_key }}"
+  port: {{ api.port }}
 
 
 # configure airflow connection
 airflow:
+  host: {{ airflow.host }}
+  port: {{ airflow.port }}
   # set admin user and password for airflow
-  admin_user: "{{ config.airflow.admin_user }}"
-  admin_password: "{{ config.airflow.admin_password }}"
-  {% if config.airflow.config_file %}
+  admin_user: "{{ airflow.admin_user }}"
+  admin_password: "{{ airflow.admin_password }}"
+  {% if airflow.config_file %}
   # path to a custom airflow configuration file
-  config_file: {{ config.airflow.config_file }}
+  config_file: {{ airflow.config_file }}
   {% endif %}
-  {% if config.airflow.custom_dags_dir %}
+  {% if airflow.custom_dags_dir %}
   # if you want to load your own DAGs from a different location set the path here, only the libraries installed in the
   # airflow_dags folder will be available to code inside the DAGs
-  extra_dags_dir: "{{ config.airflow.custom_dags_dir }}"
+  extra_dags_dir: "{{ airflow.custom_dags_dir }}"
   {% endif %}
 
 # Configure the connection to the authentication server as well as the admin accounts
 auth:
-  robot_id: {{ config.auth.robot_id }}
-  robot_secret: {{ config.auth.robot_secret }}
+  host: {{ auth.host }}
+  port: {{ auth.port }}
+  admin_user: "{{ auth.admin_user }}"
+  robot_id: {{ auth.robot_id }}
+  robot_secret: {{ auth.robot_secret }}
 
 # Configure connection to redis cache
 redis:
-  host: {{ config.redis.host }}
-  port: {{ config.redis.port }}
+  host: {{ redis.host }}
+  port: {{ redis.port }}
+  database: {{ redis.database }}
+  admin_password: "{{ redis.admin_password }}"
 
 
 # configure minio connection
 minio:
-  host: "{{ config.minio.host }}"
-  port: {{ config.minio.port }}
-  admin_user: "{{ config.minio.admin_user }}"
-  admin_password: "{{ config.minio.admin_password }}"
+  host: "{{ minio.host }}"
+  port: {{ minio.port }}
+  admin_user: "{{ minio.admin_user }}"
+  admin_password: "{{ minio.admin_password }}"
 
 

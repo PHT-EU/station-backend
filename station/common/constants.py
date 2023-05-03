@@ -3,6 +3,11 @@ from enum import Enum
 CERTS_REGEX = r"https\.certs\[([0-9]*)\]"
 
 
+class ApplicationEnvironment(str, Enum):
+    DEVELOPMENT = "development"
+    PRODUCTION = "production"
+
+
 class DockerVolumes(Enum):
     POSTGRES = "pg_pht_station"
 
@@ -33,6 +38,7 @@ class DefaultValues(Enum):
 
     FERNET_KEY = "your_fernet_key"
     ADMIN = "admin"
+    ADMIN_PASSWORD = "password"
     PRIVATE_KEY = "/path/to/private_key.pem"
     STATION_DOMAIN = "example-station.com"
     CERT = "example-cert.pem"

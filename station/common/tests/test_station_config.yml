@@ -44,7 +44,7 @@ traefik:
 registry:
   address: "dev-harbor.personalhealthtrain.de"
   user: "robot$dev"
-  password: "password"
+  password: "valid-password"
   project: "dev-project"
 
 # configure admin user for the postgres database
