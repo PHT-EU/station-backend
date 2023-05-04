@@ -40,6 +40,17 @@ class StationSettings(BaseSettings):
 
     @classmethod
     def construct(cls, _fields_set=None, **values):
+        """Construct a new model object from the function arguments. Recursively construct nested models.
+        If an environment variable is available for a field, it will override the value passed in the function
+        arguments.
+
+        Args:
+            _fields_set: Optional set of fields for hte model
+            **values: The values to set for the model
+
+        Returns:
+            A new model object
+        """
         m = cls.__new__(cls)
         fields_values = {}
 
@@ -80,7 +91,6 @@ class StationSettings(BaseSettings):
         # override with env variables
         # read the environment variables specs of the models
         # override the fields only if they are not of object type
-
         for name, field in m.__fields__.items():
             if issubclass(field.type_, BaseSettings):
                 pass
@@ -95,6 +105,7 @@ class StationSettings(BaseSettings):
                         env = int(env)
                     elif field.type_ == float:
                         env = float(env)
+                    # set the value
                     fields_values[name] = env
 
         object.__setattr__(m, "__dict__", fields_values)
@@ -128,6 +139,8 @@ class ServiceSettings(StationSettings):
 
 
 class CentralSettings(StationSettings):
+    """Model that contains settings for configuring the connection to the central API as robot user."""
+
     api_url: AnyHttpUrl
     robot_id: str
     robot_secret: str
@@ -138,12 +151,16 @@ class CentralSettings(StationSettings):
 
 
 class HttpSettings(StationSettings):
+    """General HTTP settings for the station."""
+
     port: Optional[int] = 80
 
     Config = StationSettingsConfig.with_prefix("STATION_HTTP_")
 
 
 class Certificate(StationSettings):
+    """Model that contains settings for configuring the HTTPS certificates."""
+
     cert: str
     key: str
 
@@ -154,6 +171,8 @@ class Certificate(StationSettings):
 
 
 class HttpsSettings(StationSettings):
+    """MOdel that contains the stations HTTPS settings."""
+
     port: Optional[int] = 443
     domain: str
     certificate: Optional[Certificate] = None
@@ -162,6 +181,8 @@ class HttpsSettings(StationSettings):
 
 
 class TraefikSettings(StationSettings):
+    """Configuration options for the Stations Traefik instance."""
+
     dashboard: Optional[bool] = False
     dashboard_port: Optional[int] = 8081
 
@@ -169,6 +190,8 @@ class TraefikSettings(StationSettings):
 
 
 class RegistrySettings(StationSettings):
+    """Model that contains settings for configuring the connection to the central container registry."""
+
     address: str
     user: str
     password: str
@@ -180,10 +203,16 @@ class RegistrySettings(StationSettings):
 
 
 class DBSettings(ServiceSettings):
+    """Model that contains settings for configuring the connection to the database."""
+
     Config = StationSettingsConfig.with_prefix("STATION_DB_")
 
 
 class AirflowSettings(ServiceSettings):
+    """Model that contains settings for configuring the connection to the airflow instance.
+    With the option of provididing a custom config and extra DAGs directory.
+    """
+
     config_path: str | None = None
     extra_dags_dir: str | None = None
 
@@ -205,10 +234,14 @@ class AirflowSettings(ServiceSettings):
 
 
 class MinioSettings(ServiceSettings):
+    """Model that contains settings for configuring the stations minio instance."""
+
     Config = StationSettingsConfig.with_prefix("STATION_MINIO_")
 
 
 class AuthSettings(StationSettings):
+    """Model that contains settings for configuring the stations authup instance."""
+
     host: str
     port: Optional[int] = 3001
     admin_user: Optional[str] = "admin"
@@ -219,6 +252,8 @@ class AuthSettings(StationSettings):
 
 
 class APISettings(StationSettings):
+    """Model that contains settings for configuring the station API."""
+
     port: Optional[int] = 8000
     fernet_key: str
     database: Optional[str] = "pht_station"
@@ -229,6 +264,8 @@ class APISettings(StationSettings):
 
 
 class RedisSettings(StationSettings):
+    """Model that contains settings for configuring the stations redis instance."""
+
     host: str
     port: Optional[int] = 6379
     admin_password: Optional[str] = None
@@ -240,6 +277,8 @@ class RedisSettings(StationSettings):
 
 
 class StationConfig(StationSettings):
+    """Unified model that contains all settings for configuring the station."""
+
     id: str
     environment: ApplicationEnvironment
     admin_password: str
