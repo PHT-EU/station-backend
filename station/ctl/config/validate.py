@@ -1,6 +1,5 @@
 from typing import List, Tuple
 
-from pydantic.error_wrappers import ValidationError
 from rich.style import Style
 from rich.table import Table
 
@@ -21,13 +20,13 @@ def validate_config_object(config: dict):
         print("Station config fields")
         print(StationConfig.__fields__)
         StationConfig(**config)
-    except ValidationError as e:
-        get_fixes_from_errors(e.errors())
-
-        print(e)
-        print(type(e))
-        print(e.__dict__)
-        print(e.errors())
+    except Exception as e:
+        fixes = get_fixes_from_errors(config, e.errors())
+        print(fixes)
+        # print(e)
+        # print(type(e))
+        # print(e.__dict__)
+        # print(e.errors())
 
         # raise e
 

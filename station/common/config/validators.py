@@ -1,4 +1,5 @@
-from pydantic import validator
+from cryptography.fernet import Fernet
+from pydantic import SecretStr, validator
 
 from station.common.constants import DefaultValues
 
@@ -14,6 +15,35 @@ def is_default(value: str, default: DefaultValues) -> bool:
         True if the value is the default value, False otherwise
     """
     return value == default.value
+
+
+def validate_fernet_key(value: SecretStr):
+    """Validation function for fernet key
+
+    Args:
+        value: the fernet key to validate
+
+    Raises:
+        ValueError: If the key is empty
+        AssertionError: If the key is less than 32 characters or is the default key or is invalid
+    Returns:
+        the validated key
+    """
+    if not value:
+        raise ValueError("Fernet key must not be empty")
+    if len(value.get_secret_value()) < 32:
+        raise AssertionError("Fernet key must be at least 32 characters")
+    if is_default(value.get_secret_value(), DefaultValues.FERNET_KEY):
+        raise AssertionError(
+            f"Fernet key must not be the default key [{DefaultValues.FERNET_KEY.value}]"
+        )
+
+    # try to load the key to make sure it is valid
+    try:
+        Fernet(value.get_secret_value())
+    except Exception as e:
+        raise AssertionError(f"Invalid Fernet key: {e}")
+    return value
 
 
 def validate_admin_password(value: str):

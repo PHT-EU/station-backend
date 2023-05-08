@@ -17,7 +17,7 @@ def password_generator() -> str:
 
 def generate_private_key(
     name: str, path: str = None, password: str = None
-) -> Tuple[str, rsa.RSAPrivateKey, rsa.RSAPublicKey]:
+) -> Tuple[str, rsa.RSAPrivateKey, rsa.RSAPublicKey] | None:
     private_key = rsa.generate_private_key(
         65537, key_size=2048, backend=default_backend()
     )
@@ -42,10 +42,8 @@ def generate_private_key(
     # if a path is given append the name of the private key to this path
     if path:
         private_key_path = os.path.join(path, name)
-    else:
-        private_key_path = os.getcwd().join(name)
-    with open(private_key_path, "wb") as f:
-        f.write(pem)
+        with open(private_key_path, "wb") as f:
+            f.write(pem)
 
     # generate public key and store it under the same name as .pub
     pub_name = name.split(".")[0] + ".pub"

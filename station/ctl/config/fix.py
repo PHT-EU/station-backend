@@ -1,3 +1,4 @@
+import copy
 import os.path
 import re
 import sys
@@ -6,12 +7,12 @@ from typing import Any, List
 import click
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from pydantic import BaseModel
 
 from station.common.clients.central.central_client import CentralApiClient
-from station.common.config import station_config
+from station.common.config.fix import ConfigItemFix
+from station.common.config.generators import generate_private_key
+from station.common.config.station_config import StationConfig, StationSettings
 from station.common.constants import CERTS_REGEX, Icons, PHTDirectories
-from station.ctl.config.generators import generate_private_key
 from station.ctl.config.validators import (
     ConfigItemValidationResult,
     ConfigItemValidationStatus,
@@ -19,30 +20,12 @@ from station.ctl.config.validators import (
 from station.ctl.install.certs import generate_certificates
 
 
-class ConfigItemFix(BaseModel):
-    loc: tuple
-    value: Any | None = None
-    message: str | None = None
-    fix: Any | None = None
-
-    @classmethod
-    def no_fix(
-        loc: tuple, value: str | None = None, message: str | None = None
-    ) -> "ConfigItemFix":
-        return ConfigItemFix(
-            loc=loc,
-            value=value,
-            message=message,
-            fix=None,
-        )
-
-
-def get_fixes_from_errors(errors: list[dict]) -> list[ConfigItemFix]:
+def get_fixes_from_errors(config_dict: dict, errors: list[dict]) -> list[ConfigItemFix]:
     """Takes a list of validation errors resulting from initializing the station config pydantic model and
     returns a list of fixes that can be applied to the config to fix the errors.
 
     Args:
-        errors: list of pydantic validation errors
+        errors: list of pydantic validation error dicts
 
     Returns:
         list of fixes that can be applied to the config to fix the errors
@@ -50,40 +33,44 @@ def get_fixes_from_errors(errors: list[dict]) -> list[ConfigItemFix]:
     if len(errors) == 0:
         return []
 
+    # construct the config
+    fixed_config = copy.deepcopy(config_dict)
+    config = StationConfig.construct(**fixed_config)
     for error in errors:
-        fix = get_fix_by_loc(error["loc"])
+        print(f"Attempting to fix error: {error} for config item: {error['loc']}")
+        fix = get_fix_by_loc(
+            config,
+            error["loc"],
+        )
         print(error["loc"], fix)
 
 
-def get_fix_by_loc(loc: tuple) -> ConfigItemFix | None:
+def get_fix_by_loc(config: StationConfig, loc: tuple) -> ConfigItemFix | None:
     """
     Returns the fix for the given location
     """
 
     level = len(loc)
 
+    # get config attribute based on loc
     if level == 1:
-        # todo get top level fixes
-        pass
+        return config.get_fix(loc[0])
+    # if it is a nested config item get the fix from the submodel
     else:
-        # todo get fixes for other levels
-        fix = _get_service_fix(loc)
-        print(fix)
+        sub_settings = _get_model_for_loc(config, loc=loc)
+        fix = sub_settings.get_fix(loc[-1])
+        return fix
 
 
-def _get_service_fix(loc: tuple) -> ConfigItemFix | None:
-    print("Getting service fix")
-    fields = station_config.StationConfig.__fields__
-    print(fields)
+def _get_model_for_loc(config: StationSettings, loc: tuple) -> StationSettings:
+    name = loc[0]
 
-
-def _fix_for_model(model: BaseModel, loc: tuple) -> ConfigItemFix | None:
-    # todo find the model class based on the loc
-
-    # todo get the field name based on the loc
-
-    # todo get the fix for the field name which should be defined in the class
-    pass
+    if len(loc) == 1:
+        return config
+    # get the model for the name
+    model = getattr(config, name)
+    # get the sub model for the rest of the loc
+    return _get_model_for_loc(model, loc[1:])
 
 
 def fix_config(

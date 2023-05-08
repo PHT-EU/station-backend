@@ -70,9 +70,9 @@ def config_dict():
 def test_validate_config_object(config_dict):
     test_dict = copy.deepcopy(config_dict)
 
-    del test_dict["id"]
-    del test_dict["airflow"]["host"]
-    del test_dict["https"]["certificate"]["key"]
+    test_dict["id"] = None
+    test_dict["airflow"]["host"] = None
+    test_dict["https"]["certificate"]["key"] = None
     test_dict["admin_password"] = "password"
     validate_config_object(test_dict)
 

@@ -1,5 +1,10 @@
 {
     "files.associations": {
         "*.tmpl": "jinja"
-    }
+    },
+    "python.analysis.typeCheckingMode": "off",
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "python.formatting.provider": "none"
 }

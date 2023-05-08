@@ -2,13 +2,15 @@ import os
 from typing import Optional, Union
 
 import yaml
-from pydantic import AnyHttpUrl, BaseSettings, validator
+from pydantic import AnyHttpUrl, BaseSettings, SecretStr, validator
 from pydantic.env_settings import SettingsSourceCallable
 from rich.pretty import pprint
 
+from station.common.config.fix import ConfigItemFix
 from station.common.config.validators import (
     admin_validator,
     file_readable_validator,
+    validate_fernet_key,
     validate_file_readable,
 )
 from station.common.constants import ApplicationEnvironment
@@ -37,6 +39,8 @@ class StationSettingsConfig:
 
 class StationSettings(BaseSettings):
     """Base Settings with recursive construct method"""
+
+    _fixable_fields: list[str] = []
 
     @classmethod
     def construct(cls, _fields_set=None, **values):
@@ -116,6 +120,17 @@ class StationSettings(BaseSettings):
         m._init_private_attributes()
         return m
 
+    def get_fix(self, field: str) -> ConfigItemFix:
+        """Returns a fix for the field.
+        Returns:
+            ConfigItemFix: A fix for the field or None.
+        """
+
+        if not hasattr(self, field):
+            raise ValueError(
+                f"Field {field} does not exist in model {self.__class__.__name__}"
+            )
+
 
 class ServiceSettings(StationSettings):
     """Model that contains common settings for configuring the connection to a service
@@ -123,19 +138,29 @@ class ServiceSettings(StationSettings):
     """
 
     admin_user: str
-    admin_password: str
+    admin_password: SecretStr
     host: str
     port: Optional[int] = None
     # validator for admin password
     _admin_password = admin_validator()
 
-    @staticmethod
-    def get_fix(field: str) -> dict[str, str]:
+    _fixable_fields = ["admin_password"]
+
+    def get_fix(self, field: str) -> ConfigItemFix | None:
         """Returns a dict with the settings that can be used to fix the service.
         Returns:
             dict: dict with the settings that can be used to fix the service.
         """
-        pass
+        super().get_fix(field)
+
+        print("Service settings get fix for field", field)
+
+        match field:
+            case "admin_password":
+                return ConfigItemFix.admin_password(value=self.admin_password)
+
+            case _:
+                return None
 
 
 class CentralSettings(StationSettings):
@@ -143,9 +168,9 @@ class CentralSettings(StationSettings):
 
     api_url: AnyHttpUrl
     robot_id: str
-    robot_secret: str
+    robot_secret: SecretStr
     private_key: str
-    private_key_password: Optional[str] = None
+    private_key_password: Optional[SecretStr] = None
 
     Config = StationSettingsConfig.with_prefix("STATION_CENTRAL_")
 
@@ -194,7 +219,7 @@ class RegistrySettings(StationSettings):
 
     address: str
     user: str
-    password: str
+    password: SecretStr
     project: str
 
     _password = admin_validator("password")
@@ -246,7 +271,7 @@ class AuthSettings(StationSettings):
     port: Optional[int] = 3001
     admin_user: Optional[str] = "admin"
     robot_id: Optional[str]
-    robot_secret: Optional[str]
+    robot_secret: Optional[SecretStr]
 
     Config = StationSettingsConfig.with_prefix("STATION_AUTH_")
 
@@ -255,12 +280,16 @@ class APISettings(StationSettings):
     """Model that contains settings for configuring the station API."""
 
     port: Optional[int] = 8000
-    fernet_key: str
+    fernet_key: SecretStr
     database: Optional[str] = "pht_station"
 
     Config = StationSettingsConfig.with_prefix("STATION_API_")
 
     # todo validate fernet key
+
+    @validator("fernet_key")
+    def validate_fernet_key(cls, value: SecretStr) -> SecretStr:
+        return validate_fernet_key(value)
 
 
 class RedisSettings(StationSettings):
@@ -268,7 +297,7 @@ class RedisSettings(StationSettings):
 
     host: str
     port: Optional[int] = 6379
-    admin_password: Optional[str] = None
+    admin_password: Optional[SecretStr] = None
     database: Optional[int] = 0
 
     _admin_password = admin_validator()
@@ -281,7 +310,7 @@ class StationConfig(StationSettings):
 
     id: str
     environment: ApplicationEnvironment
-    admin_password: str
+    admin_password: SecretStr
     data_dir: str
     version: str
     central: CentralSettings
@@ -306,5 +335,21 @@ class StationConfig(StationSettings):
         with open(path, "r") as f:
             # load yaml as dict
             return cls.parse_obj(yaml.safe_load(f))
+
+    def get_fix(self, field: str) -> ConfigItemFix | None:
+        """Returns a dict with the settings that can be used to fix the service.
+        Returns:
+            dict: dict with the settings that can be used to fix the service.
+        """
+        super().get_fix(field)
+
+        print("Service settings get fix for field", field)
+
+        match field:
+            case "admin_password":
+                return ConfigItemFix.admin_password(value=self.admin_password)
+
+            case _:
+                return None
 
     Config = StationSettingsConfig.with_prefix("STATION_")
