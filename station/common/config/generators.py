@@ -27,8 +27,6 @@ def generate_private_key(
     else:
         encryption_algorithm = serialization.NoEncryption()
 
-    print(path)
-
     pem = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,

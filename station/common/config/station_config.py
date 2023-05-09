@@ -152,9 +152,6 @@ class ServiceSettings(StationSettings):
             dict: dict with the settings that can be used to fix the service.
         """
         super().get_fix(field)
-
-        print("Service settings get fix for field", field)
-
         match field:
             case "admin_password":
                 return ConfigItemFix.admin_password(value=self.admin_password)
@@ -172,7 +169,22 @@ class CentralSettings(StationSettings):
     private_key: str
     private_key_password: Optional[SecretStr] = None
 
+    _private_key_validator = file_readable_validator("private_key")
+
     Config = StationSettingsConfig.with_prefix("STATION_CENTRAL_")
+
+    def get_fix(self, field: str) -> ConfigItemFix | None:
+        """Returns a dict with the settings that can be used to fix the service.
+        Returns:
+            dict: dict with the settings that can be used to fix the service.
+        """
+        super().get_fix(field)
+        match field:
+            case "private_key":
+                return ConfigItemFix.private_key(value=self.private_key)
+
+            case _:
+                return None
 
 
 class HttpSettings(StationSettings):
@@ -291,6 +303,18 @@ class APISettings(StationSettings):
     def validate_fernet_key(cls, value: SecretStr) -> SecretStr:
         return validate_fernet_key(value)
 
+    def get_fix(self, field: str) -> ConfigItemFix | None:
+        """Returns a dict with the settings that can be used to fix the service.
+        Returns:
+            dict: dict with the settings that can be used to fix the service.
+        """
+        super().get_fix(field)
+        match field:
+            case "fernet_key":
+                return ConfigItemFix.fernet_key(value=self.fernet_key)
+            case _:
+                return None
+
 
 class RedisSettings(StationSettings):
     """Model that contains settings for configuring the stations redis instance."""
@@ -303,6 +327,15 @@ class RedisSettings(StationSettings):
     _admin_password = admin_validator()
 
     Config = StationSettingsConfig.with_prefix("STATION_REDIS_")
+
+    def get_fix(self, field: str) -> ConfigItemFix:
+        super().get_fix(field)
+
+        match field:
+            case "admin_password":
+                return ConfigItemFix.admin_password(value=self.admin_password)
+            case _:
+                return None
 
 
 class StationConfig(StationSettings):
@@ -326,6 +359,7 @@ class StationConfig(StationSettings):
     redis: RedisSettings
 
     _admin_password = admin_validator()
+    _data_dir = file_readable_validator("data_dir")
 
     def display(self):
         pprint(self, expand_all=True)

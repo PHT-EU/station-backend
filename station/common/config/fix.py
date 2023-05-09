@@ -2,7 +2,11 @@ from typing import Any, Callable
 
 from pydantic import BaseModel
 
-from station.common.config.generators import password_generator
+from station.common.config.generators import (
+    generate_fernet_key,
+    generate_private_key,
+    password_generator,
+)
 
 
 class ConfigItemFix(BaseModel):
@@ -32,4 +36,27 @@ class ConfigItemFix(BaseModel):
             value=value,
             suggestion=f'Use suggested password: "{suggested_password}"',
             fix=suggested_password,
+        )
+
+    @classmethod
+    def private_key(cls, value: str) -> "ConfigItemFix":
+        """
+        Fix that allow for the generation of a new private key
+        """
+        return cls(
+            issue="Invalid private key",
+            value=value,
+            suggestion="Either generate a new private key yourself or enter GENERATE to generate a new one",
+            fix="GENERATE",
+            generator_function=generate_private_key,
+        )
+
+    @classmethod
+    def fernet_key(cls, value: str) -> "ConfigItemFix":
+        return cls(
+            issue="Invalid fernet key",
+            value=value,
+            suggestion="Enter a valid fernet key or GENERATE to generate a new one",
+            fix="GENERATE",
+            generator_function=generate_fernet_key,
         )

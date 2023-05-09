@@ -10,6 +10,9 @@ service_data/
 configs/
 certs/
 station_data/
+.ruff_cache/
+.pytest_cache/
+.vscode/
 
 
 # Created by .ignore support plugin (hsz.mobi)
@@ -22,6 +25,7 @@ private.pem
 
 # C extensions
 *.so
+.env-old
 
 station_config.yml
 config.yml

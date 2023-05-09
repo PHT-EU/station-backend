@@ -1,3 +1,5 @@
+import os
+
 from cryptography.fernet import Fernet
 from pydantic import SecretStr, validator
 
@@ -89,9 +91,24 @@ def validate_file_readable(value: str):
     return value
 
 
+def validate_is_dir_and_writable(value: str):
+    if os.path.isdir(value):
+        if not os.access(value, os.R_OK | os.X_OK):
+            raise AssertionError(f"Path {value} is not writable")
+
+    raise AssertionError(f"Path {value} is not a directory")
+
+
 def file_readable_validator(field_name: str):
     """Reusable pydantic validator function for a file that should be readable"""
     return validator(field_name, allow_reuse=True)(validate_file_readable)
+
+
+def dir_validator(field_name: str):
+    """
+    Checks wether a path is a directory and is writable
+    """
+    return validator(field_name, allow_reuse=True)(validate_is_dir_and_writable)
 
 
 def admin_validator(field_name: str = "admin_password"):

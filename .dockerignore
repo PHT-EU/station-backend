@@ -6,4 +6,7 @@ service_data/
 station_data/
 testing/
 .env
-
+.idea/
+.ruff_cache/
+.pytest_cache/
+.vscode/
