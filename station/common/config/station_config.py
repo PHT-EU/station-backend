@@ -176,7 +176,7 @@ class ServiceSettings(StationSettings):
 class CentralSettings(StationSettings):
     """Model that contains settings for configuring the connection to the central API as robot user."""
 
-    api_url: AnyHttpUrl
+    url: AnyHttpUrl
     robot_id: str
     robot_secret: SecretStr
     private_key: str

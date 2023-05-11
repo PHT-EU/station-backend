@@ -60,7 +60,7 @@ class StationClients:
             )
 
         self._central = CentralApiClient(
-            api_url=self.settings.config.central_ui.api_url,
+            base_url=self.settings.config.central_ui.api_url,
             robot_id=self.settings.config.central_ui.robot_id,
             robot_secret=robot_secret,
         )

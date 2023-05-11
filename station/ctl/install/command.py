@@ -37,25 +37,41 @@ def install(ctx, install_dir, host_path):
     if not install_dir:
         install_dir = os.getcwd()
     ctx.obj["install_dir"] = install_dir
-    table, issues = validate_config(ctx.obj, host_path=host_path, install=True)
+    result = validate_config(ctx.obj["station_config"], host_path=host_path)
 
-    if issues:
+    if result is not None:
+        table, issues = result
         click.echo(Icons.CROSS.value)
         console = Console()
         console.print(table)
-        click.confirm(
-            "Station configuration is invalid. Please fix the errors displayed above. \n"
-            "Would you like to fix the configuration now?",
-            abort=True,
-        )
-        station_config = fix_config(ctx.obj, ctx.obj, issues)
-        ctx.obj = station_config
-        render_config(ctx.obj, ctx.obj["config_path"])
+
+        if ctx.obj["environment"] == "production":
+            click.confirm(
+                "Station configuration is invalid. Please fix the errors displayed above. \n"
+                "Would you like to fix the configuration now?",
+                abort=True,
+            )
+            fixed_config = fix_config(ctx.obj, ctx.obj["station_config"], issues)
+            # merge config with fixed config
+            ctx.obj = ctx.obj | fixed_config
+            render_config(ctx.obj["station_config"], ctx.obj["config_path"])
+
+        else:
+            res = click.prompt(
+                "Station configuration is invalid. Press enter to fix the configuration now. "
+                "[dev mode detected enter (skip) to continue]",
+                default="y",
+            )
+            if res == "y":
+                fixed_config = fix_config(ctx.obj, ctx.obj["station_config"], issues)
+                ctx.obj["station_config"] = ctx.obj["station_config"] | fixed_config
+                render_config(ctx.obj["station_config"], ctx.obj["config_path"])
+            else:
+                click.echo("Skipping configuration fix.")
 
     else:
         click.echo(Icons.CHECKMARK.value)
 
-    host_path = ctx.obj.get("host_path")
     click.echo(
         "Installing station software to {}".format(
             host_path if host_path else install_dir
@@ -96,12 +112,12 @@ def install(ctx, install_dir, host_path):
 
 def _request_registry_credentials(ctx):
     click.echo("Requesting registry credentials from central api... ", nl=False)
-    url = ctx.obj["central"]["api_url"]
-    client = ctx.obj["central"]["robot_id"]
-    secret = ctx.obj["central"]["robot_secret"]
+    url = ctx.obj["station_config"]["central"]["url"]
+    client = ctx.obj["station_config"]["central"]["robot_id"]
+    secret = ctx.obj["station_config"]["central"]["robot_secret"]
     client = CentralApiClient(url, client, secret)
 
-    credentials = client.get_registry_credentials(ctx.obj["station_id"])
+    credentials = client.get_registry_credentials(ctx.obj["station_config"]["id"])
     click.echo(Icons.CHECKMARK.value)
 
     return credentials

@@ -7,15 +7,16 @@ from station.common.clients.central.schemas import RegistryCredentials
 
 
 class CentralApiClient(BaseClient):
-    def __init__(self, api_url: str, robot_id: str, robot_secret: str):
+    def __init__(self, base_url: str, robot_id: str, robot_secret: str):
         super().__init__(
-            base_url=api_url,
+            base_url=base_url,
             robot_id=robot_id,
             robot_secret=robot_secret,
-            auth_url=f"{api_url}/token",
+            auth_url=f"{base_url}/auth",
         )
+        self.base_url = base_url
 
-        self.api_url = api_url
+        self.api_url = base_url + "/api"
 
     def get_trains(self, station_id: Any) -> dict:
         url = self.api_url + "/train-stations?"
