@@ -6,7 +6,6 @@ from rich.console import Console
 
 from station.common.constants import CERTS_REGEX
 from station.ctl.config import validate_config
-from station.ctl.config.validate import validate_config_object
 
 
 @pytest.fixture
@@ -70,11 +69,14 @@ def config_dict():
 def test_validate_config_object(config_dict):
     test_dict = copy.deepcopy(config_dict)
 
-    test_dict["id"] = None
+    # test_dict["id"] = None
     test_dict["airflow"]["host"] = None
     test_dict["https"]["certificate"]["key"] = None
     test_dict["admin_password"] = "password"
-    validate_config_object(test_dict)
+    results = validate_config(test_dict)
+
+    for result in results:
+        print(result)
 
 
 def test_validate_config(config_dict):

@@ -9,6 +9,7 @@ from rich.pretty import pprint
 from station.common.config.fix import ConfigItemFix
 from station.common.config.validators import (
     admin_validator,
+    dir_validator,
     file_readable_validator,
     validate_fernet_key,
     validate_file_readable,
@@ -126,10 +127,15 @@ class StationSettings(BaseSettings):
             ConfigItemFix: A fix for the field or None.
         """
 
-        if not hasattr(self, field):
+        if field not in self.__class__.__fields__:
             raise ValueError(
                 f"Field {field} does not exist in model {self.__class__.__name__}"
             )
+
+        # if not hasattr(self, field):
+        #     raise ValueError(
+        #         f"Field {field} does not exist in model {self.__class__.__name__}"
+        #     )
 
 
 class ServiceSettings(StationSettings):
@@ -154,7 +160,14 @@ class ServiceSettings(StationSettings):
         super().get_fix(field)
         match field:
             case "admin_password":
-                return ConfigItemFix.admin_password(value=self.admin_password)
+                if hasattr(self, "admin_password"):
+                    if isinstance(self.admin_password, SecretStr):
+                        val = self.admin_password.get_secret_value()
+                    else:
+                        val = self.admin_password
+                else:
+                    val = None
+                return ConfigItemFix.admin_password(value=val)
 
             case _:
                 return None
@@ -181,7 +194,10 @@ class CentralSettings(StationSettings):
         super().get_fix(field)
         match field:
             case "private_key":
-                return ConfigItemFix.private_key(value=self.private_key)
+                val = None
+                if hasattr(self, "private_key"):
+                    val = self.private_key
+                return ConfigItemFix.private_key(value=val)
 
             case _:
                 return None
@@ -359,7 +375,7 @@ class StationConfig(StationSettings):
     redis: RedisSettings
 
     _admin_password = admin_validator()
-    _data_dir = file_readable_validator("data_dir")
+    _data_dir = dir_validator("data_dir")
 
     def display(self):
         pprint(self, expand_all=True)
@@ -376,14 +392,28 @@ class StationConfig(StationSettings):
             dict: dict with the settings that can be used to fix the service.
         """
         super().get_fix(field)
-
-        print("Service settings get fix for field", field)
-
         match field:
             case "admin_password":
-                return ConfigItemFix.admin_password(value=self.admin_password)
+                val = None
+                if hasattr(self, "admin_password"):
+                    val = self.admin_password
+
+                return ConfigItemFix.admin_password(value=val)
+
+            case "data_dir":
+                return ConfigItemFix.no_fix(
+                    value=self.data_dir,
+                    suggestion="Check that the path is correct and that the user has access to it.",
+                )
+
+            case "id":
+                return ConfigItemFix.no_fix(
+                    value=self.id,
+                    suggestion="Enter the station id that is displayed in the central PHT user interface.",
+                )
 
             case _:
+                print(f"no fix for {field}")
                 return None
 
     Config = StationSettingsConfig.with_prefix("STATION_")

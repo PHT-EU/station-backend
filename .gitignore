@@ -13,6 +13,10 @@ station_data/
 .ruff_cache/
 .pytest_cache/
 .vscode/
+.vscode/settings.json
+
+test-key.pem
+test-key.pub
 
 
 # Created by .ignore support plugin (hsz.mobi)

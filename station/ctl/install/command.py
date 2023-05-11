@@ -12,7 +12,6 @@ from station.common.clients.central.central_client import CentralApiClient
 from station.common.constants import Icons, PHTDirectories, PHTImages
 from station.ctl.config import fix_config, validate_config
 from station.ctl.config.command import render_config
-from station.ctl.config.validators import ConfigItemValidationStatus
 from station.ctl.install import templates
 from station.ctl.install.docker import setup_docker
 from station.ctl.install.fs import check_create_pht_dirs
@@ -38,14 +37,7 @@ def install(ctx, install_dir, host_path):
     if not install_dir:
         install_dir = os.getcwd()
     ctx.obj["install_dir"] = install_dir
-    validation_results, table = validate_config(
-        ctx.obj, host_path=host_path, install=True
-    )
-    issues = [
-        result
-        for result in validation_results
-        if result.status != ConfigItemValidationStatus.VALID
-    ]
+    table, issues = validate_config(ctx.obj, host_path=host_path, install=True)
 
     if issues:
         click.echo(Icons.CROSS.value)
@@ -56,7 +48,7 @@ def install(ctx, install_dir, host_path):
             "Would you like to fix the configuration now?",
             abort=True,
         )
-        station_config = fix_config(ctx.obj, ctx.obj, validation_results)
+        station_config = fix_config(ctx.obj, ctx.obj, issues)
         ctx.obj = station_config
         render_config(ctx.obj, ctx.obj["config_path"])
 

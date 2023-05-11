@@ -93,8 +93,16 @@ def validate_file_readable(value: str):
 
 def validate_is_dir_and_writable(value: str):
     if os.path.isdir(value):
-        if not os.access(value, os.R_OK | os.X_OK):
+        if not os.access(value, os.R_OK):
+            raise AssertionError(f"Path {value} is not readable")
+
+        if not os.access(value, os.W_OK):
             raise AssertionError(f"Path {value} is not writable")
+
+        if not os.access(value, os.X_OK):
+            raise AssertionError(f"Path {value} is not executable")
+
+        return value
 
     raise AssertionError(f"Path {value} is not a directory")
 

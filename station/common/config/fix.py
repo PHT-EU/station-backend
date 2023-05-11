@@ -9,23 +9,32 @@ from station.common.config.generators import (
 )
 
 
+class GeneratorArg(BaseModel):
+    prompt: str
+    arg: str
+    required: bool = True
+    value: Any | None = None
+
+
 class ConfigItemFix(BaseModel):
     issue: str
     value: Any | None = None
     suggestion: str
     fix: Any | None = None
     generator_function: Callable | None = None
-    generator_args: tuple | None = None
+    generator_args: list[GeneratorArg] | None = None
 
     @classmethod
     def no_fix(
-        cls, loc: tuple, value: str | None = None, message: str | None = None
+        cls,
+        suggestion: str,
+        value: str | None = None,
     ) -> "ConfigItemFix":
         return cls(
             value=value,
-            issue=message if message else "",
+            issue="",
             fix=None,
-            suggestion="Please contact a PHT-meDIC team member for help",
+            suggestion=suggestion,
         )
 
     @classmethod
@@ -43,12 +52,30 @@ class ConfigItemFix(BaseModel):
         """
         Fix that allow for the generation of a new private key
         """
+
+        # Generator arguments to generate a new private key
+        args = [
+            GeneratorArg(
+                prompt="Enter the directory in which to save the private key",
+                arg="path",
+            ),
+            GeneratorArg(
+                prompt="Enter the name of the private key file",
+                arg="name",
+            ),
+            GeneratorArg(
+                prompt="Optionally Enter a passphrase to encrypt the private key",
+                arg="password",
+                required=False,
+            ),
+        ]
         return cls(
             issue="Invalid private key",
             value=value,
             suggestion="Either generate a new private key yourself or enter GENERATE to generate a new one",
             fix="GENERATE",
             generator_function=generate_private_key,
+            generator_args=args,
         )
 
     @classmethod

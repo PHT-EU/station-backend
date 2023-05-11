@@ -1,17 +1,11 @@
 import os
-from typing import List
 
 import click
 from rich.console import Console
-from rich.table import Table
 
 from station.common.constants import Icons
-from station.ctl.config import find_config, fix_config, load_config, validate_config
-from station.ctl.config.validators import (
-    ConfigIssueLevel,
-    ConfigItemValidationResult,
-    ConfigItemValidationStatus,
-)
+from station.ctl.config import find_config, fix_config, load_config
+from station.ctl.config.validate import validate_config
 from station.ctl.util import get_template_env
 
 
@@ -23,7 +17,7 @@ from station.ctl.util import get_template_env
     help="Do not write the fixed config to disk. But print it instead.",
 )
 @click.pass_context
-def config(ctx, file, dry_run):
+def settings(ctx, file, dry_run):
     """Validate and/or fix the configuration file"""
 
     if not file:
@@ -37,14 +31,13 @@ def config(ctx, file, dry_run):
         station_config = load_config(file)
 
     click.echo("Validating configuration file...")
-    results, table = validate_config(station_config)
-    issues = [
-        result
-        for result in results
-        if result.status != ConfigItemValidationStatus.VALID
-    ]
-    if issues:
-        _display_issues(issues, table)
+
+    results = validate_config(station_config)
+
+    if results is not None:
+        table, results = results
+        console = Console()
+        console.print(table)
         click.confirm("Fix issues now?", abort=True)
         fixed_config = fix_config(ctx.obj, station_config, results)
         render_config(fixed_config, file)
@@ -53,20 +46,6 @@ def config(ctx, file, dry_run):
 
     else:
         click.echo("Configuration file is valid.")
-
-
-def _display_issues(issues: List[ConfigItemValidationResult], table: Table):
-    console = Console()
-    console.print(table)
-    num_warnings = len(
-        [result for result in issues if result.level == ConfigIssueLevel.WARN]
-    )
-    num_errors = len(
-        [result for result in issues if result.level == ConfigIssueLevel.ERROR]
-    )
-    warning_styled = click.style(f"{num_warnings}", fg="yellow")
-    errors_styled = click.style(f"{num_errors}", fg="red")
-    click.echo(f"Found {warning_styled} warnings and {errors_styled} errors")
 
 
 def render_config(config: dict, path: str, dry_run: bool = False) -> str | None:

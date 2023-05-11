@@ -4,7 +4,7 @@ import click
 
 from station.common.constants import Icons
 from station.ctl.config import find_config, load_config
-from station.ctl.config.command import config
+from station.ctl.config.command import settings
 from station.ctl.fhir.command import fhir
 from station.ctl.install.command import install
 
@@ -50,7 +50,7 @@ def update(ctx):
 
 
 cli.add_command(install)
-cli.add_command(config)
+cli.add_command(settings)
 cli.add_command(fhir)
 
 if __name__ == "__main__":

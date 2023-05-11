@@ -16,7 +16,7 @@ CONFIG_DICT = {
     "version": "latest",
     "environment": "development",
     "admin_password": "GucVuG6MgVyy58v8Xjg3o4jTnAyNrP1k",
-    "data_dir": "./station_data",
+    "data_dir": str(TEST_DIR / "station_data"),
     "central": {
         "api_url": "https://dev.personalhealthtrain.de/api",
         "robot_id": "0b34acb9-9b26-4780-80d1-705772464cf2",
