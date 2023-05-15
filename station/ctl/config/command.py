@@ -54,16 +54,16 @@ def render_config(config: dict, path: str, dry_run: bool = False) -> str | None:
     # write out the correct path to key file on host when rendering the template from docker container
 
     # todo check and improve this
-    if config.get("host_path"):
-        key_name = config["central"]["private_key"].split("/")[-1]
+    if config["station_config"].get("host_path"):
+        key_name = config["station_config"]["central"]["private_key"].split("/")[-1]
         key_path = os.path.join(config["host_path"], key_name)
-        config["central"]["private_key"] = key_path
+        config["station_config"]["central"]["private_key"] = key_path
 
     # todo fix this hack
     # extract https certs from config
-    certs = config["https"].pop("certificate")
+    certs = config["station_config"]["https"].pop("certificate")
 
-    out_config = template.render(certificate=certs, **config)
+    out_config = template.render(certificate=certs, **config["station_config"])
 
     # print the rendered config to stdout and return it if dry_run is True
     if dry_run:

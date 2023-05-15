@@ -29,10 +29,11 @@ class CentralApiClient(BaseClient):
 
     def get_registry_credentials(self, station_id: Any) -> RegistryCredentials:
         # get registry and external name
-        url = self.api_url + f"/stations/{station_id}?"
+        url = self.api_url + "/stations?"
         filters = (
-            "fields[station]=+secure_id,+registry_project_account_name,"
-            "+registry_project_account_token,+public_key"
+            "fields=+secure_id,+registry_project_account_name,"
+            "+registry_project_account_token&"
+            f"filter[id]={station_id}"
         )
         safe_filters = self._make_url_safe(filters)
         url = url + safe_filters
@@ -43,7 +44,7 @@ class CentralApiClient(BaseClient):
             print(r.content)
             raise e
         # create credentials object
-        station_registry_data = r.json()
+        station_registry_data = r.json()["data"][0]
         # extract station associated data from initial response
         project = station_registry_data["external_name"]
         registry_id = station_registry_data["registry_id"]
@@ -72,7 +73,11 @@ class CentralApiClient(BaseClient):
         safe_filters = self._make_url_safe(filters)
         url = url + safe_filters
         r = requests.get(url, headers=self.headers)
-        r.raise_for_status()
+        try:
+            r.raise_for_status()
+        except Exception as e:
+            print(r.content)
+            raise e
         return r.json()["account_name"], r.json()["account_secret"]
 
     def update_public_key(self, station_id: Any, public_key: str) -> dict:

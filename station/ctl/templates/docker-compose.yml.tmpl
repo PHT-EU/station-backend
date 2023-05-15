@@ -44,10 +44,6 @@ services:
       - {{ auth_config.config_path }}:/usr/src/app/writable/authup.api.conf
     ports:
       - "{{ auth_config.port }}:3000"
-    #environment:{% for key, value in auth_config.env.items() %}
-    #  - {{ key }}={{ value }}
-    #  {%- endfor %}
-    #  - ROBOT_ENABLED=true
     labels:{% for label in auth_config.labels %}
       - {{ label }}
       {%- endfor %}

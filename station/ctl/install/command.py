@@ -224,7 +224,7 @@ def _setup_auth_server(ctx):
 def write_init_sql(ctx) -> str:
     click.echo("Setting up database... ", nl=False)
     try:
-        db_config = ctx.obj["db"]
+        db_config = ctx.obj["station_config"]["db"]
         init_sql_path = os.path.join(
             ctx.obj["install_dir"],
             str(PHTDirectories.SETUP_SCRIPT_DIR.value),
@@ -257,15 +257,17 @@ def write_authup_config(ctx):
     authup_config_path = os.path.join(authup_path, "authup.api.conf")
 
     auth_config = {
-        "admin_password": ctx.obj["admin_password"],
-        "port": ctx.obj["auth"]["port"],
-        "public_url": "https://" + ctx.obj["https"]["domain"] + "/auth",
+        "admin_password": ctx.obj["station_config"]["admin_password"],
+        "port": ctx.obj["station_config"]["auth"]["port"],
+        "public_url": "https://"
+        + ctx.obj["station_config"]["https"]["domain"]
+        + "/auth",
     }
 
     config = templates.render_authup_api_config(
         auth_config=auth_config,
-        db_user=ctx["db"]["admin_user"],
-        db_password=ctx["db"]["admin_password"],
+        db_user=ctx.obj["station_config"]["db"]["admin_user"],
+        db_password=ctx.obj["station_config"]["db"]["admin_password"],
     )
 
     with open(authup_config_path, "w") as f:
@@ -285,11 +287,11 @@ def write_traefik_configs(ctx) -> Tuple[str, str]:
     click.echo("Setting up traefik... ", nl=False)
     try:
         traefik_config, router_config = templates.render_traefik_configs(
-            http_port=ctx.obj["http"]["port"],
-            https_port=ctx.obj["https"]["port"],
+            http_port=ctx.obj["station_config"]["http"]["port"],
+            https_port=ctx.obj["station_config"]["https"]["port"],
             https_enabled=True,
-            domain=ctx.obj["https"]["domain"],
-            certs=ctx.obj["https"]["certs"],
+            domain=ctx.obj["station_config"]["https"]["domain"],
+            certs=ctx.obj["station_config"]["https"]["certificate"],
         )
 
         traefik_path = os.path.join(
@@ -331,11 +333,12 @@ def write_airflow_config(ctx) -> str:
     click.echo("Setting up airflow... ", nl=False)
     try:
         db_connection_string = (
-            f"postgresql+psycopg2://{ctx.obj['db']['admin_user']}:{ctx.obj['db']['admin_password']}"
+            f"postgresql+psycopg2://{ctx.obj['station_config']['db']['admin_user']}:{ctx.obj['station_config']['db']['admin_password']}"
             f"@postgres/airflow"
         )
         airflow_config = templates.render_airflow_config(
-            sql_alchemy_conn=db_connection_string, domain=ctx.obj["https"]["domain"]
+            sql_alchemy_conn=db_connection_string,
+            domain=ctx.obj["station_config"]["https"]["domain"],
         )
 
         path = _get_base_path(ctx)
@@ -371,7 +374,7 @@ def write_compose_file(ctx):
         nl=False,
     )
 
-    content = templates.render_compose(config=ctx.obj)
+    content = templates.render_compose(ctx=ctx.obj)
     with open(compose_path, "w") as f:
         f.write(content)
 

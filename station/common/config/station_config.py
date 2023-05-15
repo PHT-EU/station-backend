@@ -132,11 +132,6 @@ class StationSettings(BaseSettings):
                 f"Field {field} does not exist in model {self.__class__.__name__}"
             )
 
-        # if not hasattr(self, field):
-        #     raise ValueError(
-        #         f"Field {field} does not exist in model {self.__class__.__name__}"
-        #     )
-
 
 class ServiceSettings(StationSettings):
     """Model that contains common settings for configuring the connection to a service
