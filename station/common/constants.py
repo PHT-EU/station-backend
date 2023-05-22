@@ -66,10 +66,11 @@ class DataDirectories(str, Enum):
     LOCAL_TRAINS = "localtrains"
 
 
-class ServiceDirectories(Enum):
+class ServiceNames(Enum):
     AUTH = "auth"
     POSTGRES = "postgres"
     REDIS = "redis"
+    MINIO = "minio"
 
 
 class Icons(Enum):

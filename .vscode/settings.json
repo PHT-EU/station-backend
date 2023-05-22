@@ -1,6 +1,7 @@
 {
     "files.associations": {
-        "*.tmpl": "jinja"
+        "*.tmpl": "jinja",
+        "Dockerfile*": "dockerfile"
     },
     "python.analysis.typeCheckingMode": "off",
     "[python]": {
