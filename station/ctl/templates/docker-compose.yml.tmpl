@@ -41,14 +41,13 @@ services:
     container_name: pht-station-auth
     restart: unless-stopped
     volumes:
-      - {{ auth_config.config_path }}:/usr/src/app/writable/authup.api.conf
+      - {{ auth_config.config_path }}:/usr/src/writable/authup.api.conf
     ports:
       - "{{ auth_config.port }}:3000"
     labels:{% for label in auth_config.labels %}
       - {{ label }}
       {%- endfor %}
-    command:
-      - api start
+    command: api start
 
   api:
     image: {{ pht_images.api }}:{{ version }}
