@@ -3,7 +3,7 @@ from enum import Enum
 
 import click
 
-from station.ctl.constants import DataDirectories, PHTDirectories, ServiceDirectories
+from station.common.constants import DataDirectories, PHTDirectories, ServiceNames
 
 
 def check_create_pht_dirs(path):
@@ -13,7 +13,7 @@ def check_create_pht_dirs(path):
     # check that pht directories exist
     pht_dir_check = _check_dirs_from_enum(path, PHTDirectories)
     service_dir_check = _check_dirs_from_enum(
-        os.path.join(path, PHTDirectories.SERVICE_DATA_DIR.value), ServiceDirectories
+        os.path.join(path, PHTDirectories.SERVICE_DATA_DIR.value), ServiceNames
     )
 
     if pht_dir_check and service_dir_check:
@@ -36,7 +36,7 @@ def create_pht_dirs(path):
     _make_dirs_from_enum(path, PHTDirectories)
     # create subdirectories for storing service data
     service_path = os.path.join(path, PHTDirectories.SERVICE_DATA_DIR.value)
-    _make_dirs_from_enum(service_path, ServiceDirectories)
+    _make_dirs_from_enum(service_path, ServiceNames)
     # create subdirectories for storing station data (mount point for minio data)
     data_path = os.path.join(path, PHTDirectories.STATION_DATA_DIR.value)
     _make_dirs_from_enum(data_path, DataDirectories)

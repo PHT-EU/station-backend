@@ -1,6 +1,8 @@
 import os
 from typing import Generator
 
+from authup.plugins.fastapi import AuthupUser
+
 from station.app.db.session import SessionLocal
 
 # reusable_oauth2 = OAuth2PasswordBearer(
@@ -23,3 +25,9 @@ def fernet_key() -> bytes:
         # TODO load key from station config file
         pass
     return fernet_key.encode()
+
+
+auth_url = os.getenv("AUTH_SERVER_HOST")
+
+
+authorized_user = AuthupUser(url=auth_url)

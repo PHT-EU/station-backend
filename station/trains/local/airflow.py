@@ -9,8 +9,11 @@ from station.app.crud.crud_local_train import local_train
 from station.app.crud.crud_train_configs import docker_train_config
 from station.app.crud.local_train_master_image import local_train_master_image
 from station.app.schemas.local_trains import LocalTrainExecution
-from station.clients.airflow.client import airflow_client
-from station.clients.airflow.docker_trains import process_dataset, process_db_config
+from station.common.clients.airflow.client import airflow_client
+from station.common.clients.airflow.docker_trains import (
+    process_dataset,
+    process_db_config,
+)
 
 
 class FHIRConfig(BaseModel):

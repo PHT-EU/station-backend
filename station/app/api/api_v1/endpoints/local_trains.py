@@ -9,7 +9,7 @@ from station.app.config import clients
 from station.app.crud.crud_local_train import local_train
 from station.app.schemas import local_trains
 from station.app.schemas.datasets import MinioFile
-from station.ctl.constants import DataDirectories
+from station.common.constants import DataDirectories
 from station.trains.local.airflow import run_local_train
 
 router = APIRouter()

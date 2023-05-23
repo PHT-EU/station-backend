@@ -5,7 +5,7 @@ import requests.auth
 from pydantic import BaseModel
 from requests import HTTPError
 
-from station.clients.base import BaseClient
+from station.common.clients.base import BaseClient
 
 ModelType = TypeVar("ModelType", bound=BaseModel)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
@@ -30,7 +30,6 @@ class ResourceClient(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self._client = client
 
     def create(self, data: Union[CreateSchemaType, dict]) -> ModelType:
-
         if isinstance(data, dict):
             data = self.model(**data)
         response = requests.post(

@@ -2,9 +2,9 @@ import os
 
 import click
 
+from station.common.constants import Icons
 from station.ctl.config import find_config, load_config
-from station.ctl.config.command import config
-from station.ctl.constants import Icons
+from station.ctl.config.command import settings
 from station.ctl.fhir.command import fhir
 from station.ctl.install.command import install
 
@@ -18,7 +18,7 @@ from station.ctl.install.command import install
 @click.pass_context
 def cli(ctx, config):
     if config:
-        ctx.obj = load_config(config)
+        ctx.obj["station_config"] = load_config(config)
     else:
         click.echo(
             f"No config file given. Looking for config file in current directory({str(os.getcwd())})... ",
@@ -26,7 +26,9 @@ def cli(ctx, config):
         )
         try:
             config_dict, path = find_config(os.getcwd())
-            ctx.obj = config_dict
+            if not ctx.obj:
+                ctx.obj = {}
+            ctx.obj["station_config"] = config_dict
             ctx.obj["config_path"] = path
             click.echo(Icons.CHECKMARK.value)
         except FileNotFoundError:
@@ -50,7 +52,7 @@ def update(ctx):
 
 
 cli.add_command(install)
-cli.add_command(config)
+cli.add_command(settings)
 cli.add_command(fhir)
 
 if __name__ == "__main__":

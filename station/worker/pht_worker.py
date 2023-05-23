@@ -5,8 +5,8 @@ from dotenv import find_dotenv, load_dotenv
 from sqlalchemy.orm import Session
 
 from station.app.crud import federated_trains
-from station.clients.conductor import ConductorRESTClient
-from station.clients.minio import MinioClient
+from station.common.clients.conductor import ConductorRESTClient
+from station.common.clients.minio import MinioClient
 from station.worker import SessionLocal
 from station.worker.discovery import perform_discovery
 from station.worker.loader import BaseLoader, MinioFolderDS, ModelLoader

@@ -1,12 +1,20 @@
 import os
 import random
 import string
-from typing import Tuple
+from typing import Any
 
 from cryptography.fernet import Fernet
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
+from pydantic import BaseModel
+
+
+class GeneratorResult(BaseModel):
+    """Base class for generator results"""
+
+    loc: tuple
+    value: Any
 
 
 def password_generator() -> str:
@@ -17,7 +25,7 @@ def password_generator() -> str:
 
 def generate_private_key(
     name: str, path: str = None, password: str = None
-) -> Tuple[str, rsa.RSAPrivateKey, rsa.RSAPublicKey]:
+) -> list[GeneratorResult]:
     private_key = rsa.generate_private_key(
         65537, key_size=2048, backend=default_backend()
     )
@@ -40,10 +48,8 @@ def generate_private_key(
     # if a path is given append the name of the private key to this path
     if path:
         private_key_path = os.path.join(path, name)
-    else:
-        private_key_path = os.getcwd().join(name)
-    with open(private_key_path, "wb") as f:
-        f.write(pem)
+        with open(private_key_path, "wb") as f:
+            f.write(pem)
 
     # generate public key and store it under the same name as .pub
     pub_name = name.split(".")[0] + ".pub"
@@ -59,9 +65,18 @@ def generate_private_key(
             )
         )
 
-    return name, private_key, private_key.public_key()
+    results = [GeneratorResult(loc=("central", "private_key"), value=private_key_path)]
+
+    if password:
+        results.append(
+            GeneratorResult(loc=("central", "private_key_password"), value=password)
+        )
+
+    return results
 
 
-def generate_fernet_key() -> str:
+def generate_fernet_key() -> GeneratorResult:
     key = Fernet.generate_key()
-    return key.decode()
+
+    result = GeneratorResult(loc=("api", "fernet_key"), value=key.decode())
+    return result

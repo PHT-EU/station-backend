@@ -3,7 +3,7 @@ from typing import Union
 from sqlalchemy.orm import Session
 
 from station.app.crud import docker_trains
-from station.clients.harbor_client import HarborClient
+from station.common.clients.harbor_client import HarborClient
 
 
 def sync_db_with_registry(db: Session, station_id: Union[str, int] = None):

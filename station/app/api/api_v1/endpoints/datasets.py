@@ -17,7 +17,7 @@ from station.app.schemas.datasets import (
     DataSetUpdate,
     MinioFile,
 )
-from station.ctl.constants import DataDirectories
+from station.common.constants import DataDirectories
 
 router = APIRouter()
 

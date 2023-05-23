@@ -4,11 +4,16 @@ version = "0.1.0"
 description = "Python library for handling containerized PHT trains"
 authors = ["Michael Graf <michael.graf@uni-tuebingen.com>"]
 readme = "README.md"
-packages = [{include = "station"}]
-include = ["station/ctl/templates/*.tmpl", "station/ctl/templates/traefik/*.tmpl"]
+packages = [{ include = "station" }]
+include = [
+    "station/ctl/templates/*.tmpl",
+    "station/ctl/templates/traefik/*.tmpl",
+    "station/ctl/templates/authup/*.tmpl",
+]
 
 [tool.poetry.scripts]
 station_ctl = "station.ctl.cli:cli"
+station_api = "station.app.run_station:main"
 
 
 [tool.poetry.dependencies]
@@ -34,17 +39,17 @@ rich = "*"
 plotly = "*"
 s3fs = "*"
 python-multipart = "*"
-redis = "4.4.2"
+redis = "*"
+authup = "^0.5.0"
 
 [tool.poetry.group.dev.dependencies]
-ruff = "^0.0.230"
-pytest = "^7.2.0"
-black = "^22.12.0"
-coverage = "^7.0.1"
-python-dotenv = "^0.21.0"
-pytest-dotenv = "^0.5.2"
-pytest-asyncio = "^0.20.3"
-pre-commit = "^2.21.0"
+ruff = "*"
+pytest = "*"
+black = "*"
+coverage = "*"
+pytest-dotenv = "*"
+pytest-asyncio = "*"
+pre-commit = "*"
 
 
 [tool.ruff]
@@ -54,7 +59,11 @@ line-length = 120
 # Enable Pyflakes `E` and `F` codes by default.
 select = ["E", "F", "I001"]
 ignore = []
-per-file-ignores = { "**/__init__.py" = ["F401"], "station/app/db/base" = ["F401"]}
+per-file-ignores = { "**/__init__.py" = [
+    "F401",
+], "station/app/db/base" = [
+    "F401",
+] }
 
 # Exclude a variety of commonly ignored directories.
 exclude = [

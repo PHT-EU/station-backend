@@ -1,0 +1,85 @@
+# configure station variables
+id: "d7b7bd69-c828-45f3-b0bc-0d5ca10a8cd5"
+version: "latest"
+
+# station runtime environment set to development to allow for debugging and reduced security settings
+# if no value is given or any value other than 'development' is given it defaults to a production environment
+environment: "development"
+
+# configure the admin password for the station (username: admin)
+admin_password: "GucVuG6MgVyy58v8Xjg3o4jTnAyNrP1k"
+
+# set the station data directory where the station will store the data used for local analysis
+data_dir: "./station_data"
+
+# Configure authentication for central services
+central:
+  api_url: "https://dev.personalhealthtrain.de/api"
+  robot_id: "123456"
+  robot_secret: "dsjaldjalskjd"
+  private_key: ./private.pem
+  private_key_password: ""
+
+# Configure which port the proxy should use to listen for http requests
+http:
+  port: "80"
+
+# Configure which port the proxy should use to listen for https requests
+https:
+  port: "443"
+  # Set the domain name for tls certificate either based on the existing certificate or to be used for self-signed certs
+  domain: "station.localhost"
+  # list of paths to certificate files (cert/key)
+  certificate:
+    cert: ./cert.pem
+    key: ./key.pem
+
+# Configure the port for the traefik dashboard, can be disabled by settings disabled: true for the dashboard
+traefik:
+  dashboard: True
+  dashboard_port: 8081
+#   disabled: True
+
+# Configures the address and credentials for the central container registry
+registry:
+  address: "dev-harbor.personalhealthtrain.de"
+  user: "robot$dev"
+  password: "valid-password"
+  project: "dev-project"
+
+# configure admin user for the postgres database
+db:
+  host: "127.0.0.1"
+  port: 5432
+  admin_user: "admin"
+  admin_password: "B2wXNUgas09pM8WsiLCKMmKIEg1Fa1ow"
+
+api:
+  # Fernet key for encryption of sensitive values stored in the database
+  fernet_key: "Z_kebTcA7p2VV9xga-ES2wCMjvfaRNzQktjsxo5vPMM="
+
+redis:
+  host: "127.0.0.1"
+  port: 6379
+
+# configure airflow connection
+airflow:
+  host: "127.0.0.1"
+  port: 8080
+  # set admin user and password for airflow
+  admin_user: "admin"
+  admin_password: "start123"
+
+# Configure the connection to the authentication server as well as the admin accounts
+auth:
+  host: "127.0.0.1"
+  port: 3001
+  robot_id: 5f77fe3f-a48c-46be-ba67-df6b1058ebcb
+  robot_secret: v1ziczynshyotuzudc8ymumjtijli9yoo1mygyrv2ucqdm77lae6d5pni6xh5vp4
+
+# configure minio connection
+minio:
+  host: "127.0.0.1"
+  port: 9000
+  admin_user: "minio_admin"
+  admin_password: "minio_admin"

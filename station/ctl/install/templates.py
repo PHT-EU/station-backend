@@ -4,11 +4,11 @@ from typing import List, Tuple
 from jinja2 import Environment
 
 from station.app.env import StationEnvironmentVariables
-from station.ctl.constants import PHTDirectories, PHTImages, ServiceImages
+from station.common.constants import PHTDirectories, PHTImages, ServiceImages
 from station.ctl.util import get_template_env
 
 
-def render_compose(config: dict, env: Environment = None) -> str:
+def render_compose(ctx: dict, env: Environment = None) -> str:
     """
     Render the docker-compose.yml file for the given config.
 
@@ -22,6 +22,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
     if not env:
         env = get_template_env()
     template = env.get_template("docker-compose.yml.tmpl")
+    config = ctx["station_config"]
 
     service_images = {
         "db": ServiceImages.POSTGRES.value,
@@ -38,12 +39,12 @@ def render_compose(config: dict, env: Environment = None) -> str:
     }
     host_path = config.get("host_path", None)
 
-    install_dir = host_path if host_path else config["install_dir"]
+    install_dir = host_path if host_path else ctx["install_dir"]
 
     service_data_dir = os.path.join(install_dir, PHTDirectories.SERVICE_DATA_DIR.value)
 
     db_config = {
-        "init_sql_path": config["init_sql_path"],
+        "init_sql_path": ctx["init_sql_path"],
         "env": {
             "POSTGRES_USER": config["db"]["admin_user"],
             "POSTGRES_PASSWORD": config["db"]["admin_password"],
@@ -56,8 +57,8 @@ def render_compose(config: dict, env: Environment = None) -> str:
         "http_port": config["http"]["port"],
         "https_port": config["https"]["port"],
         "labels": ["traefik.enable=true", "traefik.http.routers.traefik=true"],
-        "traefik_config": config["traefik_config_path"],
-        "router_config": config["router_config_path"],
+        "traefik_config": ctx["traefik_config_path"],
+        "router_config": ctx["router_config_path"],
         "certs_dir": certs_dir,
     }
 
@@ -69,6 +70,8 @@ def render_compose(config: dict, env: Environment = None) -> str:
             "PUBLIC_URL": auth_url,
             "AUTHORIZE_REDIRECT_URL": auth_url,
         },
+        "port": config["auth"]["port"],
+        "config_path": ctx["authup_config_path"],
         "labels": [
             "traefik.enable=true",
             "traefik.http.routers.auth.tls=true",
@@ -90,7 +93,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
 
     api_config = {
         "env": {
-            "STATION_ID": config["station_id"],
+            "STATION_ID": config["id"],
             StationEnvironmentVariables.STATION_DB.value: db_connection_string,
             StationEnvironmentVariables.FERNET_KEY.value: config["api"]["fernet_key"],
             StationEnvironmentVariables.ENVIRONMENT.value: config["environment"],
@@ -111,7 +114,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
             ],
             StationEnvironmentVariables.REDIS_HOST.value: "redis",
             StationEnvironmentVariables.AUTH_SERVER_HOST.value: "http://auth",
-            StationEnvironmentVariables.AUTH_SERVER_PORT.value: 3010,
+            StationEnvironmentVariables.AUTH_SERVER_PORT.value: config["auth"]["port"],
             StationEnvironmentVariables.AUTH_ROBOT_ID.value: config["auth"]["robot_id"],
             StationEnvironmentVariables.AUTH_ROBOT_SECRET.value: config["auth"][
                 "robot_secret"
@@ -126,18 +129,14 @@ def render_compose(config: dict, env: Environment = None) -> str:
             StationEnvironmentVariables.REGISTRY_PROJECT.value: config["registry"][
                 "project"
             ],
-            StationEnvironmentVariables.CENTRAL_API_URL.value: config["central"][
-                "api_url"
-            ],
+            StationEnvironmentVariables.CENTRAL_API_URL.value: config["central"]["url"],
             StationEnvironmentVariables.STATION_ROBOT_ID.value: config["central"][
                 "robot_id"
             ],
             StationEnvironmentVariables.STATION_ROBOT_SECRET.value: config["central"][
                 "robot_secret"
             ],
-            StationEnvironmentVariables.STATION_DATA_DIR.value: config[
-                "station_data_dir"
-            ],
+            StationEnvironmentVariables.STATION_DATA_DIR.value: config["data_dir"],
         },
         "labels": [
             "traefik.enable=true",
@@ -172,7 +171,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
         key_path = config["central"]["private_key"]
     airflow_config = {
         "private_key": key_path,
-        "config_path": config["airflow_config_path"],
+        "config_path": ctx["airflow_config_path"],
         "env": {
             "STATION_ID": config["registry"]["project"],
             "AIRFLOW_USER": config["airflow"]["admin_user"],
@@ -190,7 +189,7 @@ def render_compose(config: dict, env: Environment = None) -> str:
     }
 
     station_data_dir = str(
-        os.path.join(config["install_dir"], PHTDirectories.STATION_DATA_DIR.value)
+        os.path.join(ctx["install_dir"], PHTDirectories.STATION_DATA_DIR.value)
     )
 
     ui_config = {
@@ -233,6 +232,22 @@ def render_airflow_config(
     airflow_base_url = "https://" + domain + "/airflow"
     return template.render(
         airflow_base_url=airflow_base_url, sql_alchemy_conn=sql_alchemy_conn
+    )
+
+
+def render_authup_api_config(
+    auth_config: dict,
+    db_user: str,
+    db_password: str,
+    env: Environment | None = None,
+) -> str:
+    if not env:
+        env = get_template_env()
+
+    template = env.get_template("authup/authup.api.conf.tmpl")
+
+    return template.render(
+        auth_config=auth_config, db_user=db_user, db_password=db_password
     )
 
 

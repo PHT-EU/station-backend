@@ -4,7 +4,7 @@ import pprint
 import pytest
 from dotenv import find_dotenv, load_dotenv
 
-from station.clients.central.central_client import CentralApiClient
+from station.common.clients.central.central_client import CentralApiClient
 
 
 @pytest.fixture

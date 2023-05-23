@@ -3,9 +3,9 @@ import os
 from station.app.schemas.datasets import DataSet
 from station.app.schemas.local_trains import LocalTrain
 from station.app.schemas.trains import Train
-from station.clients.base import BaseClient
-from station.clients.resource_client import ResourceClient
-from station.clients.station.local_trains import LocalTrainClient
+from station.common.clients.base import BaseClient
+from station.common.clients.resource_client import ResourceClient
+from station.common.clients.station.local_trains import LocalTrainClient
 
 
 class StationAPIClient(BaseClient):
@@ -20,7 +20,6 @@ class StationAPIClient(BaseClient):
         username: str = None,
         password: str = None,
     ):
-
         super().__init__(
             base_url=base_url, auth_url=auth_url, username=username, password=password
         )
@@ -31,7 +30,6 @@ class StationAPIClient(BaseClient):
 
     @classmethod
     def from_env(cls):
-
         base_url = os.getenv("STATION_API_URL")
         username = os.getenv("STATION_USER")
         password = os.getenv("STATION_PASSWORD")

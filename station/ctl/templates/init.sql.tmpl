@@ -1,4 +1,6 @@
 CREATE DATABASE airflow;
 CREATE DATABASE pht_station;
+CREATE DATABASE authup;
 GRANT ALL PRIVILEGES ON DATABASE airflow TO {{ db_user }};
 GRANT ALL PRIVILEGES ON DATABASE pht_station TO {{ db_user }};
+GRANT ALL PRIVILEGES ON DATABASE authup TO {{ db_user }};

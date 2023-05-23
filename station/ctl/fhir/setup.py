@@ -4,7 +4,7 @@ from typing import List
 import click
 
 import docker
-from station.ctl.constants import DockerNetworks, Icons, ServiceImages
+from station.common.constants import DockerNetworks, Icons, ServiceImages
 
 
 def setup_cli(ctx: click.Context, name: str):

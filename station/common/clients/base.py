@@ -2,6 +2,7 @@ import urllib.parse
 
 import pendulum
 import requests
+from authup import Authup
 from pydantic import SecretStr
 
 
@@ -27,21 +28,25 @@ class BaseClient:
         self.token_expiration = None
         self._headers = headers
 
-        if not self.auth_url:
-            self.auth_url = f"{self.base_url}/auth/token"
+        self.auth = Authup(
+            url=self.auth_url,
+            username=self.username,
+            password=self.password,
+            robot_id=self.robot_id,
+            robot_secret=self.robot_secret,
+        )
 
-        self.setup()
+        if not self.auth_url:
+            self.auth_url = f"{self.base_url}/auth"
+
+        # self.setup()
 
     @property
     def headers(self) -> dict:
-        token = self._get_token()
-        if self._headers:
-            return {**self._headers, "Authorization": f"Bearer {token}"}
+        return self.auth.get_authorization_header()
 
-        return {"Authorization": f"Bearer {token}"}
-
-    def setup(self):
-        self._get_token()
+    # def setup(self):
+    #     self._get_token()
 
     def _get_token(self) -> str:
         if not self.token or self.token_expiration < pendulum.now():

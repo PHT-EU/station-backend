@@ -9,7 +9,7 @@ from conductor_lib.src.torch import LightningTrainModel
 from sqlalchemy.orm import Session
 
 from station.app.crud import federated_trains
-from station.clients.minio import MinioClient
+from station.common.clients.minio import MinioClient
 
 
 class ModelLoader:

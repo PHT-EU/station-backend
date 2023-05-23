@@ -1,7 +1,7 @@
 import click
 
 import docker
-from station.ctl.constants import Icons
+from station.common.constants import Icons
 
 
 def start_server(name: str):

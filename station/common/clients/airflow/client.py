@@ -14,7 +14,6 @@ class AirflowClient:
         airflow_user: str = None,
         airflow_password: str = None,
     ):
-
         self.airflow_url = (
             airflow_api_url
             if airflow_api_url

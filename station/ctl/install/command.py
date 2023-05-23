@@ -8,11 +8,10 @@ import click
 from rich.console import Console
 
 import docker
-from station.clients.central.central_client import CentralApiClient
+from station.common.clients.central.central_client import CentralApiClient
+from station.common.constants import Icons, PHTDirectories, PHTImages
 from station.ctl.config import fix_config, validate_config
 from station.ctl.config.command import render_config
-from station.ctl.config.validators import ConfigItemValidationStatus
-from station.ctl.constants import Icons, PHTDirectories, PHTImages
 from station.ctl.install import templates
 from station.ctl.install.docker import setup_docker
 from station.ctl.install.fs import check_create_pht_dirs
@@ -38,32 +37,41 @@ def install(ctx, install_dir, host_path):
     if not install_dir:
         install_dir = os.getcwd()
     ctx.obj["install_dir"] = install_dir
-    validation_results, table = validate_config(
-        ctx.obj, host_path=host_path, install=True
-    )
-    issues = [
-        result
-        for result in validation_results
-        if result.status != ConfigItemValidationStatus.VALID
-    ]
+    result = validate_config(ctx.obj["station_config"], host_path=host_path)
 
-    if issues:
+    if result is not None:
+        table, issues = result
         click.echo(Icons.CROSS.value)
         console = Console()
         console.print(table)
-        click.confirm(
-            "Station configuration is invalid. Please fix the errors displayed above. \n"
-            "Would you like to fix the configuration now?",
-            abort=True,
-        )
-        station_config = fix_config(ctx.obj, ctx.obj, validation_results)
-        ctx.obj = station_config
-        render_config(ctx.obj, ctx.obj["config_path"])
+
+        if ctx.obj["environment"] == "production":
+            click.confirm(
+                "Station configuration is invalid. Please fix the errors displayed above. \n"
+                "Would you like to fix the configuration now?",
+                abort=True,
+            )
+            fixed_config = fix_config(ctx.obj, ctx.obj["station_config"], issues)
+            # merge config with fixed config
+            ctx.obj = ctx.obj | fixed_config
+            render_config(ctx.obj["station_config"], ctx.obj["config_path"])
+
+        else:
+            res = click.prompt(
+                "Station configuration is invalid. Press enter to fix the configuration now. "
+                "[dev mode detected enter (skip) to continue]",
+                default="y",
+            )
+            if res == "y":
+                fixed_config = fix_config(ctx.obj, ctx.obj["station_config"], issues)
+                ctx.obj["station_config"] = ctx.obj["station_config"] | fixed_config
+                render_config(ctx.obj["station_config"], ctx.obj["config_path"])
+            else:
+                click.echo("Skipping configuration fix.")
 
     else:
         click.echo(Icons.CHECKMARK.value)
 
-    host_path = ctx.obj.get("host_path")
     click.echo(
         "Installing station software to {}".format(
             host_path if host_path else install_dir
@@ -82,7 +90,7 @@ def install(ctx, install_dir, host_path):
     # download_docker_images(ctx)
 
     # setup_auth_server
-    _setup_auth_server(ctx)
+    # _setup_auth_server(ctx)
 
     # copy certificates to install dir
     # copy_certificates(ctx)
@@ -93,6 +101,7 @@ def install(ctx, install_dir, host_path):
     ctx.obj["traefik_config_path"] = traefik_config_path
     ctx.obj["router_config_path"] = router_config_path
     ctx.obj["airflow_config_path"] = write_airflow_config(ctx)
+    ctx.obj["authup_config_path"] = write_authup_config(ctx)
 
     # render the updated configuration file
     render_config(ctx.obj, ctx.obj["config_path"])
@@ -103,12 +112,12 @@ def install(ctx, install_dir, host_path):
 
 def _request_registry_credentials(ctx):
     click.echo("Requesting registry credentials from central api... ", nl=False)
-    url = ctx.obj["central"]["api_url"]
-    client = ctx.obj["central"]["robot_id"]
-    secret = ctx.obj["central"]["robot_secret"]
+    url = ctx.obj["station_config"]["central"]["url"]
+    client = ctx.obj["station_config"]["central"]["robot_id"]
+    secret = ctx.obj["station_config"]["central"]["robot_secret"]
     client = CentralApiClient(url, client, secret)
 
-    credentials = client.get_registry_credentials(ctx.obj["station_id"])
+    credentials = client.get_registry_credentials(ctx.obj["station_config"]["id"])
     click.echo(Icons.CHECKMARK.value)
 
     return credentials
@@ -202,7 +211,6 @@ def _setup_auth_server(ctx):
         raise Exception("Could not get robot credentials from auth server")
 
     else:
-
         auth = {
             "robot_id": robot_id,
             "robot_secret": robot_secret,
@@ -216,8 +224,7 @@ def _setup_auth_server(ctx):
 def write_init_sql(ctx) -> str:
     click.echo("Setting up database... ", nl=False)
     try:
-
-        db_config = ctx.obj["db"]
+        db_config = ctx.obj["station_config"]["db"]
         init_sql_path = os.path.join(
             ctx.obj["install_dir"],
             str(PHTDirectories.SETUP_SCRIPT_DIR.value),
@@ -242,15 +249,49 @@ def write_init_sql(ctx) -> str:
         sys.exit(1)
 
 
+def write_authup_config(ctx):
+    authup_path = os.path.join(
+        ctx.obj["install_dir"], str(PHTDirectories.CONFIG_DIR.value), "authup"
+    )
+    os.makedirs(authup_path, exist_ok=True)
+    authup_config_path = os.path.join(authup_path, "authup.api.conf")
+
+    auth_config = {
+        "admin_password": ctx.obj["station_config"]["admin_password"],
+        "port": ctx.obj["station_config"]["auth"]["port"],
+        "public_url": "https://"
+        + ctx.obj["station_config"]["https"]["domain"]
+        + "/auth",
+    }
+
+    config = templates.render_authup_api_config(
+        auth_config=auth_config,
+        db_user=ctx.obj["station_config"]["db"]["admin_user"],
+        db_password=ctx.obj["station_config"]["db"]["admin_password"],
+    )
+
+    with open(authup_config_path, "w") as f:
+        f.write(config)
+
+    authup_config_mount_path = os.path.join(
+        _get_base_path(ctx),
+        str(PHTDirectories.CONFIG_DIR.value),
+        "authup",
+        "authup.api.conf",
+    )
+
+    return authup_config_mount_path
+
+
 def write_traefik_configs(ctx) -> Tuple[str, str]:
     click.echo("Setting up traefik... ", nl=False)
     try:
         traefik_config, router_config = templates.render_traefik_configs(
-            http_port=ctx.obj["http"]["port"],
-            https_port=ctx.obj["https"]["port"],
+            http_port=ctx.obj["station_config"]["http"]["port"],
+            https_port=ctx.obj["station_config"]["https"]["port"],
             https_enabled=True,
-            domain=ctx.obj["https"]["domain"],
-            certs=ctx.obj["https"]["certs"],
+            domain=ctx.obj["station_config"]["https"]["domain"],
+            certs=ctx.obj["station_config"]["https"]["certificate"],
         )
 
         traefik_path = os.path.join(
@@ -291,20 +332,16 @@ def write_traefik_configs(ctx) -> Tuple[str, str]:
 def write_airflow_config(ctx) -> str:
     click.echo("Setting up airflow... ", nl=False)
     try:
-
         db_connection_string = (
-            f"postgresql+psycopg2://{ctx.obj['db']['admin_user']}:{ctx.obj['db']['admin_password']}"
+            f"postgresql+psycopg2://{ctx.obj['station_config']['db']['admin_user']}:{ctx.obj['station_config']['db']['admin_password']}"
             f"@postgres/airflow"
         )
         airflow_config = templates.render_airflow_config(
-            sql_alchemy_conn=db_connection_string, domain=ctx.obj["https"]["domain"]
+            sql_alchemy_conn=db_connection_string,
+            domain=ctx.obj["station_config"]["https"]["domain"],
         )
 
-        host_path = ctx.obj.get("host_path")
-        if host_path:
-            path = host_path
-        else:
-            path = ctx.obj["install_dir"]
+        path = _get_base_path(ctx)
 
         airflow_config_path = os.path.join(
             path, str(PHTDirectories.CONFIG_DIR.value), "airflow.cfg"
@@ -337,8 +374,18 @@ def write_compose_file(ctx):
         nl=False,
     )
 
-    content = templates.render_compose(config=ctx.obj)
+    content = templates.render_compose(ctx=ctx.obj)
     with open(compose_path, "w") as f:
         f.write(content)
 
     click.echo(Icons.CHECKMARK.value)
+
+
+def _get_base_path(ctx) -> str:
+    host_path = ctx.obj.get("host_path")
+    if host_path:
+        path = host_path
+    else:
+        path = ctx.obj["install_dir"]
+
+    return path

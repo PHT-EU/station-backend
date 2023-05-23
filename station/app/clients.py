@@ -1,10 +1,10 @@
 from loguru import logger
 
 from station.app.settings import Settings
-from station.clients.airflow.client import AirflowClient
-from station.clients.central.central_client import CentralApiClient
-from station.clients.harbor_client import HarborClient
-from station.clients.minio.client import MinioClient
+from station.common.clients.airflow.client import AirflowClient
+from station.common.clients.central.central_client import CentralApiClient
+from station.common.clients.harbor_client import HarborClient
+from station.common.clients.minio.client import MinioClient
 
 
 class StationClients:
@@ -60,7 +60,7 @@ class StationClients:
             )
 
         self._central = CentralApiClient(
-            api_url=self.settings.config.central_ui.api_url,
+            base_url=self.settings.config.central_ui.api_url,
             robot_id=self.settings.config.central_ui.robot_id,
             robot_secret=robot_secret,
         )

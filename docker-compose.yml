@@ -4,9 +4,10 @@ volumes:
   pg_data:
   blaze_data:
 
+
 services:
   postgres:
-    image: postgres:13
+    image: postgres:14
     volumes:
       - ./setup_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
       - pg_data:/var/lib/postgresql/data
@@ -17,21 +18,14 @@ services:
       - "5432:5432"
 
   auth:
-    image: ghcr.io/tada5hi/authup-server:latest
+    image: ghcr.io/authup/authup:latest
     container_name: pht-station-auth
+    ports:
+      - "3000:3000"
+      - "3001:3001"
     volumes:
       - ./service_data/auth:/usr/src/app/writable
-    ports:
-      - '3010:3010'
-    environment:
-      PORT: 3010
-      ADMIN_USER: admin
-      ADMIN_PASSWORD: start123
-      NODE_ENV: test
-      ROBOT_ENABLED: true
-      PUBLIC_URL: http://auth:3010/
-    command:
-      - start
+    command: cli start
 
   redis:
     image: redislabs/rejson:latest
@@ -45,7 +39,7 @@ services:
     build:
       context: .
       dockerfile: ./airflow/Dockerfile
-#    image: ghcr.io/pht-medic/station-airflow:latest
+    #    image: ghcr.io/pht-medic/station-airflow:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./airflow/dags:/root/airflow/dags
@@ -96,4 +90,3 @@ services:
       - "9090:8080"
     volumes:
       - blaze_data:/app/data
-

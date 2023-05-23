@@ -1,3 +1,5 @@
+import pathlib
+
 import uvicorn
 from dotenv import find_dotenv, load_dotenv
 
@@ -16,7 +18,7 @@ def setup():
     # minio_client.setup_buckets()
 
 
-if __name__ == "__main__":
+def main():
     load_dotenv(find_dotenv())
     # setup()
     settings.setup()
@@ -24,24 +26,31 @@ if __name__ == "__main__":
     setup_db(dev=False, reset=False)
     clients.initialize()
     # cache.redis_cache = cache.Cache(settings.config.redis.host)
-    cache = Cache(
+    Cache(
         host=settings.config.redis.host,
         port=settings.config.redis.port,
         db=settings.config.redis.db,
         password=settings.config.redis.password,
     )
-    # Configure logging behaviour
-    log_config = uvicorn.config.LOGGING_CONFIG
-    log_config["formatters"]["access"][
-        "fmt"
-    ] = "%(asctime)s - %(levelname)s - %(message)s"
-    log_config["formatters"]["default"][
-        "fmt"
-    ] = "%(asctime)s - %(levelname)s - %(message)s"
+    # # Configure logging behaviour
+    # log_config = uvicorn.config.LOGGING_CONFIG
+    # log_config["formatters"]["access"][
+    #     "fmt"
+    # ] = "%(asctime)s - %(levelname)s - %(message)s"
+    # log_config["formatters"]["default"][
+    #     "fmt"
+    # ] = "%(asctime)s - %(levelname)s - %(message)s"
+
+    project_root = pathlib.Path(__file__).parent.parent
     uvicorn.run(
         "station.app.main:app",
         port=settings.config.port,
         host=settings.config.host,
         reload=settings.config.environment == StationRuntimeEnvironment.DEVELOPMENT,
-        log_config=log_config,
+        reload_dirs=[str(project_root)],
+        # log_config=log_config,
     )
+
+
+if __name__ == "__main__":
+    main()

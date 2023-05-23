@@ -21,7 +21,7 @@ from station.app.schemas.local_trains import (
     LocalTrainCreate,
     LocalTrainUpdate,
 )
-from station.ctl.constants import DataDirectories
+from station.common.constants import DataDirectories
 from station.trains.local.update import update_configuration_status
 
 

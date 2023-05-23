@@ -3,6 +3,11 @@ from enum import Enum
 CERTS_REGEX = r"https\.certs\[([0-9]*)\]"
 
 
+class ApplicationEnvironment(str, Enum):
+    DEVELOPMENT = "development"
+    PRODUCTION = "production"
+
+
 class DockerVolumes(Enum):
     POSTGRES = "pg_pht_station"
 
@@ -14,13 +19,13 @@ class DockerNetworks(Enum):
 class PHTImages(Enum):
     API = "ghcr.io/pht-medic/station-api"
     UI = "ghcr.io/pht-medic/station-ui"
-    AUTH = "ghcr.io/tada5hi/authup-server"
+    AUTH = "ghcr.io/authup/authup"
     AIRFLOW = "ghcr.io/pht-medic/airflow"
 
 
 class ServiceImages(Enum):
     MINIO = "minio/minio:RELEASE.2022-11-11T03-44-20Z"
-    POSTGRES = "postgres:13"
+    POSTGRES = "postgres:14"
     REDIS = "redislabs/rejson:latest"
     TRAEFIK = "traefik:v2.8"
     BLAZE = "samply/blaze:latest"
@@ -33,6 +38,7 @@ class DefaultValues(Enum):
 
     FERNET_KEY = "your_fernet_key"
     ADMIN = "admin"
+    ADMIN_PASSWORD = "password"
     PRIVATE_KEY = "/path/to/private_key.pem"
     STATION_DOMAIN = "example-station.com"
     CERT = "example-cert.pem"
@@ -60,10 +66,11 @@ class DataDirectories(str, Enum):
     LOCAL_TRAINS = "localtrains"
 
 
-class ServiceDirectories(Enum):
+class ServiceNames(Enum):
     AUTH = "auth"
     POSTGRES = "postgres"
     REDIS = "redis"
+    MINIO = "minio"
 
 
 class Icons(Enum):

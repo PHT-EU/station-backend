@@ -10,17 +10,24 @@ service_data/
 configs/
 certs/
 station_data/
+.ruff_cache/
+.pytest_cache/
 
+test-key.pem
+test-key.pub
 
+test-install/
 # Created by .ignore support plugin (hsz.mobi)
 ### Python template
 # Byte-compiled / optimized / DLL files
 */__pycache__/
 *.py[cod]
 *$py.class
+private.pem
 
 # C extensions
 *.so
+.env-old
 
 station_config.yml
 config.yml

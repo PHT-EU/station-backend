@@ -1,25 +1,91 @@
+import copy
 import os.path
-import re
 import sys
-from typing import Any, List
+from typing import TYPE_CHECKING, Any, List
 
 import click
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
-from station.clients.central.central_client import CentralApiClient
-from station.ctl.config.generators import generate_private_key
-from station.ctl.config.validators import (
-    ConfigItemValidationResult,
-    ConfigItemValidationStatus,
-)
-from station.ctl.constants import CERTS_REGEX, Icons, PHTDirectories
+from station.common.clients.central.central_client import CentralApiClient
+from station.common.config.fix import ConfigItemFix, GeneratorArg
+from station.common.config.generators import GeneratorResult, generate_private_key
+from station.common.config.station_config import StationConfig, StationSettings
+from station.common.constants import Icons, PHTDirectories
 from station.ctl.install.certs import generate_certificates
 
+if TYPE_CHECKING:
+    from station.ctl.config.validate import ValidationResult
 
-def fix_config(
-    ctx: dict, config: dict, results: List[ConfigItemValidationResult]
-) -> dict:
+
+def get_fixes_from_errors(config_dict: dict, errors: list[dict]) -> list[ConfigItemFix]:
+    """Takes a list of validation errors resulting from initializing the station config pydantic model and
+    returns a list of fixes that can be applied to the config to fix the errors.
+
+    Args:
+        errors: list of pydantic validation error dicts
+
+    Returns:
+        list of fixes that can be applied to the config to fix the errors
+    """
+    if len(errors) == 0:
+        return []
+
+    fixes = []
+
+    # construct the config
+    fixed_config = copy.deepcopy(config_dict)
+    config = StationConfig.construct(**fixed_config)
+    for error in errors:
+        fix = get_fix_by_loc(
+            config,
+            error["loc"],
+        )
+
+        if fix:
+            fixes.append(fix)
+        else:
+            unknown_fix = ConfigItemFix.no_fix(
+                suggestion="Unable to fix error automatically or find suggestions. Please enter manually or "
+                "contact the PHT team for help."
+            )
+            unknown_fix.issue = error["msg"]
+            fixes.append(unknown_fix)
+    return fixes
+
+
+def get_fix_by_loc(config: StationConfig, loc: tuple) -> ConfigItemFix | None:
+    """
+    Returns the fix for the given location
+    """
+
+    level = len(loc)
+
+    # get config attribute based on loc
+    if level == 1:
+        return config.get_fix(loc[0])
+    # if it is a nested config item get the fix from the submodel
+    else:
+        sub_settings = _get_settings_for_loc(config, loc=loc)
+        fix = sub_settings.get_fix(loc[-1])
+        return fix
+
+
+def _get_settings_for_loc(settings: StationSettings, loc: tuple) -> StationSettings:
+    """
+    Return the subsettings of the station settings for the given location
+    """
+    name = loc[0]
+
+    if len(loc) == 1:
+        return settings
+    # get the model for the name
+    model = getattr(settings, name)
+    # get the sub model for the rest of the loc
+    return _get_settings_for_loc(model, loc[1:])
+
+
+def fix_config(ctx: dict, config: dict, results: List["ValidationResult"]) -> dict:
     """
     Allows for interactive fixes of issues in the station configuration
     Args:
@@ -29,37 +95,71 @@ def fix_config(
     Returns:
         updated config dictionary
     """
-    strict = config["environment"] != "development"
-    fixed_config = config.copy()
+    fixed_config = copy.deepcopy(config)
     for result in results:
-        if result.status != ConfigItemValidationStatus.VALID:
-            if result.display_field == "central.private_key":
-                fixed_config["central"]["private_key"] = _fix_private_key(fixed_config)
-
-            # certs are missing completely
-            elif result.display_field == "https.certs":
-                install_dir = ctx.get("install_dir", os.getcwd())
-                _fix_certs(fixed_config, strict, install_dir)
-
-            # invalid certs
-            elif re.match(CERTS_REGEX, result.display_field):
-                index = int(re.match(CERTS_REGEX, result.display_field).group(1))
-                _fix_certs_path(fixed_config, index)
-
-            else:
-                default = ""
-                if result.generator:
-                    default = result.generator()
-
-                value = click.prompt(
-                    f"{result.display_field} is missing. {result.fix_hint}",
-                    default=default,
+        # if the fix is a generator function, run it and set the value(s) in the config based on the results
+        if result.fix.generator_function:
+            prompt_text = "Manually enter a value or enter GENERATE to interactively generate a value"
+            prompt_result = click.prompt(prompt_text, default="GENERATE")
+            if prompt_result == "GENERATE":
+                run_fix_generator(
+                    fixed_config,
+                    result.fix.generator_function,
+                    result.fix.generator_args,
                 )
-                if value:
-                    _set_config_values(fixed_config, result.display_field, value)
-                else:
-                    _set_config_values(fixed_config, result.display_field, None)
+            else:
+                _set_config_value(fixed_config, ".".join(result.loc), prompt_result)
+
+        else:
+            fixed_value = click.prompt(
+                result.fix.suggestion,
+                default=result.fix.fix if result.fix.fix else None,
+            )
+            _set_config_value(fixed_config, ".".join(result.loc), fixed_value)
+
     return fixed_config
+
+
+def run_fix_generator(
+    config: dict, generator: callable, args: list[GeneratorArg] | None
+) -> Any:
+    """
+    Runs a generator function and the configured arguments in an interactive prompt
+    """
+
+    if args is None:
+        args = []
+
+    arg_dict = {}
+    # iterate over the arguments and prompt the user for the values
+    for arg in args:
+        value = click.prompt(arg.prompt, default="" if not arg.required else None)
+        # prompt again if the value is required and not given
+        if not value and arg.required:
+            click.echo(
+                f"{Icons.FAIL.value} {arg.arg} is a required argument for the generator function."
+            )
+            value = click.prompt(
+                arg.prompt,
+            )
+            if not value:
+                click.echo(
+                    f"{Icons.FAIL.value} {arg.arg} is a required argument for the generator function. Exiting..."
+                )
+                sys.exit(1)
+        arg_dict[arg.arg] = value
+
+    # Get the result from the generator function
+    result: list[GeneratorResult] | GeneratorResult = generator(**arg_dict)
+
+    # Apply the result to the config
+    if isinstance(result, list):
+        for item in result:
+            _set_config_value(config, ".".join(item.loc), item.value)
+    else:
+        _set_config_value(config, ".".join(result.loc), result.value)
+
+    return
 
 
 def _fix_certs(config: dict, strict: bool, install_dir: str):
@@ -149,7 +249,6 @@ def _fix_private_key(config: dict) -> str:
     # if a host path is given append the name of the private key to this path
     host_path = config.get("host_path", None)
     if host_path:
-
         private_key_path = os.path.join(host_path, private_key_path)
         click.echo(
             f"Private key will be saved at: {private_key_path} on the host machine"
@@ -166,7 +265,7 @@ def _fix_private_key(config: dict) -> str:
     return private_key_path
 
 
-def _set_config_values(config: dict, field: str, value: Any):
+def _set_config_value(config: dict, field: str, value: Any):
     nested_fields = field.split(".")
     if len(nested_fields) == 1:
         config[field] = value
