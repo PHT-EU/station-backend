@@ -18,7 +18,7 @@ api_router = APIRouter()
 
 api_router.include_router(station.router, prefix="/station", tags=["Station"])
 api_router.include_router(
-    docker_trains.router, prefix="/trains/docker", tags=["PHT 1.0"]
+    docker_trains.router, prefix="/trains/docker", tags=["Trains", "PHT 1.0"]
 )
 api_router.include_router(datasets.router, prefix="/datasets", tags=["Datasets"])
 api_router.include_router(
