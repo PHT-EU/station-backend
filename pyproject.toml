@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "PHT Station Backend"
-version = "0.1.0"
+name = "pht-station"
+version = "0.2.0"
 description = "Python library for handling containerized PHT trains"
 authors = ["Michael Graf <michael.graf@uni-tuebingen.com>"]
 readme = "README.md"
