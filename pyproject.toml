@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pht-station"
-version = "0.2.0"
+version = "0.2.1"
 description = "Python library for handling containerized PHT trains"
 authors = ["Michael Graf <michael.graf@uni-tuebingen.com>"]
 readme = "README.md"
@@ -37,7 +37,7 @@ jinja2 = "*"
 click = "*"
 rich = "*"
 plotly = "*"
-s3fs = "*"
+# s3fs = "*"
 python-multipart = "*"
 redis = "*"
 authup = "^0.5.0"
