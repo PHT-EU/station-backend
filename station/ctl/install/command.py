@@ -45,7 +45,7 @@ def install(ctx, install_dir, host_path):
         console = Console()
         console.print(table)
 
-        if ctx.obj["environment"] == "production":
+        if ctx.obj["station_config"]["environment"] == "production":
             click.confirm(
                 "Station configuration is invalid. Please fix the errors displayed above. \n"
                 "Would you like to fix the configuration now?",
@@ -53,7 +53,7 @@ def install(ctx, install_dir, host_path):
             )
             fixed_config = fix_config(ctx.obj, ctx.obj["station_config"], issues)
             # merge config with fixed config
-            ctx.obj = ctx.obj | fixed_config
+            ctx.obj["station_config"] = ctx.obj["station_config"] | fixed_config
             render_config(ctx.obj["station_config"], ctx.obj["config_path"])
 
         else:
