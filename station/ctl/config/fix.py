@@ -9,7 +9,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 
 from station.common.clients.central.central_client import CentralApiClient
 from station.common.config.fix import ConfigItemFix, GeneratorArg
-from station.common.config.generators import GeneratorResult, generate_private_key
+from station.common.config.generators import GeneratorResult
 from station.common.config.station_config import StationConfig, StationSettings
 from station.common.constants import Icons, PHTDirectories
 from station.ctl.install.certs import generate_certificates
@@ -97,9 +97,9 @@ def fix_config(ctx: dict, config: dict, results: List["ValidationResult"]) -> di
     """
     fixed_config = copy.deepcopy(config)
     for result in results:
-        # if the fix is a generator function, run it and set the value(s) in the config based on the results
+        # if the fix is a generator function, run it and set the value(s) in the config based on the result
+        prompt_text = _make_prompt_text(result)
         if result.fix.generator_function:
-            prompt_text = "Manually enter a value or enter GENERATE to interactively generate a value"
             prompt_result = click.prompt(prompt_text, default="GENERATE")
             if prompt_result == "GENERATE":
                 run_fix_generator(
@@ -112,10 +112,12 @@ def fix_config(ctx: dict, config: dict, results: List["ValidationResult"]) -> di
 
         else:
             fixed_value = click.prompt(
-                result.fix.suggestion,
+                prompt_text,
                 default=result.fix.fix if result.fix.fix else None,
             )
             _set_config_value(fixed_config, ".".join(result.loc), fixed_value)
+
+    ctx["station_config"] = fixed_config
 
     return fixed_config
 
@@ -195,76 +197,6 @@ def _fix_certs(config: dict, strict: bool, install_dir: str):
     config["https"]["certs"] = cert_list
 
 
-def _fix_certs_path(config: dict, index: int, strict: bool = False):
-    cert_path = config["https"]["certs"][index]["cert"]
-    key_path = config["https"]["certs"][index]["key"]
-
-    print(cert_path, key_path)
-    if not cert_path and not key_path:
-        _fix_certs(config, strict, config.get("install_dir", os.getcwd()))
-        return
-    if not os.path.isfile(cert_path):
-        cert_path = click.prompt(
-            f"Certificate at {cert_path} does not exist. "
-            f"Please enter the correct path to the certificate file"
-        )
-        if not os.path.isfile(cert_path):
-            click.echo("Certificate path is invalid", err=True)
-        cert_path = str(os.path.abspath(cert_path))
-    if not os.path.isfile(key_path):
-        key_path = click.prompt(
-            f"Key at {key_path} does not exist. "
-            f"Please enter the correct path to the key file"
-        )
-        if not os.path.isfile(key_path):
-            click.echo("Key path is invalid", err=True)
-        key_path = str(os.path.abspath(key_path))
-
-    config["https"]["certs"][index]["cert"] = cert_path
-    config["https"]["certs"][index]["key"] = key_path
-
-
-def _fix_private_key(config: dict) -> str:
-    path = click.prompt(
-        "Private key is missing enter the path to the private key "
-        "file or press enter to generate a new one",
-        default="GENERATE",
-    )
-    if path and path != "GENERATE":
-        if not os.path.isfile(path):
-            raise click.BadParameter(f"{path} is not a file")
-        else:
-            return path
-    name = click.prompt("Name your private key file")
-    passphrase = click.prompt(
-        "Enter your passphrase. If given, it will be used to encrypt the private key",
-        default="",
-    )
-    private_key_path, private_key, public_key = generate_private_key(
-        name, config.get("install_dir"), passphrase
-    )
-    if passphrase:
-        config["central"]["private_key_password"] = passphrase
-
-    # if a host path is given append the name of the private key to this path
-    host_path = config.get("host_path", None)
-    if host_path:
-        private_key_path = os.path.join(host_path, private_key_path)
-        click.echo(
-            f"Private key will be saved at: {private_key_path} on the host machine"
-        )
-    else:
-        private_key_path = os.path.abspath(private_key_path)
-        click.echo(f"New private key created: {private_key_path}")
-
-    click.echo("Submitting public key to central API...", nl=False)
-    # submit public key to central API
-    _submit_public_key(config, public_key)
-    click.echo(Icons.CHECKMARK.value)
-
-    return private_key_path
-
-
 def _set_config_value(config: dict, field: str, value: Any):
     nested_fields = field.split(".")
     if len(nested_fields) == 1:
@@ -288,3 +220,20 @@ def _submit_public_key(config: dict, public_key: rsa.RSAPublicKey):
         format=serialization.PublicFormat.SubjectPublicKeyInfo,
     ).hex()
     client.update_public_key(config["station_id"], hex_key)
+
+
+def _make_prompt_text(result: "ValidationResult") -> str:
+    """Generates a prompt text for the given validation result
+
+    Args:
+        result: validation result to generate the prompt text for
+
+    Returns:
+        String prompt text to display to the user
+    """
+    string_loc = ".".join(result.loc)
+    prompt_text = f"Manually enter a value for {string_loc}"
+    if result.fix.generator_function:
+        prompt_text = f"Manually enter a value for {string_loc} or enter GENERATE to generate a valid value."
+
+    return prompt_text

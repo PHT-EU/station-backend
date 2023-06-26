@@ -1,12 +1,15 @@
+import datetime
 import os
 import random
 import string
 from typing import Any
 
+from cryptography import x509
 from cryptography.fernet import Fernet
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.x509.oid import NameOID
 from pydantic import BaseModel
 
 
@@ -80,3 +83,60 @@ def generate_fernet_key() -> GeneratorResult:
 
     result = GeneratorResult(loc=("api", "fernet_key"), value=key.decode())
     return result
+
+
+def generate_self_signed_cert(
+    domain_name: str, path: str = None
+) -> list[GeneratorResult]:
+    # Generate a new private key
+    private_key = rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=2048,
+    )
+
+    # Create a new self-signed certificate
+    subject = issuer = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, domain_name)])
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(issuer)
+        .public_key(private_key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(datetime.datetime.utcnow())
+        .not_valid_after(datetime.datetime.utcnow() + datetime.timedelta(days=365))
+        .add_extension(
+            x509.SubjectAlternativeName([x509.DNSName(domain_name)]),
+            critical=False,
+        )
+        .sign(private_key, hashes.SHA256())
+    )
+
+    # Write our certificate out to disk.
+    if not path:
+        path = os.getcwd()
+    else:
+        # make the path absolute
+        path = os.path.abspath(path)
+
+    cert_path = os.path.join(path, "cert.pem")
+    key_path = os.path.join(path, "key.pem")
+
+    with open(cert_path, "wb") as f:
+        f.write(cert.public_bytes(serialization.Encoding.PEM))
+
+    with open(key_path, "wb") as f:
+        f.write(
+            private_key.private_bytes(
+                serialization.Encoding.PEM,
+                serialization.PrivateFormat.TraditionalOpenSSL,
+                serialization.NoEncryption(),
+            )
+        )
+
+    results = [
+        GeneratorResult(loc=("https", "certificate", "cert"), value=cert_path),
+        GeneratorResult(loc=("https", "certificate", "cert"), value=key_path),
+    ]
+
+    # Return the results containing the certificate and private key path
+    return results

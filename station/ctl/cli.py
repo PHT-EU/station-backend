@@ -2,6 +2,7 @@ import os
 
 import click
 
+from station.common.config.generators import generate_self_signed_cert
 from station.common.constants import Icons
 from station.ctl.config import find_config, load_config
 from station.ctl.config.command import settings
@@ -19,6 +20,7 @@ from station.ctl.install.command import install
 def cli(ctx, config):
     if config:
         ctx.obj["station_config"] = load_config(config)
+        ctx.obj["config_path"] = config
     else:
         click.echo(
             f"No config file given. Looking for config file in current directory({str(os.getcwd())})... ",
@@ -49,6 +51,21 @@ def uninstall(ctx):
 def update(ctx):
     # todo
     click.echo("Coming soon...")
+
+
+@cli.command(
+    help="Generate self signed certificates for the given domain to be used for development/testing purposes."
+)
+@click.argument("domain")
+@click.option(
+    "--path",
+    "-p",
+    type=click.Path(exists=True),
+    help="Path to the directory where the certificates should be stored. If none assumes CWD.",
+)
+@click.pass_context
+def certs(ctx, domain, path):
+    generate_self_signed_cert(domain, path)
 
 
 cli.add_command(install)

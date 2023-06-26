@@ -3,8 +3,7 @@ import os
 import click
 from rich.console import Console
 
-from station.common.constants import Icons
-from station.ctl.config import find_config, fix_config, load_config
+from station.ctl.config import fix_config
 from station.ctl.config.validate import validate_config
 from station.ctl.util import get_template_env
 
@@ -20,27 +19,17 @@ from station.ctl.util import get_template_env
 def settings(ctx, file, dry_run):
     """Validate and/or fix the configuration file"""
 
-    if not file:
-        click.echo(
-            "No configuration file specified. Looking for a config file in the current directory... ",
-            nl=False,
-        )
-        station_config, file = find_config(os.getcwd())
-        click.echo(f"{Icons.CHECKMARK.value}")
-    else:
-        station_config = load_config(file)
-
     click.echo("Validating configuration file...")
 
-    results = validate_config(station_config)
+    results = validate_config(ctx.obj["station_config"])
 
     if results is not None:
         table, results = results
         console = Console()
         console.print(table)
         click.confirm("Fix issues now?", abort=True)
-        fixed_config = fix_config(ctx.obj, station_config, results)
-        render_config(fixed_config, file)
+        fix_config(ctx.obj, ctx.obj["station_config"], results)
+        render_config(ctx.obj, ctx.obj["config_path"], dry_run=dry_run)
         if not dry_run:
             click.echo(f"Fixed configuration file written to: {file}")
 
@@ -48,22 +37,22 @@ def settings(ctx, file, dry_run):
         click.echo("Configuration file is valid.")
 
 
-def render_config(config: dict, path: str, dry_run: bool = False) -> str | None:
+def render_config(ctx: dict, path: str, dry_run: bool = False) -> str | None:
     env = get_template_env()
     template = env.get_template("station_config.yml.tmpl")
     # write out the correct path to key file on host when rendering the template from docker container
 
     # todo check and improve this
-    if config.get("host_path"):
-        key_name = config["station_config"]["central"]["private_key"].split("/")[-1]
-        key_path = os.path.join(config["host_path"], key_name)
-        config["station_config"]["central"]["private_key"] = key_path
+    if ctx.get("host_path"):
+        key_name = ctx["station_config"]["central"]["private_key"].split("/")[-1]
+        key_path = os.path.join(ctx["host_path"], key_name)
+        ctx["station_config"]["central"]["private_key"] = key_path
 
     # todo fix this hack
     # extract https certs from config
-    certs = config["station_config"]["https"].pop("certificate")
+    certs = ctx["station_config"]["https"].pop("certificate")
 
-    out_config = template.render(certificate=certs, **config["station_config"])
+    out_config = template.render(certificate=certs, **ctx["station_config"])
 
     # print the rendered config to stdout and return it if dry_run is True
     if dry_run:
